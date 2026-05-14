@@ -1,0 +1,246 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { api } from '../services/api'
+
+const AppContext = createContext(null)
+
+const ROLE_KEY = 'ngja_role'
+const USER_KEY = 'ngja_user'
+
+const readStoredUser = () => {
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch (error) {
+    return null
+  }
+}
+
+const mapInvoiceRows = (items = []) =>
+  items.map((invoice) => ({
+    id: invoice.invoiceNumber,
+    buyer: invoice.buyerDetails?.company || invoice.buyerDetails?.name || 'N/A',
+    date: invoice.createdAt
+      ? new Date(invoice.createdAt).toISOString().slice(0, 10)
+      : 'N/A',
+    status: invoice.status || 'draft',
+    template: invoice.templateType,
+    totalUsd: invoice.totalUsd || 0,
+  }))
+
+export const AppProvider = ({ children }) => {
+  const [role, setRole] = useState(() => localStorage.getItem(ROLE_KEY))
+  const [user, setUser] = useState(readStoredUser)
+  const [userStatus, setUserStatus] = useState(user?.status || 'not_verified')
+  const [registrations, setRegistrations] = useState([])
+  const [invoices, setInvoices] = useState([])
+  const [users, setUsers] = useState([])
+  const [toasts, setToasts] = useState([])
+  const [notifications, setNotifications] = useState([])
+
+  const selectRole = (nextRole) => {
+    setRole(nextRole)
+    localStorage.setItem(ROLE_KEY, nextRole)
+  }
+
+  const storeUser = useCallback((nextUser) => {
+    setUser(nextUser)
+    localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
+  }, [])
+
+  const refreshInvoices = useCallback(async (userId) => {
+    if (!userId) return
+    const data = await api.get(`/users/${userId}/invoices`)
+    setInvoices(mapInvoiceRows(data || []))
+  }, [])
+
+  const refreshUserProfile = useCallback(async (userId) => {
+    if (!userId) return
+    const profile = await api.get(`/users/${userId}`)
+    storeUser(profile)
+    setUserStatus(profile.status || 'not_verified')
+  }, [storeUser])
+
+  const refreshAdminData = useCallback(async () => {
+    const [usersData, pendingData] = await Promise.all([
+      api.get('/admin/users'),
+      api.get('/admin/registrations/pending'),
+    ])
+
+    const normalizedUsers = usersData || []
+    setUsers(normalizedUsers)
+
+    const userMap = new Map(normalizedUsers.map((item) => [item.id, item]))
+    const normalizedRegistrations = (pendingData || []).map((item) => {
+      const profile = userMap.get(item.userId) || {}
+      return {
+        id: item.id,
+        userId: item.userId,
+        dealerName: profile.fullName || 'Dealer',
+        nic: profile.nic || 'N/A',
+        submittedDate: item.submittedAt
+          ? new Date(item.submittedAt).toISOString().slice(0, 10)
+          : 'N/A',
+        status: item.status,
+        documents: {
+          gemDealer: item.gemDealerLicense,
+          jewellery: item.jewelleryLicense,
+          customs: item.customsExporterLicense,
+        },
+        tin: item.tin,
+        vat: item.vat,
+      }
+    })
+
+    setRegistrations(normalizedRegistrations)
+  }, [])
+
+  const login = async ({ nic, password }) => {
+    const data = await api.post('/auth/login', { nic, password })
+    const nextRole = data.role || role || 'user'
+    setRole(nextRole)
+    localStorage.setItem(ROLE_KEY, nextRole)
+    storeUser(data)
+    setUserStatus(data.status || 'not_verified')
+    await refreshInvoices(data.id)
+    if (nextRole === 'admin') {
+      await refreshAdminData()
+    }
+    return data
+  }
+
+  const logout = () => {
+    setRole(null)
+    setUser(null)
+    setUserStatus('not_verified')
+    setRegistrations([])
+    setInvoices([])
+    setUsers([])
+    localStorage.removeItem(ROLE_KEY)
+    localStorage.removeItem(USER_KEY)
+  }
+
+  const signUp = async (payload) => {
+    const data = await api.post('/auth/signup', payload)
+    return data
+  }
+
+  const submitRegistration = async ({ userId, tin, vat, documents }) => {
+    const formData = new FormData()
+    formData.append('userId', userId)
+    if (tin) formData.append('tin', tin)
+    if (vat) formData.append('vat', vat)
+    formData.append('gemDealerLicense', documents.gemDealer)
+    formData.append('jewelleryLicense', documents.jewellery)
+    formData.append('customsExporterLicense', documents.customs)
+
+    const verification = await api.postForm('/verifications/submit', formData)
+    setUserStatus(verification.status || 'pending')
+    await refreshUserProfile(userId)
+    return verification
+  }
+
+  const updateProfile = async (userId, payload) => {
+    await api.put(`/users/${userId}`, payload)
+    await refreshUserProfile(userId)
+  }
+
+  const updateRegistrationStatus = async (userId, status) => {
+    if (!user?.id) return
+    const action = status === 'approved' ? 'approve' : 'reject'
+    await api.put(`/admin/dealers/${userId}/${action}`, {
+      reviewedBy: user.id,
+    })
+    await refreshAdminData()
+  }
+
+  const createInvoice = async (payload) => {
+    const invoice = await api.post('/invoices', payload)
+    setInvoices((prev) => [
+      ...mapInvoiceRows([invoice]),
+      ...prev,
+    ])
+    return invoice
+  }
+
+  const generateInvoiceNumber = async () => {
+    const data = await api.get('/invoices/generate-number')
+    return data?.invoiceNumber || ''
+  }
+
+  const pushToast = ({ title, message, tone = 'info' }) => {
+    const id = `toast-${Date.now()}`
+    setToasts((prev) => [...prev, { id, title, message, tone }])
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id))
+    }, 3200)
+  }
+
+  const dismissToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }
+
+  const value = useMemo(
+    () => ({
+      role,
+      user,
+      userStatus,
+      registrations,
+      invoices,
+      users,
+      notifications,
+      toasts,
+      selectRole,
+      login,
+      signUp,
+      logout,
+      setUserStatus,
+      refreshInvoices,
+      refreshUserProfile,
+      refreshAdminData,
+      submitRegistration,
+      updateRegistrationStatus,
+      updateProfile,
+      createInvoice,
+      generateInvoiceNumber,
+      pushToast,
+      dismissToast,
+    }),
+    [
+      role,
+      user,
+      userStatus,
+      registrations,
+      invoices,
+      users,
+      notifications,
+      toasts,
+    ],
+  )
+
+  useEffect(() => {
+    if (user?.id) {
+      refreshUserProfile(user.id)
+      refreshInvoices(user.id)
+      if (role === 'admin') {
+        refreshAdminData()
+      }
+    }
+  }, [user?.id, role])
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+}
+
+export const useApp = () => {
+  const context = useContext(AppContext)
+  if (!context) {
+    throw new Error('useApp must be used within AppProvider')
+  }
+  return context
+}

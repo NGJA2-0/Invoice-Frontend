@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI Variable", "Segoe UI", Candara, Optima, sans-serif;
+  color: #1b2f4a;
+  background-color: #f7f9fc;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(rgba(47, 108, 243, 0.05) 1px, transparent 1px),
+    linear-gradient(135deg, #f7f9fc 0%, #ffffff 55%, #eef3fb 100%);
+  background-size: 24px 24px, cover;
+  background-attachment: fixed;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-card;
+  }
+
+  .surface-card {
+    @apply bg-white border border-cloud-200 shadow-soft;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+
+  .page-shell {
+    @apply px-6 py-8 lg:px-10;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold text-ink-800;
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-cloud-200 bg-white/90 px-4 py-3 text-sm text-ink-800 shadow-sm outline-none transition focus:border-azure-400 focus:ring-2 focus:ring-azure-100;
+  }
+
+  .label {
+    @apply text-xs font-semibold uppercase tracking-[0.12em] text-ink-700;
+  }
+
+  .panel-divider {
+    @apply border-t border-cloud-200/80;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-azure-600 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:bg-azure-700;
+  }
+
+  .btn-primary:disabled {
+    @apply cursor-not-allowed bg-cloud-200 text-ink-500 shadow-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-cloud-200 bg-white px-5 py-3 text-sm font-semibold text-ink-800 shadow-sm transition hover:border-azure-200;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-ink-700 transition hover:bg-cloud-100;
+  }
+
+  .shimmer {
+    @apply animate-shimmer bg-[linear-gradient(90deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.6)_50%,rgba(255,255,255,0)_100%)] bg-[length:200%_100%];
+  }
+}
