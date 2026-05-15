@@ -25,13 +25,16 @@ const readStoredUser = () => {
 const mapInvoiceRows = (items = []) =>
   items.map((invoice) => ({
     id: invoice.invoiceNumber,
-    buyer: invoice.buyerDetails?.company || invoice.buyerDetails?.name || 'N/A',
+    buyer:
+      invoice.data?.buyerInformation?.buyerName ||
+      invoice.data?.buyerInformation?.buyerAddress ||
+      'N/A',
     date: invoice.createdAt
       ? new Date(invoice.createdAt).toISOString().slice(0, 10)
       : 'N/A',
     status: invoice.status || 'draft',
-    template: invoice.templateType,
-    totalUsd: invoice.totalUsd || 0,
+    template: invoice.templateKey || 'N/A',
+    totalUsd: invoice.data?.valuation?.totalUsd || 0,
   }))
 
 export const AppProvider = ({ children }) => {

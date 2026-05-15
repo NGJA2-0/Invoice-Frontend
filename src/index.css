@@ -25,6 +25,22 @@ body {
   min-height: 100vh;
 }
 
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .print-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
 @layer components {
   .glass-card {
     @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-card;

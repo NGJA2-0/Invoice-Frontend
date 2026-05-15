@@ -1,0 +1,84 @@
+import FileUpload from '../forms/FileUpload'
+import DynamicFieldRenderer from './DynamicFieldRenderer'
+import ValuationTable from './ValuationTable'
+
+const TemplateEngine = ({
+  templateConfig,
+  invoiceNumber,
+  register,
+  control,
+  watch,
+  setValue,
+  onLogoUpload,
+  uploadingLogo,
+}) => {
+  if (!templateConfig) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="glass-card rounded-2xl border px-6 py-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-600">
+          {templateConfig.key}
+        </p>
+        <h3 className="mt-2 text-2xl font-semibold text-ink-900">
+          {templateConfig.name}
+        </h3>
+        <p className="mt-1 text-sm text-ink-600">
+          Invoice Number: <span className="font-semibold">{invoiceNumber || 'Pending'}</span>
+        </p>
+      </div>
+
+      {templateConfig.sections.map((section) => (
+        <div key={section.key} className="surface-card rounded-2xl border px-6 py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h4 className="section-title">{section.label}</h4>
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {section.key === 'companyHeader' ? (
+              <div className="md:col-span-2">
+                <FileUpload
+                  label="Company Logo"
+                  helper="PNG or JPG (optional)"
+                  accept="image/png,image/jpeg"
+                  onChange={onLogoUpload}
+                />
+                {uploadingLogo ? (
+                  <p className="mt-2 text-xs text-ink-500">Uploading logo...</p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {section.key === 'valuation' ? (
+              <div className="md:col-span-2">
+                <ValuationTable
+                  control={control}
+                  register={register}
+                  watch={watch}
+                  setValue={setValue}
+                />
+              </div>
+            ) : null}
+
+            {section.key !== 'valuation'
+              ? section.fields
+                  .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
+                  .map((field) => (
+                    <DynamicFieldRenderer
+                      key={`${section.key}-${field.key}`}
+                      sectionKey={section.key}
+                      field={field}
+                      register={register}
+                      watch={watch}
+                    />
+                  ))
+              : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default TemplateEngine

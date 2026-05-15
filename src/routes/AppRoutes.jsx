@@ -17,10 +17,6 @@ import CreateInvoice from '../pages/user/CreateInvoice'
 import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
-import Template1 from '../pages/invoices/Template1'
-import Template2 from '../pages/invoices/Template2'
-import Template3 from '../pages/invoices/Template3'
-import Template4 from '../pages/invoices/Template4'
 
 const AppRoutes = () => {
   const location = useLocation()
@@ -40,10 +36,6 @@ const AppRoutes = () => {
           <Route path="procedure-flow" element={<ProcedureFlow />} />
           <Route path="edit-profile" element={<EditProfile />} />
           <Route path="dealer-registration" element={<DealerRegistration />} />
-          <Route path="invoices/template-1" element={<Template1 />} />
-          <Route path="invoices/template-2" element={<Template2 />} />
-          <Route path="invoices/template-3" element={<Template3 />} />
-          <Route path="invoices/template-4" element={<Template4 />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

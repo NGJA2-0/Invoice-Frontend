@@ -14,7 +14,7 @@ export const procedureSteps = [
   },
   {
     title: 'Invoice Creation',
-    description: 'Select premium template and prepare export invoice.',
+    description: 'Select category, load template, and prepare export invoice.',
   },
   {
     title: 'Export Documentation',
