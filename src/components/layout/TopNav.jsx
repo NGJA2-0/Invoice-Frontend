@@ -1,14 +1,24 @@
-import { Bell } from 'lucide-react'
+import { Bell, Menu } from 'lucide-react'
 import Badge from '../common/Badge'
 
-const TopNav = ({ title, subtitle, status, statusTone = 'info', avatar }) => {
+const TopNav = ({ title, subtitle, status, statusTone = 'info', avatar, onMenuClick }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cloud-200 bg-white/80 px-6 py-4 shadow-soft">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-600">
-          {subtitle}
-        </p>
-        <h2 className="text-xl font-semibold text-ink-900">{title}</h2>
+      <div className="flex items-center gap-4">
+        {/* Mobile Menu Button */}
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="rounded-lg p-2 text-ink-700 hover:bg-cloud-100 md:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-600">
+            {subtitle}
+          </p>
+          <h2 className="text-xl font-semibold text-ink-900">{title}</h2>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <Badge tone={statusTone}>{status}</Badge>
@@ -22,7 +32,7 @@ const TopNav = ({ title, subtitle, status, statusTone = 'info', avatar }) => {
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-azure-100 text-azure-700">
             {avatar}
           </span>
-          Profile
+          <span className="hidden sm:inline">Profile</span>
         </div>
       </div>
     </div>

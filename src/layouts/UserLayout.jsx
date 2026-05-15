@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   FileText,
   LayoutGrid,
@@ -39,11 +40,18 @@ const UserLayout = () => {
   const location = useLocation()
   const { userStatus, user } = useApp()
   const label = pageLabels[location.pathname] || 'Dashboard'
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="grid min-h-screen grid-cols-[280px_1fr] bg-page-gradient">
-      <Sidebar title="NGJA Export" subtitle="User Workspace" items={navItems} />
-      <main className="flex flex-col gap-6 p-6">
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[280px_1fr] bg-page-gradient">
+      <Sidebar
+        title="NGJA Export"
+        subtitle="User Workspace"
+        items={navItems}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      <main className="flex flex-col gap-6 p-4 sm:p-6">
         <Breadcrumbs
           items={[
             { label: 'User', active: false },
@@ -56,6 +64,7 @@ const UserLayout = () => {
           status={userStatus}
           statusTone={statusTone[userStatus] || 'info'}
           avatar={user?.avatar || 'U'}
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
         />
         <section className="page-shell">
           <Outlet />

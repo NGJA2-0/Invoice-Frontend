@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   FileCheck,
   LayoutGrid,
@@ -42,11 +43,18 @@ const AdminLayout = () => {
   const location = useLocation()
   const { user } = useApp()
   const label = pageLabels[location.pathname] || 'Dashboard'
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="grid min-h-screen grid-cols-[280px_1fr] bg-page-gradient">
-      <Sidebar title="NGJA Export" subtitle="Admin Console" items={navItems} />
-      <main className="flex flex-col gap-6 p-6">
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[280px_1fr] bg-page-gradient">
+      <Sidebar
+        title="NGJA Export"
+        subtitle="Admin Console"
+        items={navItems}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      <main className="flex flex-col gap-6 p-4 sm:p-6">
         <Breadcrumbs
           items={[
             { label: 'Admin', active: false },
@@ -58,6 +66,7 @@ const AdminLayout = () => {
           subtitle="Verification Oversight"
           status="Active"
           avatar={user?.avatar || 'A'}
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
         />
         <section className="page-shell">
           <Outlet />
