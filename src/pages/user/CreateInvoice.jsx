@@ -13,49 +13,57 @@ import { jsPDF } from 'jspdf'
 
 const buildDefaultInvoiceData = () => ({
   companyHeader: {
+    logoUrl: '',
     companyName: '',
     companyAddress: '',
-    logoUrl: '',
+    companyPhone: '',
+    companyEmail: '',
+    companyWebsite: '',
   },
-  buyerInformation: {
-    buyerName: '',
-    buyerAddress: '',
-    buyerCountry: '',
+  receiverInfo: {
+    receiverName: '',
+    receiverAddress: '',
+    receiverCountry: '',
+    receiverContact: '',
   },
-  deliveryInformation: {
-    deliveryAddress: '',
-    deliveryTerms: '',
+  senderInfo: {
+    senderName: '',
+    senderAddress: '',
+    senderPhone: '',
+    senderWebsite: '',
   },
-  transportDetails: {
-    transportMode: '',
-    carrier: '',
-    awbNumber: '',
+  invoiceMeta: {
+    invoiceDate: '',
+    invoiceNumber: '',
+    exportType: '',
+    countryOfOrigin: '',
+    remarks: '',
   },
-  valuation: {
-    items: [
-      {
-        itemName: '',
-        description: '',
-        quantity: 1,
-        unitPrice: 0,
-        totalPrice: 0,
-        currency: 'USD',
-        weight: '',
-      },
-    ],
-    totalUsd: 0,
-    totalLkr: 0,
+  deliveryInfo: {
+    deliveryType: '',
   },
-  exchangeRates: {
+  carrierDetails: {
+    carrierFullName: '',
+    carrierPassportID: '',
+    carrierContact: '',
+    carrierNationality: '',
+    flightNumber: '',
+    airline: '',
+    destinationCountry: '',
+  },
+  valuationTable: {
+    valuationItems: [],
+  },
+  cifSummary: {
+    cifItems: [],
+  },
+  exchangeRateSection: {
     exchangeRate: '',
-  },
-  certification: {
-    certificateNumber: '',
-    issueDate: '',
-  },
-  signature: {
-    signatoryName: '',
-    signatoryTitle: '',
+    fob: '',
+    freight: '',
+    insurance: '',
+    cif: '',
+    cifLkr: '',
   },
 })
 
@@ -142,25 +150,37 @@ const CreateInvoice = () => {
       return
     }
 
-    const loadConfig = async () => {
+    const loadTemplate = async () => {
       setLoadingConfig(true)
       try {
-        const config = await invoiceService.getConfiguration({
+        // Step 1: Resolve template to get the template key
+        const templateResolution = await invoiceService.resolveTemplate({
           category,
           subCategory,
         })
-        setTemplateConfig(config)
+        
+        if (!templateResolution?.key) {
+          throw new Error('Unable to determine template for this category')
+        }
+
+        // Step 2: Get full template structure using the template key
+        const templateStructure = await invoiceService.getTemplate(
+          templateResolution.key,
+        )
+        
+        setTemplateConfig(templateStructure)
       } catch (error) {
         pushToast({
           title: 'Unable to load template',
           message: error.message || 'Please try again.',
           tone: 'danger',
         })
+        setTemplateConfig(null)
       } finally {
         setLoadingConfig(false)
       }
     }
-    loadConfig()
+    loadTemplate()
   }, [category, subCategory, subCategories.length, pushToast])
 
   const formReady = useMemo(() => Boolean(category && templateConfig), [category, templateConfig])

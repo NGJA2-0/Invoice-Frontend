@@ -21,6 +21,11 @@ export const invoiceService = {
     return response
   },
 
+  getTemplate: async (templateKey) => {
+    const response = await api.get(`/templates/${templateKey}`)
+    return response
+  },
+
   getConfiguration: async ({ category, subCategory }) => {
     const query = new URLSearchParams({ category })
     if (subCategory) {
