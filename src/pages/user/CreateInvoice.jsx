@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Download, Eye, Save, FileText, ChevronRight } from 'lucide-react'
@@ -67,6 +67,31 @@ const buildDefaultInvoiceData = () => ({
   },
 })
 
+const normalizeOptions = (items) => {
+  if (!items) return []
+  if (!Array.isArray(items)) {
+    if (Array.isArray(items.items)) return normalizeOptions(items.items)
+    if (Array.isArray(items.data)) return normalizeOptions(items.data)
+    return []
+  }
+
+  return items
+    .map((item) => {
+      if (typeof item === 'string') {
+        return { name: item, value: item }
+      }
+      if (!item) return null
+      const name = item.name ?? item.label ?? item.value
+      if (!name) return null
+      return {
+        ...item,
+        name,
+        value: item.value ?? item.name ?? item.label,
+      }
+    })
+    .filter(Boolean)
+}
+
 const CreateInvoice = () => {
   const { userStatus, user, createInvoice, pushToast } = useApp()
   const navigate = useNavigate()
@@ -79,6 +104,7 @@ const CreateInvoice = () => {
   const [preview, setPreview] = useState(null)
   const [loadingConfig, setLoadingConfig] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const previewRef = useRef(null)
 
   const form = useForm({
     defaultValues: {
@@ -98,7 +124,7 @@ const CreateInvoice = () => {
     const loadCategories = async () => {
       try {
         const data = await invoiceService.getCategories()
-        setCategories(data || [])
+        setCategories(normalizeOptions(data))
       } catch (error) {
         pushToast({
           title: 'Unable to load categories',
@@ -132,7 +158,7 @@ const CreateInvoice = () => {
       }
       try {
         const data = await invoiceService.getSubCategories(category)
-        setSubCategories(data || [])
+        setSubCategories(normalizeOptions(data))
         setSubCategory('')
         setTemplateConfig(null)
         reset({ invoiceData: buildDefaultInvoiceData() })
@@ -158,15 +184,18 @@ const CreateInvoice = () => {
           category,
           subCategory,
         })
-        
-        if (!templateResolution?.key) {
+
+        const templateKey =
+          templateResolution?.key ||
+          templateResolution?.templateKey ||
+          templateResolution?.template?.key
+
+        if (!templateKey) {
           throw new Error('Unable to determine template for this category')
         }
 
         // Step 2: Get full template structure using the template key
-        const templateStructure = await invoiceService.getTemplate(
-          templateResolution.key,
-        )
+        const templateStructure = await invoiceService.getTemplate(templateKey)
         
         setTemplateConfig(templateStructure)
       } catch (error) {
@@ -263,24 +292,54 @@ const CreateInvoice = () => {
     }
   }
 
+  const ensurePreviewData = async () => {
+    if (preview) return preview
+    const data = await invoiceService.preview(buildPayload('draft'))
+    setPreview(data)
+    return data
+  }
+
+  const waitForPreviewPaint = () =>
+    new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    )
+
   const exportPdf = async () => {
     try {
-      const data =
-        preview || (await invoiceService.preview(buildPayload('draft')))
-      const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(16)
-      doc.text('NGJA Export Invoice', 40, 50)
-      doc.setFontSize(11)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`Invoice: ${data?.meta?.invoiceNumber || ''}`, 40, 80)
-      doc.text(`Category: ${data?.meta?.category || ''}`, 40, 100)
-      if (data?.meta?.subCategory) {
-        doc.text(`Sub Category: ${data.meta.subCategory}`, 40, 120)
+      const data = await ensurePreviewData()
+      await waitForPreviewPaint()
+
+      const target = previewRef.current
+      if (!target) {
+        throw new Error('Preview is not ready yet. Please try again.')
       }
-      doc.text(`Template: ${data?.meta?.templateKey || ''}`, 40, 140)
-      doc.text('Generated via NGJA E-Invoice System', 40, 170)
-      doc.save(`${data?.meta?.invoiceNumber || 'invoice'}.pdf`)
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 32
+      const { width, height } = target.getBoundingClientRect()
+      const scale = Math.min(
+        1,
+        (pageWidth - margin * 2) / width,
+        (pageHeight - margin * 2) / height,
+      )
+
+      await new Promise((resolve) => {
+        doc.html(target, {
+          x: margin,
+          y: margin,
+          html2canvas: {
+            scale,
+            backgroundColor: '#ffffff',
+          },
+          windowWidth: target.scrollWidth,
+          callback: (renderedDoc) => {
+            renderedDoc.save(`${data?.meta?.invoiceNumber || 'invoice'}.pdf`)
+            resolve()
+          },
+        })
+      })
     } catch (error) {
       pushToast({
         title: 'PDF export failed',
@@ -618,7 +677,114 @@ const CreateInvoice = () => {
           line-height: 1.6;
         }
 
+        /* ── Invoice preview sheet ── */
+        .print-sheet {
+          background: #ffffff;
+          border: 1px solid #eee2c8;
+          border-radius: 20px;
+          padding: 2.25rem;
+          box-shadow: 0 24px 70px rgba(15, 15, 15, 0.08);
+        }
+        .invoice-doc-title {
+          font-size: 20px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: #121212;
+        }
+        .invoice-doc-subtitle {
+          font-size: 12px;
+          color: #8c8c8c;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .invoice-meta-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.75rem 1.5rem;
+        }
+        .invoice-meta-card {
+          border: 1px solid #f0e6d2;
+          border-radius: 14px;
+          padding: 0.9rem 1rem;
+          background: #fffaf1;
+        }
+        .invoice-meta-label {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          color: #b8922a;
+          font-weight: 600;
+        }
+        .invoice-meta-value {
+          margin-top: 0.35rem;
+          font-size: 12px;
+          color: #2c2c2c;
+          font-weight: 500;
+        }
+        .invoice-section {
+          border: 1px solid #f3ead7;
+          border-radius: 14px;
+          padding: 1rem 1.25rem;
+          background: #fff;
+        }
+        .invoice-section-title {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #b8922a;
+        }
+        .invoice-kv-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.65rem 1.25rem;
+          margin-top: 0.75rem;
+          font-size: 11px;
+        }
+        .invoice-kv-label {
+          color: #8a8a8a;
+          font-weight: 500;
+        }
+        .invoice-kv-value {
+          text-align: right;
+          color: #1f1f1f;
+          font-weight: 500;
+        }
+        .invoice-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 0.75rem;
+          font-size: 10px;
+        }
+        .invoice-table th,
+        .invoice-table td {
+          border-bottom: 1px solid #f0e7d5;
+          padding: 6px 8px;
+          text-align: left;
+        }
+        .invoice-table th {
+          font-size: 9px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #9b9b9b;
+        }
+
+        @media (max-width: 768px) {
+          .invoice-meta-grid,
+          .invoice-kv-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
         @media print {
+          .print-sheet {
+            box-shadow: none;
+            border: 1px solid #e7dcc6;
+            padding: 1.5rem;
+          }
+          .invoice-doc-title { font-size: 18px; }
+          .invoice-kv-grid,
+          .invoice-table { font-size: 10px; }
           .no-print { display: none !important; }
         }
       `}</style>
@@ -805,7 +971,7 @@ const CreateInvoice = () => {
               </button>
             </div>
             <div className="ci-preview-body">
-              <InvoicePreview preview={preview} />
+              <InvoicePreview ref={previewRef} preview={preview} />
             </div>
           </div>
         ) : null}

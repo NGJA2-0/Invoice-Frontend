@@ -13,7 +13,7 @@ const SubCategorySelector = ({ subCategories, value, onChange }) => {
     >
       <option value="">Select sub category</option>
       {subCategories.map((subCategory) => (
-        <option key={subCategory.name} value={subCategory.name}>
+        <option key={subCategory.value || subCategory.name} value={subCategory.value || subCategory.name}>
           {subCategory.name}
         </option>
       ))}

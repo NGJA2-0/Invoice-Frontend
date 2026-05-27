@@ -11,7 +11,10 @@ const parseResponse = async (response) => {
     error.details = payload?.errors || null
     throw error
   }
-  return payload?.data ?? null
+  if (payload?.data !== undefined && payload?.data !== null) {
+    return payload.data
+  }
+  return payload ?? null
 }
 
 const request = async (path, options = {}) => {

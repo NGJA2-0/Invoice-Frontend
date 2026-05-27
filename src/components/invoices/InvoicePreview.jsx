@@ -1,76 +1,125 @@
+import { forwardRef } from 'react'
+
+const formatLabel = (value = '') =>
+  value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+
+const formatValue = (value) => {
+  if (value === null || value === undefined) return '—'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (Array.isArray(value)) return `${value.length} item(s)`
+  return String(value)
+}
+
+const renderTable = (rows = []) => {
+  if (!rows.length) return null
+  const columns = Object.keys(rows[0] || {})
+  if (!columns.length) return null
+
+  return (
+    <table className="invoice-table">
+      <thead>
+        <tr>
+          {columns.map((column) => (
+            <th key={column}>{formatLabel(column)}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, rowIndex) => (
+          <tr key={`row-${rowIndex}`}>
+            {columns.map((column) => (
+              <td key={`${rowIndex}-${column}`}>{formatValue(row?.[column])}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 const renderSectionData = (sectionKey, data) => {
   const sectionData = data?.[sectionKey]
   if (!sectionData) return null
 
   if (Array.isArray(sectionData)) {
-    return sectionData.map((item, index) => (
-      <li key={`${sectionKey}-${index}`} className="text-sm text-ink-700">
-        {JSON.stringify(item)}
-      </li>
-    ))
+    return renderTable(sectionData)
   }
 
-  return Object.entries(sectionData).map(([key, value]) => (
-    <div key={`${sectionKey}-${key}`} className="flex flex-col gap-2 text-sm">
-      <div className="flex justify-between gap-4">
-        <span className="text-ink-500">{key}</span>
-        {Array.isArray(value) ? (
-          <span className="text-ink-800">{value.length} item(s)</span>
-        ) : (
-          <span className="text-ink-800">{String(value || '')}</span>
-        )}
-      </div>
-      {Array.isArray(value)
-        ? value.map((item, index) => (
-            <div
-              key={`${sectionKey}-${key}-${index}`}
-              className="rounded-lg border border-cloud-100 bg-cloud-50 px-3 py-2 text-xs text-ink-700"
-            >
-              {item?.itemName || `Item ${index + 1}`} • Qty {item?.quantity || 0}
-            </div>
-          ))
-        : null}
-    </div>
-  ))
-}
-
-const InvoicePreview = ({ preview }) => {
-  if (!preview) return null
+  const entries = Object.entries(sectionData)
+  const arrayEntry = entries.find(([, value]) => Array.isArray(value))
+  const hasArray = Boolean(arrayEntry)
 
   return (
-    <div className="print-sheet mx-auto w-full max-w-4xl rounded-2xl border border-cloud-200 bg-white px-6 py-8 shadow-soft">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">
-            Preview
-          </p>
-          <h3 className="mt-2 text-2xl font-semibold text-ink-900">
-            {preview.meta?.invoiceNumber}
-          </h3>
-          <p className="mt-1 text-sm text-ink-600">
-            {preview.meta?.category} {preview.meta?.subCategory ? `• ${preview.meta.subCategory}` : ''}
+    <>
+      {!hasArray && (
+        <div className="invoice-kv-grid">
+          {entries.map(([key, value]) => (
+            <div key={`${sectionKey}-${key}`} className="flex items-center justify-between">
+              <span className="invoice-kv-label">{formatLabel(key)}</span>
+              <span className="invoice-kv-value">{formatValue(value)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {hasArray && renderTable(arrayEntry?.[1])}
+    </>
+  )
+}
+
+const InvoicePreview = forwardRef(({ preview }, ref) => {
+  if (!preview) return null
+
+  const meta = preview.meta || {}
+  const data = preview.data || {}
+
+  return (
+    <div ref={ref} className="print-sheet mx-auto w-full max-w-4xl">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2">
+          <p className="invoice-doc-subtitle">NGJA Export Invoice</p>
+          <h2 className="invoice-doc-title">
+            {meta.invoiceNumber || 'Pending Invoice'}
+          </h2>
+          <p className="text-sm text-ink-500">
+            {meta.category || 'Category'}
+            {meta.subCategory ? ` • ${meta.subCategory}` : ''}
           </p>
         </div>
-        <div className="text-right text-sm text-ink-600">
-          <p>Template: {preview.meta?.templateKey}</p>
-          <p>Version: {preview.meta?.templateVersion}</p>
+        <div className="invoice-meta-grid">
+          <div className="invoice-meta-card">
+            <p className="invoice-meta-label">Template</p>
+            <p className="invoice-meta-value">{meta.templateKey || 'N/A'}</p>
+          </div>
+          <div className="invoice-meta-card">
+            <p className="invoice-meta-label">Version</p>
+            <p className="invoice-meta-value">{meta.templateVersion || '1.0'}</p>
+          </div>
+          <div className="invoice-meta-card">
+            <p className="invoice-meta-label">Issued</p>
+            <p className="invoice-meta-value">{data?.invoiceMeta?.invoiceDate || '—'}</p>
+          </div>
+          <div className="invoice-meta-card">
+            <p className="invoice-meta-label">Export Type</p>
+            <p className="invoice-meta-value">{data?.invoiceMeta?.exportType || '—'}</p>
+          </div>
         </div>
       </div>
 
       <div className="mt-6 grid gap-4">
         {preview.sections?.map((section) => (
-          <div key={section.key} className="rounded-xl border border-cloud-100 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-500">
-              {section.label}
-            </p>
-            <div className="mt-3 flex flex-col gap-2">
-              {renderSectionData(section.key, preview.data)}
-            </div>
+          <div key={section.key} className="invoice-section">
+            <p className="invoice-section-title">{section.label}</p>
+            <div className="mt-3">{renderSectionData(section.key, data)}</div>
           </div>
         ))}
       </div>
     </div>
   )
-}
+})
+
+InvoicePreview.displayName = 'InvoicePreview'
 
 export default InvoicePreview
