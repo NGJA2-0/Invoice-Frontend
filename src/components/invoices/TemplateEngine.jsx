@@ -45,6 +45,7 @@ const TemplateEngine = ({
       {templateConfig.sections.map((section) => {
         const formValues = watch()
         if (!shouldShowSection(section, formValues)) return null
+        if (section.key === 'exchangeRateSection' || section.key === 'cifSummary') return null
 
         return (
           <div key={section.key} className="surface-card rounded-2xl border px-6 py-6">
