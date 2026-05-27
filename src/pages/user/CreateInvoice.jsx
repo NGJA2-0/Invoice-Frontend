@@ -679,11 +679,11 @@ const CreateInvoice = () => {
 
         /* ── Invoice preview sheet ── */
         .print-sheet {
-          background: #ffffff;
+          background: linear-gradient(180deg, #fffdfa 0%, #ffffff 45%, #fff9f1 100%);
           border: 1px solid #eee2c8;
-          border-radius: 20px;
-          padding: 2.25rem;
-          box-shadow: 0 24px 70px rgba(15, 15, 15, 0.08);
+          border-radius: 22px;
+          padding: 2.5rem;
+          box-shadow: 0 28px 80px rgba(15, 15, 15, 0.1);
         }
         .invoice-doc-title {
           font-size: 20px;
@@ -707,6 +707,7 @@ const CreateInvoice = () => {
           border-radius: 14px;
           padding: 0.9rem 1rem;
           background: #fffaf1;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
         .invoice-meta-label {
           font-size: 10px;
@@ -723,9 +724,10 @@ const CreateInvoice = () => {
         }
         .invoice-section {
           border: 1px solid #f3ead7;
-          border-radius: 14px;
-          padding: 1rem 1.25rem;
-          background: #fff;
+          border-radius: 16px;
+          padding: 1.1rem 1.4rem;
+          background: #ffffff;
+          box-shadow: 0 10px 30px rgba(24, 24, 24, 0.04);
         }
         .invoice-section-title {
           font-size: 11px;
@@ -733,45 +735,109 @@ const CreateInvoice = () => {
           letter-spacing: 0.2em;
           text-transform: uppercase;
           color: #b8922a;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid #f4ead8;
         }
         .invoice-kv-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 0.65rem 1.25rem;
-          margin-top: 0.75rem;
-          font-size: 11px;
+          gap: 0.6rem 1.25rem;
+          margin-top: 0.9rem;
+          font-size: 11.5px;
+        }
+        .invoice-kv-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          padding: 0.35rem 0.5rem;
+          border-radius: 10px;
+          background: #fffdf8;
+          border: 1px solid #f6efe2;
         }
         .invoice-kv-label {
           color: #8a8a8a;
-          font-weight: 500;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
+          font-size: 10px;
         }
         .invoice-kv-value {
           text-align: right;
           color: #1f1f1f;
-          font-weight: 500;
+          font-weight: 600;
         }
         .invoice-table {
           width: 100%;
-          border-collapse: collapse;
-          margin-top: 0.75rem;
+          border-collapse: separate;
+          border-spacing: 0;
+          margin-top: 0.9rem;
           font-size: 10px;
+          border: 1px solid #f0e7d5;
+          border-radius: 12px;
+          overflow: hidden;
         }
         .invoice-table th,
         .invoice-table td {
           border-bottom: 1px solid #f0e7d5;
-          padding: 6px 8px;
+          padding: 8px 10px;
           text-align: left;
         }
-        .invoice-table th {
+        .invoice-table th:not(:first-child),
+        .invoice-table td:not(:first-child) {
+          border-left: 1px solid #f4ead8;
+        }
+        .invoice-table-head th {
           font-size: 9px;
           letter-spacing: 0.16em;
           text-transform: uppercase;
           color: #9b9b9b;
+          background: #fffaf1;
+        }
+        .invoice-table-row:nth-child(even) td {
+          background: #fffdfa;
+        }
+        .invoice-table-total td {
+          font-weight: 700;
+          background: #fff7eb;
+        }
+        .invoice-summary-grid {
+          margin-top: 0.8rem;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.6rem;
+        }
+        .invoice-summary-grid div {
+          border: 1px solid #f0e7d5;
+          border-radius: 12px;
+          padding: 0.6rem 0.75rem;
+          background: #fffaf1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+        .invoice-summary-label {
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #b8922a;
+          font-weight: 700;
+        }
+        .invoice-summary-value {
+          font-size: 12px;
+          font-weight: 700;
+          color: #1f1f1f;
+        }
+        .invoice-block {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
         }
 
         @media (max-width: 768px) {
           .invoice-meta-grid,
-          .invoice-kv-grid {
+          .invoice-kv-grid,
+          .invoice-summary-grid {
             grid-template-columns: 1fr;
           }
         }
