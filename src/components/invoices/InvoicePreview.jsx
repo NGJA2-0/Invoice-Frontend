@@ -45,15 +45,36 @@ const renderValuationSection = (data) => {
   const items = valuation?.valuationItems || valuation?.items || []
   if (!items.length) return null
 
+  const pickValue = (item, keys) => {
+    for (const key of keys) {
+      const value = item?.[key]
+      if (value !== null && value !== undefined && value !== '') return value
+    }
+    return ''
+  }
+
   const totals = items.reduce(
     (acc, item) => {
-      acc.totalPieces += Number(item?.noOfPcs || item?.quantity || 0) || 0
-      acc.totalWeight += Number(item?.weight || 0) || 0
-      acc.totalAmount += Number(item?.amount || 0) || 0
+      const pieces = Number(pickValue(item, ['numberOfPieces', 'noOfPcs', 'noOfPieces', 'numberOfPcs', 'quantity', 'qty', 'pcs', 'No of Pcs', 'No Of Pcs'])) || 0
+      const weight = Number(pickValue(item, ['weight'])) || 0
+      const amount = Number(pickValue(item, ['amount', 'totalUsd', 'total'])) || 0
+      acc.totalPieces += pieces
+      acc.totalWeight += weight
+      acc.totalAmount += amount
       return acc
     },
     { totalPieces: 0, totalWeight: 0, totalAmount: 0 },
   )
+
+  const totalPiecesValue =
+    Number(pickValue(valuation, ['totalPieces', 'totalPcs', 'totalPiecesValue', 'Total Pieces'])) ||
+    totals.totalPieces
+  const totalWeightValue =
+    Number(pickValue(valuation, ['totalWeight', 'totalWeightValue', 'Total Weight'])) ||
+    totals.totalWeight
+  const totalAmountValue =
+    Number(pickValue(valuation, ['totalAmount', 'totalAmountUsd', 'totalUsd', 'Total Amount (USD)'])) ||
+    totals.totalAmount
 
   return (
     <div className="invoice-block">
@@ -75,29 +96,29 @@ const renderValuationSection = (data) => {
         <tbody className="invoice-table-body">
           {items.map((item, index) => (
             <tr key={`valuation-${index}`} className="invoice-table-row">
-              <td>{formatValue(item?.itemNo)}</td>
-              <td>{formatValue(item?.itemType)}</td>
-              <td>{formatValue(item?.description)}</td>
-              <td>{formatValue(item?.noOfPcs)}</td>
-              <td>{formatValue(item?.unitType)}</td>
-              <td>{formatValue(item?.weight)}</td>
-              <td>{formatValue(item?.weightUnit)}</td>
-              <td>{formatValue(item?.ratePer)}</td>
-              <td>{formatValue(item?.rateUnit)}</td>
-              <td>{formatValue(item?.amount)}</td>
+              <td>{formatValue(pickValue(item, ['itemNo', 'itemNumber', 'no']))}</td>
+              <td>{formatValue(pickValue(item, ['itemType', 'type', 'stoneType']))}</td>
+              <td>{formatValue(pickValue(item, ['description', 'descriptionOfGoods']))}</td>
+              <td>{formatValue(pickValue(item, ['numberOfPieces', 'noOfPcs', 'noOfPieces', 'numberOfPcs', 'quantity', 'qty', 'pcs', 'No of Pcs', 'No Of Pcs']))}</td>
+              <td>{formatValue(pickValue(item, ['piecesUnit', 'unitType', 'unit', 'pcsUnit', 'unitTypeLabel', 'Unit']))}</td>
+              <td>{formatValue(pickValue(item, ['weight']))}</td>
+              <td>{formatValue(pickValue(item, ['weightUnit', 'unitWeight']))}</td>
+              <td>{formatValue(pickValue(item, ['ratePer', 'rate']))}</td>
+              <td>{formatValue(pickValue(item, ['rateUnit', 'unitRate']))}</td>
+              <td>{formatValue(pickValue(item, ['amount', 'totalUsd', 'total']))}</td>
             </tr>
           ))}
           <tr className="invoice-table-row invoice-table-total">
             <td><strong>Totals</strong></td>
             <td></td>
             <td></td>
-            <td>{totals.totalPieces.toFixed(2)}</td>
+              <td>{totalPiecesValue.toFixed(2)}</td>
             <td></td>
-            <td>{totals.totalWeight.toFixed(2)}</td>
+              <td>{totalWeightValue.toFixed(2)}</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>{totals.totalAmount.toFixed(2)}</td>
+              <td>{totalAmountValue.toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
@@ -105,15 +126,15 @@ const renderValuationSection = (data) => {
       <div className="invoice-summary-grid">
         <div>
           <span className="invoice-summary-label">Total Pieces</span>
-          <span className="invoice-summary-value">{totals.totalPieces.toFixed(2)}</span>
+          <span className="invoice-summary-value">{totalPiecesValue.toFixed(2)}</span>
         </div>
         <div>
           <span className="invoice-summary-label">Total Weight</span>
-          <span className="invoice-summary-value">{totals.totalWeight.toFixed(2)}</span>
+          <span className="invoice-summary-value">{totalWeightValue.toFixed(2)}</span>
         </div>
         <div>
           <span className="invoice-summary-label">Total Amount (USD)</span>
-          <span className="invoice-summary-value">{totals.totalAmount.toFixed(2)}</span>
+          <span className="invoice-summary-value">{totalAmountValue.toFixed(2)}</span>
         </div>
       </div>
     </div>
@@ -228,6 +249,11 @@ const InvoicePreview = forwardRef(({ preview }, ref) => {
     <div ref={ref} className="print-sheet mx-auto w-full max-w-4xl">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
+          {data?.companyHeader?.logoUrl ? (
+            <div className="invoice-logo">
+              <img src={data.companyHeader.logoUrl} alt="Company logo" />
+            </div>
+          ) : null}
           <p className="invoice-doc-subtitle">NGJA Export Invoice</p>
           <h2 className="invoice-doc-title">
             {meta.invoiceNumber || 'Pending Invoice'}
@@ -247,7 +273,7 @@ const InvoicePreview = forwardRef(({ preview }, ref) => {
             </div>
             <div className="invoice-kv-row">
               <span className="invoice-kv-label">Export Type</span>
-              <span className="invoice-kv-value">{formatValue(invoiceMeta.exportType)}</span>
+              <span className="invoice-kv-value">{formatValue(meta.templateKey || invoiceMeta.exportType)}</span>
             </div>
             <div className="invoice-kv-row">
               <span className="invoice-kv-label">Country of Origin</span>
@@ -259,24 +285,7 @@ const InvoicePreview = forwardRef(({ preview }, ref) => {
             </div>
           </div>
         </div>
-        <div className="invoice-meta-grid">
-          <div className="invoice-meta-card">
-            <p className="invoice-meta-label">Template</p>
-            <p className="invoice-meta-value">{meta.templateKey || 'N/A'}</p>
-          </div>
-          <div className="invoice-meta-card">
-            <p className="invoice-meta-label">Version</p>
-            <p className="invoice-meta-value">{meta.templateVersion || '1.0'}</p>
-          </div>
-          <div className="invoice-meta-card">
-            <p className="invoice-meta-label">Issued</p>
-            <p className="invoice-meta-value">{data?.invoiceMeta?.invoiceDate || '—'}</p>
-          </div>
-          <div className="invoice-meta-card">
-            <p className="invoice-meta-label">Export Type</p>
-            <p className="invoice-meta-value">{data?.invoiceMeta?.exportType || '—'}</p>
-          </div>
-        </div>
+        <div></div>
       </div>
 
       <div className="mt-6 grid gap-4">

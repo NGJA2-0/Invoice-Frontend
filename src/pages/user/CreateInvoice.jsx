@@ -697,6 +697,19 @@ const CreateInvoice = () => {
           letter-spacing: 0.12em;
           text-transform: uppercase;
         }
+        .invoice-logo {
+          width: 120px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          margin-bottom: 0.4rem;
+        }
+        .invoice-logo img {
+          max-width: 100%;
+          max-height: 48px;
+          object-fit: contain;
+        }
         .invoice-meta-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
