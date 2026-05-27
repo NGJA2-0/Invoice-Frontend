@@ -3,6 +3,7 @@ import { useFieldArray } from 'react-hook-form'
 import Button from '../common/Button'
 import Input from '../common/Input'
 import Select from '../common/Select'
+import { Check, Trash2 } from 'lucide-react'
 
 const ValuationTable = ({ control, register, watch, setValue, section }) => {
   // For backward compatibility: if no section provided, use old defaults
@@ -29,7 +30,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const itemsKey = tableConfig.key || (sectionKey === 'valuationTable' ? 'valuationItems' : 'items')
   const itemsPath = `${fieldPath}.${itemsKey}`
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control,
     name: itemsPath,
   })
@@ -70,6 +71,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
         defaultItem[col.key] = ''
       }
     })
+    defaultItem.isDone = false
     append(defaultItem)
   }
 
@@ -83,9 +85,10 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const hasAmountColumn = tableConfig.columns.some((col) => col.key === amountKey)
 
   const totals = useMemo(() => {
-    const totalPieces = items.reduce((sum, item) => sum + (Number(item?.[piecesKey]) || 0), 0)
-    const totalWeight = items.reduce((sum, item) => sum + (Number(item?.[weightKey]) || 0), 0)
-    const totalAmount = items.reduce((sum, item) => sum + (Number(item?.[amountKey]) || 0), 0)
+    const completedItems = items.filter((item) => item?.isDone || (Number(item?.[amountKey]) || 0) > 0)
+    const totalPieces = completedItems.reduce((sum, item) => sum + (Number(item?.[piecesKey]) || 0), 0)
+    const totalWeight = completedItems.reduce((sum, item) => sum + (Number(item?.[weightKey]) || 0), 0)
+    const totalAmount = completedItems.reduce((sum, item) => sum + (Number(item?.[amountKey]) || 0), 0)
 
     return {
       totalPieces,
@@ -105,22 +108,18 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const insuranceLkr = insurance * exchangeRate
   const cifLkr = cifUsd * exchangeRate
 
-  useEffect(() => {
-    if (!amountKey || !weightKey || !rateKey || !hasAmountColumn) return
-
-    items.forEach((item, index) => {
-      const weight = Number(item?.[weightKey]) || 0
-      const rate = Number(item?.[rateKey]) || 0
-      const amount = weight * rate
-      const currentAmount = Number(item?.[amountKey]) || 0
-      if (Math.abs(currentAmount - amount) > 0.001) {
-        setValue(`${itemsPath}.${index}.${amountKey}`, Number(amount.toFixed(2)), {
-          shouldDirty: true,
-          shouldValidate: false,
-        })
-      }
+  const handleRowDone = (index) => {
+    if (!hasAmountColumn) return
+    const item = items[index] || {}
+    const weight = Number(item?.[weightKey]) || 0
+    const rate = Number(item?.[rateKey]) || 0
+    const amount = weight * rate
+    update(index, {
+      ...item,
+      isDone: true,
+      [amountKey]: Number(amount.toFixed(2)),
     })
-  }, [items, amountKey, weightKey, rateKey, setValue, itemsPath, hasAmountColumn])
+  }
 
   useEffect(() => {
     setValue(`${exchangeRatePath}.fob`, Number(fobUsd.toFixed(2)), { shouldValidate: false })
@@ -130,7 +129,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
 
   const renderFieldInput = (column, index, value, item) => {
     const fieldName = `${itemsPath}.${index}.${column.key}`
-    const baseClassName = 'py-2 px-3 text-ink-900 font-medium placeholder:text-ink-400'
+    const baseClassName = 'border-0 rounded-none bg-transparent shadow-none px-2 py-1 text-xs text-ink-900 placeholder:text-ink-400'
 
     if (column.readOnly) {
       const displayValue = Number(item?.[column.key]) || 0
@@ -193,8 +192,8 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
           />
         </div>
       )}
-      <div className="overflow-x-auto rounded-2xl border border-cloud-200">
-        <table className="min-w-full text-left text-sm">
+      <div className="overflow-x-auto">
+        <table className="valuation-table min-w-full text-left text-xs">
           <thead className="bg-cloud-50 text-xs uppercase tracking-[0.16em] text-ink-500">
             <tr>
               {tableConfig.columns.map((column) => (
@@ -223,11 +222,26 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
                       </td>
                     ))}
                     {tableConfig.allowRemoveRows && (
-                      <td className="px-4 py-3">
-                        <Button variant="ghost" size="sm" onClick={() => remove(index)}>
-                          Remove
-                        </Button>
-                      </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-cloud-200 text-ink-600 transition hover:bg-cloud-50"
+                              onClick={() => handleRowDone(index)}
+                              aria-label="Done"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-cloud-200 text-ink-600 transition hover:bg-cloud-50"
+                              onClick={() => remove(index)}
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
                     )}
                   </tr>
                 )
