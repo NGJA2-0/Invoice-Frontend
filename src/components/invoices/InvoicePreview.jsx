@@ -255,15 +255,15 @@ const styles = {
   topRow: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
-    marginBottom: 6,
+    gap: 12,
+    marginBottom: 12,
     flexShrink: 0,
   },
 
   toFromStack: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 12,
   },
 
   /* ── each section box ── */
@@ -280,7 +280,7 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    marginBottom: 6,
+    marginBottom: 12,
   },
   sectionHead: {
     background: `linear-gradient(90deg, #f0e8d4 0%, #fffdf8 100%)`,
