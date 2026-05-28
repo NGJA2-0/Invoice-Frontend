@@ -173,8 +173,9 @@ const RULE       = '#e8dfc8'
 const styles = {
   page: {
     width: '210mm',
-    height: '297mm',
-    overflow: 'hidden',
+    minHeight: '297mm',
+    height: 'auto',
+    overflow: 'visible',
     background: BG,
     fontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
     color: '#1a1a1a',
@@ -248,7 +249,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 0,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
 
   /* ── top layout: all sections stacked vertically ── */
@@ -276,8 +277,7 @@ const styles = {
   sectionWide: {
     border: `1px solid ${RULE}`,
     borderRadius: 3,
-    overflow: 'hidden',
-    flex: 1,
+    overflow: 'visible',
     display: 'flex',
     flexDirection: 'column',
     marginBottom: 12,
@@ -295,7 +295,6 @@ const styles = {
   },
   sectionBody: {
     padding: '7px 10px',
-    flex: 1,
   },
 
   /* ── delivery type: compact premium horizontal bar ── */
@@ -472,8 +471,9 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
 
   const sections = (preview.sections || []).filter((s) => !shouldHide(s))
 
-  const WIDE_KEYS    = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
+  const WIDE_KEYS     = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
   const DELIVERY_KEYS = ['deliveryInfo','transportDetails']
+  const CARRIER_KEYS  = ['carrierDetails']
 
   const wideSections     = sections.filter((s) => WIDE_KEYS.includes(sectionOverrides[s.key]?.dataKey || s.key))
   const deliverySections = sections.filter((s) => {
@@ -485,7 +485,12 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
       label.includes('transport')
     )
   })
-  const narrowSections   = sections.filter((s) => !wideSections.includes(s) && !deliverySections.includes(s))
+  const narrowSections   = sections.filter((s) => {
+    if (wideSections.includes(s) || deliverySections.includes(s)) return false
+    const resolved = sectionOverrides[s.key]?.dataKey || s.key
+    const label    = String(s.label || '').toLowerCase()
+    return !CARRIER_KEYS.includes(resolved) && !label.includes('carrier')
+  })
 
   // resolve label + key for a section
   const resolveSection = (section) => {
@@ -533,6 +538,15 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
       ''
     )
   })()
+
+  const deliveryTypeRaw = String(deliveryValue || '').toUpperCase()
+  const showCarrier = deliveryTypeRaw === 'HAND_CARRY'
+  const carrierData =
+    data?.carrierDetails ||
+    data?.deliveryInfo?.carrierDetails ||
+    data?.transportDetails?.carrierDetails ||
+    {}
+  const hasCarrierData = Object.values(carrierData).some((v) => v !== null && v !== undefined && v !== '')
 
   return (
     <div>
@@ -622,6 +636,15 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
                     )}
                   </div>
                   <div style={styles.deliveryLabel}>Courier Method</div>
+                </div>
+              </div>
+            )}
+
+            {showCarrier && hasCarrierData && (
+              <div style={styles.section}>
+                <div style={styles.sectionHead}>Carrier Details</div>
+                <div style={styles.sectionBody}>
+                  <KVGrid data={carrierData} />
                 </div>
               </div>
             )}

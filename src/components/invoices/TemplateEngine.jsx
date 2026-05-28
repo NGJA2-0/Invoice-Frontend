@@ -18,14 +18,22 @@ const TemplateEngine = ({
 
   const shouldShowSection = (section, formValues) => {
     if (!section.conditional) return true
-    
+
     const fieldPath = section.conditional.field.split('.')
-    let value = formValues
-    for (const key of fieldPath) {
-      value = value?.[key]
+
+    const resolveValue = (root) => {
+      let value = root
+      for (const key of fieldPath) {
+        value = value?.[key]
+      }
+      return value
     }
-    
-    return value === section.conditional.equals
+
+    const directValue = resolveValue(formValues)
+    const invoiceValue = resolveValue(formValues?.invoiceData)
+    const resolved = directValue ?? invoiceValue
+
+    return resolved === section.conditional.equals
   }
 
   return (
