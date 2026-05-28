@@ -101,15 +101,7 @@ const ValuationSection = ({ data }) => {
               <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
             </tr>
           ))}
-          <tr style={{ background: '#f5f0e8' }}>
-            <td style={{ ...styles.td, fontWeight: 700 }}>Totals</td>
-            <td style={styles.td}></td><td style={styles.td}></td>
-            <td style={{ ...styles.td, fontWeight: 700 }}>{totalPcs.toFixed(2)}</td>
-            <td style={styles.td}></td>
-            <td style={{ ...styles.td, fontWeight: 700 }}>{totalWt.toFixed(2)}</td>
-            <td style={styles.td}></td><td style={styles.td}></td><td style={styles.td}></td>
-            <td style={{ ...styles.td, fontWeight: 700 }}>{totalAmt.toFixed(2)}</td>
-          </tr>
+
         </tbody>
       </table>
       <div style={styles.summaryRow}>
@@ -212,9 +204,9 @@ const styles = {
     flexShrink: 0, fontWeight: 700, letterSpacing: 1,
     boxShadow: '0 2px 8px rgba(154,123,60,0.12)',
   },
-  docLabel: { fontSize: 7.5, letterSpacing: 2.5, color: GOLD, textTransform: 'uppercase' },
-  docTitle: { fontSize: 15, fontWeight: 700, letterSpacing: 0.3, color: '#111', margin: '1px 0' },
-  docSub:   { fontSize: 8, color: '#666', letterSpacing: 0.8, marginBottom: 4 },
+  docLabel: { fontSize: 8.5, letterSpacing: 2.5, color: GOLD, textTransform: 'uppercase' },
+  docTitle: { fontSize: 18, fontWeight: 700, letterSpacing: 0.3, color: '#111', margin: '2px 0' },
+  docSub:   { fontSize: 9.5, color: '#666', letterSpacing: 0.8, marginBottom: 4 },
 
   /* company details stacked under name */
   companyMeta: {
@@ -238,16 +230,16 @@ const styles = {
     gap: 4,
     alignItems: 'baseline',
   },
-  companyMetaLabel: { fontSize: 6.5, textTransform: 'uppercase', letterSpacing: 1, color: '#aaa', fontWeight: 700 },
-  companyMetaValue: { fontSize: 8, fontWeight: 600, color: '#333' },
+  companyMetaLabel: { fontSize: 9.5, textTransform: 'uppercase', letterSpacing: 1, color: '#aaa', fontWeight: 700 },
+  companyMetaValue: { fontSize: 11, fontWeight: 600, color: '#333' },
 
   headerRight: { textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4 },
   metaChip: {
     display: 'inline-flex', gap: 10, background: '#f5f0e8',
-    border: `1px solid ${RULE}`, borderRadius: 3, padding: '3px 8px',
-    fontSize: 8, alignItems: 'center', minWidth: 175,
+    border: `1px solid ${RULE}`, borderRadius: 3, padding: '4px 9px',
+    fontSize: 9, alignItems: 'center', minWidth: 180,
   },
-  metaLabel: { color: GOLD, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700, fontSize: 7 },
+  metaLabel: { color: GOLD, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700, fontSize: 7.5 },
   metaValue: { color: '#222', fontWeight: 600, marginLeft: 'auto' },
 
   /* ── body: flex column that grows ── */
@@ -352,20 +344,20 @@ const styles = {
     letterSpacing: 1,
   },
 
-  /* ── KV grid inside narrow sections ── */
+  /* ── KV grid inside narrow sections (TO / FROM) ── */
   kvGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 10px' },
   kvRow:  { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 },
-  kvLabel: { fontSize: 7.5, textTransform: 'uppercase', letterSpacing: 0.8, color: '#888', flexShrink: 0 },
-  kvValue: { fontSize: 8.5, fontWeight: 600, color: '#1a1a1a', textAlign: 'right' },
+  kvLabel: { fontSize: 9.5, textTransform: 'uppercase', letterSpacing: 0.8, color: '#888', flexShrink: 0 },
+  kvValue: { fontSize: 11, fontWeight: 600, color: '#1a1a1a', textAlign: 'right' },
 
   /* ── tables ── */
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: 8 },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
   th: {
     background: '#f0e8d4', color: GOLD, fontWeight: 700, textTransform: 'uppercase',
-    letterSpacing: 0.8, fontSize: 7, padding: '5px 6px', textAlign: 'left',
+    letterSpacing: 0.8, fontSize: 9.5, padding: '6px 7px', textAlign: 'left',
     borderBottom: `1px solid ${RULE}`,
   },
-  td: { padding: '5px 6px', borderBottom: `1px solid ${RULE}`, color: '#222', fontSize: 8 },
+  td: { padding: '6px 7px', borderBottom: `1px solid ${RULE}`, color: '#222', fontSize: 11 },
 
   /* ── exchange rates table (larger font) ── */
   tableExchange: { width: '100%', borderCollapse: 'collapse', fontSize: 11 },
@@ -382,8 +374,8 @@ const styles = {
     flex: 1, background: '#f5f0e6', border: `1px solid ${RULE}`,
     borderRadius: 3, padding: '6px 10px',
   },
-  summaryLabel: { fontSize: 7, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.8 },
-  summaryValue: { fontSize: 11, fontWeight: 700, color: '#111', marginTop: 2 },
+  summaryLabel: { fontSize: 8, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.8 },
+  summaryValue: { fontSize: 13, fontWeight: 700, color: '#111', marginTop: 2 },
 
   /* ── footer ── */
   footer: {
@@ -566,7 +558,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
               <div style={styles.docSub}>
                 {meta.category || 'Category'}{meta.subCategory ? ` · ${meta.subCategory}` : ''}
               </div>
-              {/* Company details: address first, then contact info */}
+              {/* Company details: address first, then email / phone / website each on own line */}
               {companyFields.length > 0 && (
                 <div style={styles.companyMeta}>
                   {/* Address row */}
@@ -576,21 +568,15 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
                       <span style={styles.companyMetaValue}>{formatValue(companyHeader.companyAddress)}</span>
                     </div>
                   )}
-                  {/* Email / Phone / Website row */}
+                  {/* Email, Phone, Website — each on its own line */}
                   {[['Email', companyHeader.companyEmail], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
                     .filter(([, v]) => v !== null && v !== undefined && v !== '')
-                    .length > 0 && (
-                    <div style={styles.companyMetaRow}>
-                      {[['Email', companyHeader.companyEmail], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
-                        .filter(([, v]) => v !== null && v !== undefined && v !== '')
-                        .map(([lbl, val]) => (
-                          <div key={lbl} style={styles.companyMetaItem}>
-                            <span style={styles.companyMetaLabel}>{lbl}</span>
-                            <span style={styles.companyMetaValue}>{formatValue(val)}</span>
-                          </div>
-                        ))}
-                    </div>
-                  )}
+                    .map(([lbl, val]) => (
+                      <div key={lbl} style={styles.companyMetaAddress}>
+                        <span style={styles.companyMetaLabel}>{lbl}</span>
+                        <span style={styles.companyMetaValue}>{formatValue(val)}</span>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
