@@ -23,14 +23,16 @@ const pickValue = (item, keys) => {
 }
 
 /* ─── sub-renderers ────────────────────────────────────────── */
-const KVGrid = ({ data }) => (
+const KVGrid = ({ data, exclude = [] }) => (
   <div style={styles.kvGrid}>
-    {Object.entries(data).map(([k, v]) => (
-      <div key={k} style={styles.kvRow}>
-        <span style={styles.kvLabel}>{formatLabel(k)}</span>
-        <span style={styles.kvValue}>{formatValue(v)}</span>
-      </div>
-    ))}
+    {Object.entries(data)
+      .filter(([k]) => !exclude.includes(k))
+      .map(([k, v]) => (
+        <div key={k} style={styles.kvRow}>
+          <span style={styles.kvLabel}>{formatLabel(k)}</span>
+          <span style={styles.kvValue}>{formatValue(v)}</span>
+        </div>
+      ))}
   </div>
 )
 
@@ -163,14 +165,17 @@ const renderSectionData = (sectionKey, data) => {
   const entries = Object.entries(sd)
   const arrayEntry = entries.find(([, v]) => Array.isArray(v))
   if (arrayEntry) return <SimpleTable rows={arrayEntry[1]} />
-  return <KVGrid data={sd} />
+
+  // For senderInfo / receiverInfo: exclude logoUrl
+  const exclude = sectionKey === 'companyHeader' ? ['logoUrl'] : []
+  return <KVGrid data={sd} exclude={exclude} />
 }
 
 /* ─── colour tokens ────────────────────────────────────────── */
-const GOLD      = '#9a7b3c'
+const GOLD       = '#9a7b3c'
 const LIGHT_GOLD = '#c9a96e'
-const BG        = '#fffdf8'
-const RULE      = '#e8dfc8'
+const BG         = '#fffdf8'
+const RULE       = '#e8dfc8'
 
 /* ─── styles ───────────────────────────────────────────────── */
 const styles = {
@@ -181,7 +186,7 @@ const styles = {
     background: BG,
     fontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
     color: '#1a1a1a',
-    padding: '12mm 14mm 14mm 14mm',
+    padding: '10mm 12mm 12mm 12mm',
     boxSizing: 'border-box',
     position: 'relative',
     display: 'flex',
@@ -195,23 +200,52 @@ const styles = {
     alignItems: 'flex-start',
     borderBottom: `2px solid ${GOLD}`,
     paddingBottom: 10,
-    marginBottom: 10,
+    marginBottom: 8,
     flexShrink: 0,
   },
-  headerLeft: { display: 'flex', flexDirection: 'column', gap: 4 },
+  headerLeft: { display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  headerLeftText: { display: 'flex', flexDirection: 'column', gap: 2 },
   logoPlaceholder: {
-    width: 48, height: 48, borderRadius: 4,
+    width: 64, height: 64, borderRadius: 6,
     background: '#f0e8d5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 8, color: GOLD, border: `1px solid ${RULE}`, fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif',
+    fontSize: 9, color: GOLD, border: `2px solid ${RULE}`, fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif',
+    flexShrink: 0, fontWeight: 700, letterSpacing: 1,
+    boxShadow: '0 2px 8px rgba(154,123,60,0.12)',
   },
-  docLabel: { fontSize: 8, letterSpacing: 2.5, color: GOLD, textTransform: 'uppercase' },
-  docTitle: { fontSize: 17, fontWeight: 700, letterSpacing: 0.3, color: '#111', margin: '2px 0' },
-  docSub:   { fontSize: 8.5, color: '#666', letterSpacing: 0.8 },
-  headerRight: { textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 5 },
+  docLabel: { fontSize: 7.5, letterSpacing: 2.5, color: GOLD, textTransform: 'uppercase' },
+  docTitle: { fontSize: 15, fontWeight: 700, letterSpacing: 0.3, color: '#111', margin: '1px 0' },
+  docSub:   { fontSize: 8, color: '#666', letterSpacing: 0.8, marginBottom: 4 },
+
+  /* company details stacked under name */
+  companyMeta: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    marginTop: 4,
+  },
+  companyMetaAddress: {
+    display: 'flex',
+    gap: 4,
+    alignItems: 'baseline',
+  },
+  companyMetaRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '1px 14px',
+  },
+  companyMetaItem: {
+    display: 'flex',
+    gap: 4,
+    alignItems: 'baseline',
+  },
+  companyMetaLabel: { fontSize: 6.5, textTransform: 'uppercase', letterSpacing: 1, color: '#aaa', fontWeight: 700 },
+  companyMetaValue: { fontSize: 8, fontWeight: 600, color: '#333' },
+
+  headerRight: { textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4 },
   metaChip: {
     display: 'inline-flex', gap: 10, background: '#f5f0e8',
     border: `1px solid ${RULE}`, borderRadius: 3, padding: '3px 8px',
-    fontSize: 8, alignItems: 'center', minWidth: 180,
+    fontSize: 8, alignItems: 'center', minWidth: 175,
   },
   metaLabel: { color: GOLD, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700, fontSize: 7 },
   metaValue: { color: '#222', fontWeight: 600, marginLeft: 'auto' },
@@ -225,13 +259,19 @@ const styles = {
     overflow: 'hidden',
   },
 
-  /* ── top 2-col grid ── */
-  topGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '6px 10px',
+  /* ── top layout: all sections stacked vertically ── */
+  topRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
     marginBottom: 6,
     flexShrink: 0,
+  },
+
+  toFromStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
   },
 
   /* ── each section box ── */
@@ -253,7 +293,7 @@ const styles = {
   sectionHead: {
     background: `linear-gradient(90deg, #f0e8d4 0%, #fffdf8 100%)`,
     borderBottom: `1px solid ${RULE}`,
-    padding: '5px 10px',
+    padding: '4px 10px',
     fontSize: 7.5,
     fontWeight: 700,
     letterSpacing: 2,
@@ -262,12 +302,58 @@ const styles = {
     flexShrink: 0,
   },
   sectionBody: {
-    padding: '8px 10px',
+    padding: '7px 10px',
     flex: 1,
   },
 
+  /* ── delivery type: compact premium horizontal bar ── */
+  deliveryCard: {
+    border: `1px solid ${RULE}`,
+    borderRadius: 3,
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  deliveryCardHead: {
+    background: `linear-gradient(90deg, #f0e8d4 0%, #fffdf8 100%)`,
+    borderRight: `1px solid ${RULE}`,
+    padding: '6px 12px',
+    fontSize: 7.5,
+    fontWeight: 700,
+    letterSpacing: 2,
+    color: GOLD,
+    textTransform: 'uppercase',
+    display: 'flex',
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  deliveryCardBody: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: '6px 12px',
+    gap: 10,
+  },
+  deliveryBadge: {
+    background: `linear-gradient(135deg, ${GOLD}, ${LIGHT_GOLD})`,
+    color: '#fff',
+    borderRadius: 3,
+    padding: '4px 14px',
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: 1.5,
+    whiteSpace: 'nowrap',
+  },
+  deliveryLabel: {
+    fontSize: 7,
+    color: '#aaa',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+
   /* ── KV grid inside narrow sections ── */
-  kvGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' },
+  kvGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 10px' },
   kvRow:  { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 },
   kvLabel: { fontSize: 7.5, textTransform: 'uppercase', letterSpacing: 0.8, color: '#888', flexShrink: 0 },
   kvValue: { fontSize: 8.5, fontWeight: 600, color: '#1a1a1a', textAlign: 'right' },
@@ -303,8 +389,8 @@ const styles = {
   footer: {
     flexShrink: 0,
     borderTop: `1px solid ${RULE}`,
-    paddingTop: 6,
-    marginTop: 6,
+    paddingTop: 5,
+    marginTop: 5,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -360,10 +446,18 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
 
   if (!preview) return null
 
-  const meta        = preview.meta || {}
-  const data        = preview.data?.invoiceData || preview.data || {}
-  const invoiceMeta = data?.invoiceMeta || {}
+  const meta          = preview.meta || {}
+  const data          = preview.data?.invoiceData || preview.data || {}
+  const invoiceMeta   = data?.invoiceMeta || {}
   const companyHeader = data?.companyHeader || {}
+
+  // Company fields for header display (exclude logoUrl)
+  const companyFields = [
+    ['Address',  companyHeader.companyAddress],
+    ['Email',    companyHeader.companyEmail],
+    ['Phone',    companyHeader.companyPhone],
+    ['Website',  companyHeader.companyWebsite],
+  ].filter(([, v]) => v !== null && v !== undefined && v !== '')
 
   const sectionOverrides = {
     buyerInfo:        { label: 'TO',            dataKey: 'receiverInfo' },
@@ -376,16 +470,33 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const shouldHide = (s) => {
     const k = String(s?.key   || '').toLowerCase()
     const l = String(s?.label || '').toLowerCase()
-    return k.includes('cert') || k.includes('signature') || l.includes('cert') || l.includes('signature')
+    return (
+      k.includes('cert') || k.includes('signature') ||
+      l.includes('cert') || l.includes('signature') ||
+      // hide companyHeader section since we moved it to the header
+      k === 'companyheader' || k === 'company_header' || l === 'company header'
+    )
   }
 
   const sections = (preview.sections || []).filter((s) => !shouldHide(s))
 
-  const WIDE_KEYS = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
-  const wideSections   = sections.filter((s) => WIDE_KEYS.includes(sectionOverrides[s.key]?.dataKey || s.key))
-  const narrowSections = sections.filter((s) => !wideSections.includes(s))
+  const WIDE_KEYS    = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
+  const DELIVERY_KEYS = ['deliveryInfo','transportDetails']
 
-  const renderSec = (section, wide = false) => {
+  const wideSections     = sections.filter((s) => WIDE_KEYS.includes(sectionOverrides[s.key]?.dataKey || s.key))
+  const deliverySections = sections.filter((s) => {
+    const resolved = sectionOverrides[s.key]?.dataKey || s.key
+    const label    = String(s.label || '').toLowerCase()
+    return (
+      DELIVERY_KEYS.includes(resolved) ||
+      label.includes('delivery type') ||
+      label.includes('transport')
+    )
+  })
+  const narrowSections   = sections.filter((s) => !wideSections.includes(s) && !deliverySections.includes(s))
+
+  // resolve label + key for a section
+  const resolveSection = (section) => {
     const labelKey = String(section.label || '').toLowerCase()
     const fallback = labelKey.includes('buyer')
       ? { label: 'TO',            dataKey: 'receiverInfo' }
@@ -395,16 +506,41 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
       ? { label: 'FROM',          dataKey: 'senderInfo'   }
       : {}
     const override     = sectionOverrides[section.key] || fallback
-    const sectionLabel = override.label   || section.label
-    const sectionKey   = override.dataKey || section.key
+    return {
+      sectionLabel: override.label   || section.label,
+      sectionKey:   override.dataKey || section.key,
+    }
+  }
 
+  const renderNarrowSec = (section) => {
+    const { sectionLabel, sectionKey } = resolveSection(section)
     return (
-      <div key={section.key} style={wide ? styles.sectionWide : styles.section}>
+      <div key={section.key} style={styles.section}>
         <div style={styles.sectionHead}>{sectionLabel}</div>
         <div style={styles.sectionBody}>{renderSectionData(sectionKey, data)}</div>
       </div>
     )
   }
+
+  const renderWideSec = (section) => {
+    const { sectionLabel, sectionKey } = resolveSection(section)
+    return (
+      <div key={section.key} style={styles.sectionWide}>
+        <div style={styles.sectionHead}>{sectionLabel}</div>
+        <div style={styles.sectionBody}>{renderSectionData(sectionKey, data)}</div>
+      </div>
+    )
+  }
+
+  // Delivery value — pull from deliveryInfo or transportDetails
+  const deliveryValue = (() => {
+    const di = data?.deliveryInfo || {}
+    return (
+      pickValue(di, ['deliveryType','courier','method','type','carrier']) ||
+      pickValue(data?.transportDetails || {}, ['deliveryType','courier','method','type','carrier']) ||
+      ''
+    )
+  })()
 
   return (
     <div>
@@ -418,22 +554,52 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
         <div style={styles.header}>
           <div style={styles.headerLeft}>
             {companyHeader?.logoUrl
-              ? <img src={companyHeader.logoUrl} alt="logo" style={{ width: 48, height: 48, objectFit: 'contain' }} />
+              ? <img src={companyHeader.logoUrl} alt="logo" style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0, borderRadius: 6, boxShadow: '0 2px 8px rgba(154,123,60,0.12)' }} />
               : <div style={styles.logoPlaceholder}>LOGO</div>
             }
-            <div style={{ marginTop: 5 }}>
+            <div style={styles.headerLeftText}>
               <div style={styles.docLabel}>NGJA Export Invoice</div>
-              <div style={styles.docTitle}>{meta.invoiceNumber || 'Pending Invoice'}</div>
+              {/* Company name replaces invoice number */}
+              <div style={styles.docTitle}>
+                {companyHeader.companyName || meta.companyName || 'Company Name'}
+              </div>
               <div style={styles.docSub}>
                 {meta.category || 'Category'}{meta.subCategory ? ` · ${meta.subCategory}` : ''}
               </div>
+              {/* Company details: address first, then contact info */}
+              {companyFields.length > 0 && (
+                <div style={styles.companyMeta}>
+                  {/* Address row */}
+                  {companyHeader.companyAddress && (
+                    <div style={styles.companyMetaAddress}>
+                      <span style={styles.companyMetaLabel}>Address</span>
+                      <span style={styles.companyMetaValue}>{formatValue(companyHeader.companyAddress)}</span>
+                    </div>
+                  )}
+                  {/* Email / Phone / Website row */}
+                  {[['Email', companyHeader.companyEmail], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
+                    .filter(([, v]) => v !== null && v !== undefined && v !== '')
+                    .length > 0 && (
+                    <div style={styles.companyMetaRow}>
+                      {[['Email', companyHeader.companyEmail], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
+                        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+                        .map(([lbl, val]) => (
+                          <div key={lbl} style={styles.companyMetaItem}>
+                            <span style={styles.companyMetaLabel}>{lbl}</span>
+                            <span style={styles.companyMetaValue}>{formatValue(val)}</span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           <div style={styles.headerRight}>
             {[
               ['Invoice Date', invoiceMeta.invoiceDate],
-              ['Invoice No',   invoiceMeta.invoiceNumber],
+              ['Invoice No',   invoiceMeta.invoiceNumber || meta.invoiceNumber],
               ['Export Type',  meta.templateKey || invoiceMeta.exportType],
               ['Country',      invoiceMeta.countryOfOrigin],
               ['Remarks',      invoiceMeta.remarks],
@@ -449,13 +615,34 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
         {/* ── BODY (flex column, fills remaining height) ── */}
         <div style={styles.body}>
 
-          {/* narrow sections in 2-col grid */}
-          <div style={styles.topGrid}>
-            {narrowSections.map((s) => renderSec(s, false))}
+          {/* TO, FROM stacked, then Delivery below */}
+          <div style={styles.topRow}>
+            <div style={styles.toFromStack}>
+              {narrowSections.map((s) => renderNarrowSec(s))}
+            </div>
+
+            {/* Delivery Type: full-width horizontal bar below FROM */}
+            {deliverySections.length > 0 && (
+              <div style={styles.deliveryCard}>
+                <div style={styles.deliveryCardHead}>Delivery</div>
+                <div style={styles.deliveryCardBody}>
+                  <div style={styles.deliveryBadge}>
+                    {deliveryValue || formatValue(
+                      (() => {
+                        const di = data?.deliveryInfo || data?.transportDetails || {}
+                        const vals = Object.values(di).filter(v => v && typeof v === 'string')
+                        return vals[0] || ''
+                      })()
+                    )}
+                  </div>
+                  <div style={styles.deliveryLabel}>Courier Method</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* wide sections grow to fill space */}
-          {wideSections.map((s) => renderSec(s, true))}
+          {wideSections.map((s) => renderWideSec(s))}
 
           {/* spacer pushes footer to bottom */}
           <div style={{ flex: 1 }} />
