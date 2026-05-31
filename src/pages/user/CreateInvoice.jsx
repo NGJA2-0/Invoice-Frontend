@@ -118,10 +118,12 @@ const CreateInvoice = () => {
 
   const { register, control, watch, setValue, getValues, reset } = form
 
-  const isTemplate3 = String(templateConfig?.templateKey || '').toUpperCase() === 'TEMPLATE_3'
+  const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
+  const isTemplate3 = templateKey === 'TEMPLATE_3'
+  const isTemplate4 = templateKey === 'TEMPLATE_4'
 
   const ensureTemplate3NiDetails = () => {
-    if (!isTemplate3) return true
+    if (!isTemplate3 && !isTemplate4) return true
     const niNumber = getValues('invoiceData.niDetails.niNumber')
     const niDate = getValues('invoiceData.niDetails.niDate')
     if (niNumber && niDate) return true

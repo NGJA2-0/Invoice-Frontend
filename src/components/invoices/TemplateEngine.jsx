@@ -91,9 +91,10 @@ const TemplateEngine = ({
                 ? section.fields
                     .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
                     .map((field) => {
-                      const isTemplate3 = String(templateConfig?.templateKey || '').toUpperCase() === 'TEMPLATE_3'
+                      const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
+                      const requiresNi = templateKey === 'TEMPLATE_3' || templateKey === 'TEMPLATE_4'
                       const adjustedField =
-                        isTemplate3 && section.key === 'niDetails'
+                        requiresNi && section.key === 'niDetails'
                           ? { ...field, required: true }
                           : field
 

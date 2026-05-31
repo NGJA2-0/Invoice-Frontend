@@ -68,12 +68,15 @@ const ValuationSection = ({ data }) => {
       item?.mainStoneWeight !== undefined ||
       item?.otherStoneWeight !== undefined,
   )
-  const isReImport = items.some(
-    (item) =>
-      item?.valueAddition !== undefined ||
-      item?.importValue !== undefined ||
-      item?.totalValue !== undefined,
-  )
+  const isReImportClassic = items.some((item) => item?.totalValue !== undefined)
+  const isReImportJewellery =
+    isJewellery &&
+    items.some(
+      (item) =>
+        item?.valueAddition !== undefined ||
+        item?.importValue !== undefined ||
+        item?.amount !== undefined,
+    )
 
   const totals = items.reduce(
     (acc, item) => {
@@ -104,7 +107,40 @@ const ValuationSection = ({ data }) => {
 
   return (
     <>
-      {isReImport ? (
+      {isReImportJewellery ? (
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              {['Item No','Item Type','Description','No Of','Unit','Metal Weight','Metal Unit','Main Stone Weight','Main Stone Unit','Other Stone Weight','Other Stone Unit','Total Weight','Total Weight Unit','Rate Per Unit ($)','Value Addition ($)','Import Value ($)','Amount ($)'].map((h) => (
+                <th key={h} style={styles.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['metalWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['metalUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeightUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit','ratePer','rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['valueAddition']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['importValue']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['amount']))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : isReImportClassic ? (
         <table style={styles.table}>
           <thead>
             <tr>
@@ -197,14 +233,14 @@ const ValuationSection = ({ data }) => {
                 ['Total Combined Weight', totalWt.toFixed(2)],
               ]
             : []),
-          ...(isReImport
+          ...(isReImportClassic || isReImportJewellery
             ? [
                 ['Total Value Addition', totalValueAddition.toFixed(2)],
                 ['Total Import Value', totalImportValue.toFixed(2)],
-                ['Total Value', totalValue.toFixed(2)],
+                ['Total Value', (isReImportJewellery ? totalAmt : totalValue).toFixed(2)],
               ]
             : []),
-          ['Total Amount (USD)', (isReImport ? totalValue : totalAmt).toFixed(2)],
+          ['Total Amount (USD)', (isReImportClassic ? totalValue : totalAmt).toFixed(2)],
         ].map(([lbl, val]) => (
           <div key={lbl} style={styles.summaryBox}>
             <div style={styles.summaryLabel}>{lbl}</div>
@@ -658,7 +694,9 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     data?.transportDetails?.carrierDetails ||
     {}
   const hasCarrierData = Object.values(carrierData).some((v) => v !== null && v !== undefined && v !== '')
-  const isTemplate3 = String(meta.templateKey || '').toUpperCase() === 'TEMPLATE_3'
+  const templateKey = String(meta.templateKey || '').toUpperCase()
+  const isTemplate3 = templateKey === 'TEMPLATE_3'
+  const isTemplate4 = templateKey === 'TEMPLATE_4'
 
   return (
     <div>
@@ -733,7 +771,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
               {narrowSections.map((s) => renderNarrowSec(s))}
             </div>
 
-            {isTemplate3 && (
+            {(isTemplate3 || isTemplate4) && (
               <div style={styles.section}>
                 <div style={styles.sectionHead}>NI Details</div>
                 <div style={styles.sectionBody}>{renderSectionData('niDetails', data)}</div>
