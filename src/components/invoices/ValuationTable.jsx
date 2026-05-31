@@ -151,9 +151,11 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       baseItems.reduce((sum, item) => sum + (Number(item?.[piecesKey]) || 0), 0)
     const totalWeight =
       totalsMap.totalCombinedWeight ??
+      totalsMap.totalWeight ??
       baseItems.reduce((sum, item) => sum + (Number(item?.[weightKey]) || 0), 0)
     const totalAmount =
       totalsMap.totalAmount ??
+      totalsMap.totalValue ??
       baseItems.reduce((sum, item) => sum + (Number(item?.[amountKey]) || 0), 0)
 
     return {
@@ -169,6 +171,8 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const insurance = Number(watch(`${exchangeRatePath}.insurance`)) || 0
 
   const fobUsd = totals.totalAmount
+  const valueAdditionUsd = totals.totalsMap?.totalValueAddition ?? 0
+  const valueAdditionLkr = valueAdditionUsd * exchangeRate
   const cifUsd = fobUsd + freight + insurance
   const fobLkr = fobUsd * exchangeRate
   const freightLkr = freight * exchangeRate
@@ -355,6 +359,27 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
                     </td>
                   )
                 }
+                if (column.key === 'valueAddition') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {(totalsMap.totalValueAddition ?? 0).toFixed(2)}
+                    </td>
+                  )
+                }
+                if (column.key === 'importValue') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {(totalsMap.totalImportValue ?? 0).toFixed(2)}
+                    </td>
+                  )
+                }
+                if (column.key === 'totalValue') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {(totalsMap.totalValue ?? 0).toFixed(2)}
+                    </td>
+                  )
+                }
                 if (column.key === weightKey) {
                   return (
                     <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
@@ -430,13 +455,41 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
               readOnly
             />
           )}
+          {'totalValueAddition' in totals.totalsMap && (
+            <Input
+              label="Total Value Addition"
+              type="number"
+              value={(totals.totalsMap.totalValueAddition || 0).toFixed(2)}
+              readOnly
+            />
+          )}
+          {'totalImportValue' in totals.totalsMap && (
+            <Input
+              label="Total Import Value"
+              type="number"
+              value={(totals.totalsMap.totalImportValue || 0).toFixed(2)}
+              readOnly
+            />
+          )}
+          {'totalValue' in totals.totalsMap && (
+            <Input
+              label="Total Value"
+              type="number"
+              value={(totals.totalsMap.totalValue || 0).toFixed(2)}
+              readOnly
+            />
+          )}
         </div>
       ) : null}
 
       {sectionKey === 'valuationTable' && (
         <div className="mt-2 rounded-2xl border border-cloud-200 bg-white">
           <div className="border-b border-cloud-200 px-4 py-3">
-            <p className="text-sm font-semibold text-ink-800">FOB / Freight / Insurance Summary</p>
+            <p className="text-sm font-semibold text-ink-800">
+              {totals.totalsMap?.totalValueAddition !== undefined
+                ? 'Value Addition / FOB / Freight / Insurance Summary'
+                : 'FOB / Freight / Insurance Summary'}
+            </p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -448,6 +501,17 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-cloud-100">
+                {totals.totalsMap?.totalValueAddition !== undefined && (
+                  <tr>
+                    <td className="px-4 py-3 font-semibold text-ink-700">Value Addition</td>
+                    <td className="px-4 py-3">
+                      <Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Input type="number" value={valueAdditionLkr.toFixed(2)} readOnly />
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">FOB</td>
                   <td className="px-4 py-3">

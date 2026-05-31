@@ -90,17 +90,25 @@ const TemplateEngine = ({
               {section.sectionType !== 'table'
                 ? section.fields
                     .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
-                    .map((field) => (
-                      <DynamicFieldRenderer
-                        key={`${section.key}-${field.key}`}
-                        sectionKey={section.key}
-                        field={field}
-                        register={register}
-                        watch={watch}
-                        control={control}
-                        setValue={setValue}
-                      />
-                    ))
+                    .map((field) => {
+                      const isTemplate3 = String(templateConfig?.templateKey || '').toUpperCase() === 'TEMPLATE_3'
+                      const adjustedField =
+                        isTemplate3 && section.key === 'niDetails'
+                          ? { ...field, required: true }
+                          : field
+
+                      return (
+                        <DynamicFieldRenderer
+                          key={`${section.key}-${field.key}`}
+                          sectionKey={section.key}
+                          field={adjustedField}
+                          register={register}
+                          watch={watch}
+                          control={control}
+                          setValue={setValue}
+                        />
+                      )
+                    })
                 : null}
             </div>
           </div>

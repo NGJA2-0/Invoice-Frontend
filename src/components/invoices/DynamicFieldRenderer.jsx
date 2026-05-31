@@ -22,6 +22,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
   const label = field.required ? `${field.label} *` : field.label
   const isAddress = field.key.toLowerCase().includes('address') || field.multiLine
   const value = watch(name)
+  const registerOptions = field.required ? { required: `${field.label} is required` } : undefined
 
   // Handle autoFill fields
   useEffect(() => {
@@ -49,7 +50,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
       <Select
         label={label}
         disabled={field.readOnly}
-        {...register(name)}
+        {...register(name, registerOptions)}
       >
         <option value="">{field.placeholder || 'Select...'}</option>
         {options.map((opt) => (
@@ -69,7 +70,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
         type="date"
         placeholder={field.placeholder || field.label}
         readOnly={field.readOnly}
-        {...register(name)}
+        {...register(name, registerOptions)}
       />
     )
   }
@@ -81,7 +82,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
         label={label}
         placeholder={field.placeholder || field.label}
         readOnly={field.readOnly}
-        {...register(name)}
+        {...register(name, registerOptions)}
       />
     )
   }
@@ -94,7 +95,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
         type="number"
         placeholder={field.placeholder || field.label}
         readOnly={field.readOnly}
-        {...register(name, { valueAsNumber: true })}
+        {...register(name, { valueAsNumber: true, ...registerOptions })}
       />
     )
   }
@@ -111,7 +112,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
       type="text"
       placeholder={field.placeholder || field.label}
       readOnly={field.readOnly}
-      {...register(name)}
+      {...register(name, registerOptions)}
     />
   )
 }

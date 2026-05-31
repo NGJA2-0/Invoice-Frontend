@@ -68,6 +68,12 @@ const ValuationSection = ({ data }) => {
       item?.mainStoneWeight !== undefined ||
       item?.otherStoneWeight !== undefined,
   )
+  const isReImport = items.some(
+    (item) =>
+      item?.valueAddition !== undefined ||
+      item?.importValue !== undefined ||
+      item?.totalValue !== undefined,
+  )
 
   const totals = items.reduce(
     (acc, item) => {
@@ -78,9 +84,12 @@ const ValuationSection = ({ data }) => {
       acc.mainStoneWeight += Number(pickValue(item, ['mainStoneWeight'])) || 0
       acc.otherStoneWeight += Number(pickValue(item, ['otherStoneWeight'])) || 0
       acc.combinedWeight += Number(pickValue(item, ['totalWeight'])) || 0
+      acc.valueAddition += Number(pickValue(item, ['valueAddition'])) || 0
+      acc.importValue += Number(pickValue(item, ['importValue'])) || 0
+      acc.totalValue += Number(pickValue(item, ['totalValue'])) || 0
       return acc
     },
-    { pieces: 0, weight: 0, amount: 0, metalWeight: 0, mainStoneWeight: 0, otherStoneWeight: 0, combinedWeight: 0 },
+    { pieces: 0, weight: 0, amount: 0, metalWeight: 0, mainStoneWeight: 0, otherStoneWeight: 0, combinedWeight: 0, valueAddition: 0, importValue: 0, totalValue: 0 },
   )
 
   const totalPcs = Number(pickValue(valuation, ['totalPieces','totalPcs'])) || totals.pieces
@@ -89,10 +98,41 @@ const ValuationSection = ({ data }) => {
   const totalMetal = Number(pickValue(valuation, ['totalMetalWeight'])) || totals.metalWeight
   const totalMainStone = Number(pickValue(valuation, ['totalMainStoneWeight'])) || totals.mainStoneWeight
   const totalOtherStone = Number(pickValue(valuation, ['totalOtherStoneWeight'])) || totals.otherStoneWeight
+  const totalValueAddition = Number(pickValue(valuation, ['totalValueAddition'])) || totals.valueAddition
+  const totalImportValue = Number(pickValue(valuation, ['totalImportValue'])) || totals.importValue
+  const totalValue = Number(pickValue(valuation, ['totalValue'])) || totals.totalValue
 
   return (
     <>
-      {isJewellery ? (
+      {isReImport ? (
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              {['Item No','Item Type','Description','No of Pcs','Unit','Weight','Weight Unit','Rate Per','Rate Unit','Value Addition','Import Value ($)','Total Value ($)'].map((h) => (
+                <th key={h} style={styles.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['weight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit','unitWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePer','rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit','unitRate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['valueAddition']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['importValue']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['totalValue']))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : isJewellery ? (
         <table style={styles.table}>
           <thead>
             <tr>
@@ -157,7 +197,14 @@ const ValuationSection = ({ data }) => {
                 ['Total Combined Weight', totalWt.toFixed(2)],
               ]
             : []),
-          ['Total Amount (USD)', totalAmt.toFixed(2)],
+          ...(isReImport
+            ? [
+                ['Total Value Addition', totalValueAddition.toFixed(2)],
+                ['Total Import Value', totalImportValue.toFixed(2)],
+                ['Total Value', totalValue.toFixed(2)],
+              ]
+            : []),
+          ['Total Amount (USD)', (isReImport ? totalValue : totalAmt).toFixed(2)],
         ].map(([lbl, val]) => (
           <div key={lbl} style={styles.summaryBox}>
             <div style={styles.summaryLabel}>{lbl}</div>
@@ -171,8 +218,19 @@ const ValuationSection = ({ data }) => {
 
 const ExchangeSection = ({ data }) => {
   const ex = data?.exchangeRateSection || {}
+  const valuation = data?.valuationTable || data?.valuation || {}
+  const items = valuation?.valuationItems || valuation?.items || []
+  const hasValueAddition =
+    valuation?.totalValueAddition !== undefined ||
+    items.some((item) => item?.valueAddition !== undefined)
+  const totalValueAddition =
+    Number(pickValue(valuation, ['totalValueAddition'])) ||
+    items.reduce((sum, item) => sum + (Number(item?.valueAddition) || 0), 0)
   if (!Object.keys(ex).length) return null
   const rows = [
+    ...(hasValueAddition
+      ? [['Value Addition', totalValueAddition, ex.exchangeRate ? (Number(totalValueAddition || 0) * Number(ex.exchangeRate || 0)).toString() : '—']]
+      : []),
     ['FOB', ex.fob, ex.exchangeRate ? (Number(ex.fob||0)*Number(ex.exchangeRate||0)).toString() : '—'],
     ['Freight', ex.freight, ex.exchangeRate ? (Number(ex.freight||0)*Number(ex.exchangeRate||0)).toString() : '—'],
     ['Insurance', ex.insurance, ex.exchangeRate ? (Number(ex.insurance||0)*Number(ex.exchangeRate||0)).toString() : '—'],
@@ -600,6 +658,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     data?.transportDetails?.carrierDetails ||
     {}
   const hasCarrierData = Object.values(carrierData).some((v) => v !== null && v !== undefined && v !== '')
+  const isTemplate3 = String(meta.templateKey || '').toUpperCase() === 'TEMPLATE_3'
 
   return (
     <div>
@@ -673,6 +732,13 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
             <div style={styles.toFromStack}>
               {narrowSections.map((s) => renderNarrowSec(s))}
             </div>
+
+            {isTemplate3 && (
+              <div style={styles.section}>
+                <div style={styles.sectionHead}>NI Details</div>
+                <div style={styles.sectionBody}>{renderSectionData('niDetails', data)}</div>
+              </div>
+            )}
 
             {/* Delivery Type: full-width horizontal bar below FROM */}
             {deliverySections.length > 0 && (

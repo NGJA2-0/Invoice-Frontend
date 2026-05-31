@@ -39,6 +39,10 @@ const buildDefaultInvoiceData = () => ({
     countryOfOrigin: '',
     remarks: '',
   },
+  niDetails: {
+    niNumber: '',
+    niDate: '',
+  },
   deliveryInfo: {
     deliveryType: '',
   },
@@ -113,6 +117,21 @@ const CreateInvoice = () => {
   })
 
   const { register, control, watch, setValue, getValues, reset } = form
+
+  const isTemplate3 = String(templateConfig?.templateKey || '').toUpperCase() === 'TEMPLATE_3'
+
+  const ensureTemplate3NiDetails = () => {
+    if (!isTemplate3) return true
+    const niNumber = getValues('invoiceData.niDetails.niNumber')
+    const niDate = getValues('invoiceData.niDetails.niDate')
+    if (niNumber && niDate) return true
+    pushToast({
+      title: 'NI details required',
+      message: 'Please provide NI Number and NI Date before continuing.',
+      tone: 'danger',
+    })
+    return false
+  }
 
   useEffect(() => {
     if (userStatus !== 'approved') {
@@ -245,7 +264,7 @@ const CreateInvoice = () => {
   })
 
   const handlePreview = async () => {
-    if (!formReady) return
+    if (!formReady || !ensureTemplate3NiDetails()) return
     try {
       const data = await invoiceService.preview(buildPayload('draft'))
       setPreview(data)
@@ -264,6 +283,7 @@ const CreateInvoice = () => {
   }
 
   const handleSave = async (status) => {
+    if (!ensureTemplate3NiDetails()) return
     if (!user?.id) {
       pushToast({
         title: 'Missing user profile',
@@ -293,6 +313,9 @@ const CreateInvoice = () => {
   }
 
   const ensurePreviewData = async () => {
+    if (!ensureTemplate3NiDetails()) {
+      throw new Error('Missing required NI details.')
+    }
     if (preview) return preview
     const data = await invoiceService.preview(buildPayload('draft'))
     setPreview(data)
