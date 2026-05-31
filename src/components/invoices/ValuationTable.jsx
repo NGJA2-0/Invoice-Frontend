@@ -50,10 +50,11 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       ]
     }
 
-    if (/unitType|pcs|pieces/i.test(column.key)) {
+    if (/unitType|pcs|pieces|numberOfUnit/i.test(column.key)) {
       return [
         { label: 'Pcs', value: 'Pcs' },
         { label: 'Lot', value: 'Lot' },
+        { label: 'Prs', value: 'Prs' },
       ]
     }
 
@@ -63,7 +64,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const addItem = () => {
     const defaultItem = {}
     tableConfig.columns.forEach((col) => {
-      if (col.dataType === 'number') {
+      if (col.dataType === 'number' || col.dataType === 'computed' || col.readOnly) {
         defaultItem[col.key] = 0
       } else if (col.dataType === 'dropdown' && col.options) {
         defaultItem[col.key] = col.options[0]?.value || ''
@@ -81,21 +82,87 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const amountKey = findColumnKey(/amount/i) || 'amount'
   const weightKey = findColumnKey(/weight/i, /unit/i) || 'weight'
   const rateKey = findColumnKey(/rate/i, /unit/i) || 'ratePer'
-  const piecesKey = findColumnKey(/pcs|pieces|quantity|qty/i) || 'noOfPcs'
+  const piecesKey = findColumnKey(/pcs|pieces|quantity|qty|numberOfItems|noOf/i) || 'noOfPcs'
   const hasAmountColumn = tableConfig.columns.some((col) => col.key === amountKey)
 
+  const computeFormulaValue = (formula, item) => {
+    if (!formula) return 0
+    const sanitized = formula.replace(/\s+/g, '')
+    const getValue = (key) => Number(item?.[key]) || 0
+
+    if (sanitized.includes('+') && !sanitized.includes('*') && !sanitized.includes('-') && !sanitized.includes('/')) {
+      return sanitized
+        .split('+')
+        .filter(Boolean)
+        .reduce((sum, key) => sum + getValue(key), 0)
+    }
+
+    if (sanitized.includes('*') && !sanitized.includes('+') && !sanitized.includes('-') && !sanitized.includes('/')) {
+      return sanitized
+        .split('*')
+        .filter(Boolean)
+        .reduce((product, key) => product * getValue(key), 1)
+    }
+
+    return 0
+  }
+
+  useEffect(() => {
+    const computedColumns = tableConfig.columns.filter(
+      (col) => col.formula || col.dataType === 'computed',
+    )
+
+    if (!computedColumns.length || !items.length) return
+
+    items.forEach((item, index) => {
+      computedColumns.forEach((col) => {
+        const value = computeFormulaValue(col.formula, item)
+        const rounded = Number(value.toFixed(2))
+        const current = Number(item?.[col.key]) || 0
+        if (!Number.isFinite(rounded) || rounded === current) return
+        setValue(`${itemsPath}.${index}.${col.key}`, rounded, {
+          shouldValidate: false,
+          shouldDirty: true,
+        })
+      })
+    })
+  }, [items, itemsPath, setValue, tableConfig.columns])
+
   const totals = useMemo(() => {
-    const completedItems = items.filter((item) => item?.isDone || (Number(item?.[amountKey]) || 0) > 0)
-    const totalPieces = completedItems.reduce((sum, item) => sum + (Number(item?.[piecesKey]) || 0), 0)
-    const totalWeight = completedItems.reduce((sum, item) => sum + (Number(item?.[weightKey]) || 0), 0)
-    const totalAmount = completedItems.reduce((sum, item) => sum + (Number(item?.[amountKey]) || 0), 0)
+    const totalsMap = {}
+
+    if (Array.isArray(tableConfig.totals)) {
+      tableConfig.totals.forEach((total) => {
+        if (!total?.formula?.startsWith('sum:')) return
+        const fieldKey = total.formula.split(':')[1]
+        totalsMap[total.key] = items.reduce(
+          (sum, item) => sum + (Number(item?.[fieldKey]) || 0),
+          0,
+        )
+      })
+    }
+
+    const completedItems = items.filter(
+      (item) => item?.isDone || (Number(item?.[amountKey]) || 0) > 0,
+    )
+    const baseItems = tableConfig.totals?.length ? items : completedItems
+    const totalPieces =
+      totalsMap.totalPieces ??
+      baseItems.reduce((sum, item) => sum + (Number(item?.[piecesKey]) || 0), 0)
+    const totalWeight =
+      totalsMap.totalCombinedWeight ??
+      baseItems.reduce((sum, item) => sum + (Number(item?.[weightKey]) || 0), 0)
+    const totalAmount =
+      totalsMap.totalAmount ??
+      baseItems.reduce((sum, item) => sum + (Number(item?.[amountKey]) || 0), 0)
 
     return {
       totalPieces,
       totalWeight,
       totalAmount,
+      totalsMap,
     }
-  }, [items, amountKey, weightKey, piecesKey])
+  }, [items, amountKey, weightKey, piecesKey, tableConfig.totals])
 
   const exchangeRate = Number(watch(`${exchangeRatePath}.exchangeRate`)) || 0
   const freight = Number(watch(`${exchangeRatePath}.freight`)) || 0
@@ -131,7 +198,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     const fieldName = `${itemsPath}.${index}.${column.key}`
     const baseClassName = 'border-0 rounded-none bg-transparent shadow-none px-2 py-1 text-xs text-ink-900 placeholder:text-ink-400'
 
-    if (column.readOnly) {
+    if (column.readOnly || column.dataType === 'computed') {
       const displayValue = Number(item?.[column.key]) || 0
       return (
         <Input
@@ -251,10 +318,40 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
           <tfoot className="bg-cloud-50 text-sm text-ink-700">
             <tr>
               {tableConfig.columns.map((column) => {
-                if (column.key === piecesKey) {
+                const totalsMap = totals.totalsMap || {}
+
+                if (column.key === piecesKey || column.key === 'numberOfItems') {
                   return (
                     <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
                       {totals.totalPieces.toFixed(2)}
+                    </td>
+                  )
+                }
+                if (column.key === 'metalWeight') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {(totalsMap.totalMetalWeight ?? 0).toFixed(2)}
+                    </td>
+                  )
+                }
+                if (column.key === 'mainStoneWeight') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {(totalsMap.totalMainStoneWeight ?? 0).toFixed(2)}
+                    </td>
+                  )
+                }
+                if (column.key === 'otherStoneWeight') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {(totalsMap.totalOtherStoneWeight ?? 0).toFixed(2)}
+                    </td>
+                  )
+                }
+                if (column.key === 'totalWeight') {
+                  return (
+                    <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">
+                      {totals.totalWeight.toFixed(2)}
                     </td>
                   )
                 }
@@ -298,6 +395,43 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
         <Input label="Total Weight" type="number" value={totals.totalWeight.toFixed(2)} readOnly />
         <Input label="Total Amount (USD)" type="number" value={totals.totalAmount.toFixed(2)} readOnly />
       </div>
+
+      {tableConfig.totals?.length ? (
+        <div className="grid gap-3 md:grid-cols-3">
+          {'totalMetalWeight' in totals.totalsMap && (
+            <Input
+              label="Total Metal Weight"
+              type="number"
+              value={(totals.totalsMap.totalMetalWeight || 0).toFixed(2)}
+              readOnly
+            />
+          )}
+          {'totalMainStoneWeight' in totals.totalsMap && (
+            <Input
+              label="Total Main Stone Weight"
+              type="number"
+              value={(totals.totalsMap.totalMainStoneWeight || 0).toFixed(2)}
+              readOnly
+            />
+          )}
+          {'totalOtherStoneWeight' in totals.totalsMap && (
+            <Input
+              label="Total Other Stone Weight"
+              type="number"
+              value={(totals.totalsMap.totalOtherStoneWeight || 0).toFixed(2)}
+              readOnly
+            />
+          )}
+          {'totalCombinedWeight' in totals.totalsMap && (
+            <Input
+              label="Total Combined Weight"
+              type="number"
+              value={(totals.totalsMap.totalCombinedWeight || 0).toFixed(2)}
+              readOnly
+            />
+          )}
+        </div>
+      ) : null}
 
       {sectionKey === 'valuationTable' && (
         <div className="mt-2 rounded-2xl border border-cloud-200 bg-white">

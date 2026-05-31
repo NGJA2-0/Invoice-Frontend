@@ -62,50 +62,108 @@ const ValuationSection = ({ data }) => {
   const items = valuation?.valuationItems || valuation?.items || []
   if (!items.length) return null
 
+  const isJewellery = items.some(
+    (item) =>
+      item?.metalWeight !== undefined ||
+      item?.mainStoneWeight !== undefined ||
+      item?.otherStoneWeight !== undefined,
+  )
+
   const totals = items.reduce(
     (acc, item) => {
-      acc.pieces += Number(pickValue(item, ['numberOfPieces','noOfPcs','noOfPieces','quantity','qty','pcs'])) || 0
-      acc.weight += Number(pickValue(item, ['weight'])) || 0
+      acc.pieces += Number(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','noOfPieces','quantity','qty','pcs'])) || 0
+      acc.weight += Number(pickValue(item, ['weight','totalWeight'])) || 0
       acc.amount += Number(pickValue(item, ['amount','totalUsd','total'])) || 0
+      acc.metalWeight += Number(pickValue(item, ['metalWeight'])) || 0
+      acc.mainStoneWeight += Number(pickValue(item, ['mainStoneWeight'])) || 0
+      acc.otherStoneWeight += Number(pickValue(item, ['otherStoneWeight'])) || 0
+      acc.combinedWeight += Number(pickValue(item, ['totalWeight'])) || 0
       return acc
     },
-    { pieces: 0, weight: 0, amount: 0 },
+    { pieces: 0, weight: 0, amount: 0, metalWeight: 0, mainStoneWeight: 0, otherStoneWeight: 0, combinedWeight: 0 },
   )
 
   const totalPcs = Number(pickValue(valuation, ['totalPieces','totalPcs'])) || totals.pieces
-  const totalWt  = Number(pickValue(valuation, ['totalWeight'])) || totals.weight
+  const totalWt = Number(pickValue(valuation, ['totalWeight','totalCombinedWeight'])) || totals.weight || totals.combinedWeight
   const totalAmt = Number(pickValue(valuation, ['totalAmount','totalAmountUsd','totalUsd'])) || totals.amount
+  const totalMetal = Number(pickValue(valuation, ['totalMetalWeight'])) || totals.metalWeight
+  const totalMainStone = Number(pickValue(valuation, ['totalMainStoneWeight'])) || totals.mainStoneWeight
+  const totalOtherStone = Number(pickValue(valuation, ['totalOtherStoneWeight'])) || totals.otherStoneWeight
 
   return (
     <>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            {['Item No','Item Type','Description','No of Pcs','Unit','Weight','Wt Unit','Rate Per','Rate Unit','Amt (USD)'].map((h) => (
-              <th key={h} style={styles.th}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item, i) => (
-            <tr key={i}>
-              <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit','unitType','unit','pcsUnit']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['weight']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit','unitWeight']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['ratePer','rate']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit','unitRate']))}</td>
-              <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
+      {isJewellery ? (
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              {['Item No','Item Type','Description','No of','Unit','Metal Weight','Metal Unit','Main Stone Weight','Main Stone Unit','Other Stone Weight','Other Stone Unit','Total Weight','Total Weight Unit','Rate Per Unit ($)','Amount ($)'].map((h) => (
+                <th key={h} style={styles.th}>{h}</th>
+              ))}
             </tr>
-          ))}
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['metalWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['metalUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeightUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit','ratePer','rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              {['Item No','Item Type','Description','No of Pcs','Unit','Weight','Wt Unit','Rate Per','Rate Unit','Amt (USD)'].map((h) => (
+                <th key={h} style={styles.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['weight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit','unitWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePer','rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit','unitRate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
+              </tr>
+            ))}
 
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      )}
       <div style={styles.summaryRow}>
-        {[['Total Pieces', totalPcs.toFixed(2)], ['Total Weight', totalWt.toFixed(2)], ['Total Amount (USD)', totalAmt.toFixed(2)]].map(([lbl, val]) => (
+        {[
+          ['Total Pieces', totalPcs.toFixed(2)],
+          isJewellery ? ['Total Metal Weight', totalMetal.toFixed(2)] : ['Total Weight', totalWt.toFixed(2)],
+          ...(isJewellery
+            ? [
+                ['Total Main Stone Weight', totalMainStone.toFixed(2)],
+                ['Total Other Stone Weight', totalOtherStone.toFixed(2)],
+                ['Total Combined Weight', totalWt.toFixed(2)],
+              ]
+            : []),
+          ['Total Amount (USD)', totalAmt.toFixed(2)],
+        ].map(([lbl, val]) => (
           <div key={lbl} style={styles.summaryBox}>
             <div style={styles.summaryLabel}>{lbl}</div>
             <div style={styles.summaryValue}>{val}</div>

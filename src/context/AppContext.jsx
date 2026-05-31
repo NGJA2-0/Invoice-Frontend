@@ -22,8 +22,15 @@ const readStoredUser = () => {
   }
 }
 
+const normalizeInvoiceItems = (items) => {
+  if (Array.isArray(items)) return items
+  if (Array.isArray(items?.data)) return items.data
+  if (Array.isArray(items?.invoices)) return items.invoices
+  return []
+}
+
 const mapInvoiceRows = (items = []) =>
-  items.map((invoice) => ({
+  normalizeInvoiceItems(items).map((invoice) => ({
     id: invoice.invoiceNumber,
     buyer:
       invoice.data?.buyerInformation?.buyerName ||
