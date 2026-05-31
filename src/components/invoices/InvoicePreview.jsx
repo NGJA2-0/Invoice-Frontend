@@ -96,7 +96,7 @@ const ValuationSection = ({ data }) => {
         <table style={styles.table}>
           <thead>
             <tr>
-              {['Item No','Item Type','Description','No of','Unit','Metal Weight','Metal Unit','Main Stone Weight','Main Stone Unit','Other Stone Weight','Other Stone Unit','Total Weight','Total Weight Unit','Rate Per Unit ($)','Amount ($)'].map((h) => (
+              {['Item No','Item Type','Description','No of (Unit)','Metal Weight','Main Stone Weight','Other Stone Weight','Total Weight','Rate Per Unit ($)','Amount ($)'].map((h) => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
             </tr>
@@ -107,16 +107,11 @@ const ValuationSection = ({ data }) => {
                 <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['metalWeight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['metalUnit']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneWeight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneUnit']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneWeight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneUnit']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeightUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))} {formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['metalWeight']))} {formatValue(pickValue(item, ['metalUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneWeight']))} {formatValue(pickValue(item, ['mainStoneUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneWeight']))} {formatValue(pickValue(item, ['otherStoneUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['totalWeight']))} {formatValue(pickValue(item, ['totalWeightUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit','ratePer','rate']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
               </tr>
