@@ -57,7 +57,7 @@ const SimpleTable = ({ rows }) => {
   )
 }
 
-const ValuationSection = ({ data }) => {
+const ValuationSection = ({ data, templateKey }) => {
   const valuation = data?.valuationTable || data?.valuation || {}
   const items = valuation?.valuationItems || valuation?.items || []
   if (!items.length) return null
@@ -69,7 +69,10 @@ const ValuationSection = ({ data }) => {
       item?.otherStoneWeight !== undefined,
   )
   const isReImportClassic = items.some((item) => item?.totalValue !== undefined)
+  const isTemplate2 = String(templateKey || '').toUpperCase() === 'TEMPLATE_2'
+
   const isReImportJewellery =
+    !isTemplate2 &&
     isJewellery &&
     items.some(
       (item) =>
@@ -293,8 +296,8 @@ const ExchangeSection = ({ data }) => {
   )
 }
 
-const renderSectionData = (sectionKey, data) => {
-  if (sectionKey === 'valuationTable' || sectionKey === 'valuation') return <ValuationSection data={data} />
+const renderSectionData = (sectionKey, data, templateKey) => {
+  if (sectionKey === 'valuationTable' || sectionKey === 'valuation') return <ValuationSection data={data} templateKey={templateKey} />
   if (sectionKey === 'exchangeRateSection' || sectionKey === 'exchangeRates') return <ExchangeSection data={data} />
 
   const sd = data?.[sectionKey]
@@ -661,7 +664,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     return (
       <div key={section.key} style={styles.section}>
         <div style={styles.sectionHead}>{sectionLabel}</div>
-        <div style={styles.sectionBody}>{renderSectionData(sectionKey, data)}</div>
+        <div style={styles.sectionBody}>{renderSectionData(sectionKey, data, meta.templateKey)}</div>
       </div>
     )
   }
@@ -671,7 +674,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     return (
       <div key={section.key} style={styles.sectionWide}>
         <div style={styles.sectionHead}>{sectionLabel}</div>
-        <div style={styles.sectionBody}>{renderSectionData(sectionKey, data)}</div>
+        <div style={styles.sectionBody}>{renderSectionData(sectionKey, data, meta.templateKey)}</div>
       </div>
     )
   }
