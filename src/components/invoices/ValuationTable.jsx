@@ -182,13 +182,49 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const handleRowDone = (index) => {
     if (!hasAmountColumn) return
     const item = items[index] || {}
-    const weight = Number(item?.[weightKey]) || 0
-    const rate = Number(item?.[rateKey]) || 0
-    const amount = weight * rate
+
+    // Compute all formula-based columns
+    const computedUpdates = {}
+    tableConfig.columns.forEach((col) => {
+      if (col.formula || col.dataType === 'computed') {
+        const value = computeFormulaValue(col.formula, item)
+        computedUpdates[col.key] = Number(value.toFixed(2))
+      }
+    })
+
+    // Check if amount column has a formula, else use weight * rate as fallback
+    const amountColHasFormula = tableConfig.columns.find(
+      (col) => col.key === amountKey && col.formula
+    )
+
+    let finalAmount
+    if (amountColHasFormula) {
+      finalAmount = computedUpdates[amountKey] ?? 0
+    } else {
+      // Check if valueAddition + importValue columns exist (Template 4 pattern)
+      const valueAdditionKey = tableConfig.columns.find((col) =>
+        /valueAddition/i.test(col.key)
+      )?.key
+      const importValueKey = tableConfig.columns.find((col) =>
+        /importValue/i.test(col.key)
+      )?.key
+
+      if (valueAdditionKey && importValueKey) {
+        const va = Number(item?.[valueAdditionKey]) || 0
+        const iv = Number(item?.[importValueKey]) || 0
+        finalAmount = Number((va + iv).toFixed(2))
+      } else {
+        const weight = Number(item?.[weightKey]) || 0
+        const rate = Number(item?.[rateKey]) || 0
+        finalAmount = Number((weight * rate).toFixed(2))
+      }
+    }
+
     update(index, {
       ...item,
+      ...computedUpdates,
       isDone: true,
-      [amountKey]: Number(amount.toFixed(2)),
+      [amountKey]: finalAmount,
     })
   }
 
