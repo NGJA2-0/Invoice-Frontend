@@ -21,15 +21,14 @@ const Login = () => {
   const [showSignUp, setShowSignUp] = useState(false)
   const [signupData, setSignupData] = useState({
     username: '',
-    fullName: '',
-    nic: '',
+    businessName: '',
+    businessAddress: '',
+    gemDealerFileNo: '',
+    nicOrBrc: '',
+    mobileNumbers: [''],
+    email: '',
     password: '',
     confirmPassword: '',
-    email: '',
-    phone: '',
-    address: '',
-    tin: '',
-    vat: '',
   })
   const [isSigningUp, setIsSigningUp] = useState(false)
   const [signupErrors, setSignupErrors] = useState({})
@@ -107,7 +106,9 @@ const Login = () => {
     } catch (error) {
       pushToast({
         title: 'Login Failed',
-        message: error.message || 'Unable to login. Please try again.',
+        message: error.message?.toLowerCase().includes('invalid credentials')
+          ? 'Your account is currently awaiting administrator approval.'
+          : error.message || 'Unable to login. Please try again.',
         tone: 'danger',
       })
     } finally {
@@ -130,44 +131,45 @@ const Login = () => {
       }))
     }
   }
+  const handleAddMobile = () => {
+    setSignupData(prev => ({ ...prev, mobileNumbers: [...prev.mobileNumbers, ''] }))
+  }
 
-  // Validate signup form
+  const handleMobileChange = (index, value) => {
+    const updated = [...signupData.mobileNumbers]
+    updated[index] = value
+    setSignupData(prev => ({ ...prev, mobileNumbers: updated }))
+    if (signupErrors.mobileNumbers) {
+      setSignupErrors(prev => ({ ...prev, mobileNumbers: '' }))
+    }
+  }
+
+  const handleRemoveMobile = (index) => {
+    if (signupData.mobileNumbers.length === 1) return
+    setSignupData(prev => ({
+      ...prev,
+      mobileNumbers: prev.mobileNumbers.filter((_, i) => i !== index)
+    }))
+  }
+
   const validateSignupForm = () => {
     const errors = {}
 
-    if (!signupData.username.trim()) {
-      errors.username = 'Username is required'
-    } else if (signupData.username.length < 3) {
-      errors.username = 'Username must be at least 3 characters'
-    }
+    if (!signupData.username.trim()) errors.username = 'Username is required'
+    else if (signupData.username.length < 3) errors.username = 'Username must be at least 3 characters'
 
-    if (!signupData.fullName.trim()) {
-      errors.fullName = 'Full name is required'
-    }
+    if (!signupData.businessName.trim()) errors.businessName = 'Business name is required'
+    if (!signupData.businessAddress.trim()) errors.businessAddress = 'Business address is required'
+    if (!signupData.gemDealerFileNo.trim()) errors.gemDealerFileNo = 'Gem dealer file number is required'
+    if (!signupData.nicOrBrc.trim()) errors.nicOrBrc = 'NIC/BRC number is required'
 
-    if (!signupData.nic.trim()) {
-      errors.nic = 'NIC is required'
-    }
+    const validMobiles = signupData.mobileNumbers.filter(m => m.trim())
+    if (validMobiles.length === 0) errors.mobileNumbers = 'At least one mobile number is required'
 
-    if (!signupData.password.trim()) {
-      errors.password = 'Password is required'
-    } else if (signupData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters'
-    }
+    if (!signupData.password.trim()) errors.password = 'Password is required'
+    else if (signupData.password.length < 6) errors.password = 'Password must be at least 6 characters'
 
-    if (signupData.password !== signupData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match'
-    }
-
-    if (!signupData.email.trim()) {
-      errors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupData.email)) {
-      errors.email = 'Invalid email format'
-    }
-
-    if (!signupData.phone.trim()) {
-      errors.phone = 'Phone is required'
-    }
+    if (signupData.password !== signupData.confirmPassword) errors.confirmPassword = 'Passwords do not match'
 
     return errors
   }
@@ -191,20 +193,14 @@ const Login = () => {
     try {
       await signUp({
         username: signupData.username,
-        fullName: signupData.fullName,
-        nic: signupData.nic,
-        password: signupData.password,
-        role: 'user',
+        businessName: signupData.businessName,
+        businessAddress: signupData.businessAddress,
+        gemDealerFileNo: signupData.gemDealerFileNo,
+        nicOrBrc: signupData.nicOrBrc,
+        mobileNumbers: signupData.mobileNumbers.filter(m => m.trim()),
         email: signupData.email,
-        phone: signupData.phone,
-        address: signupData.address,
-        tin: signupData.tin,
-        vat: signupData.vat,
-        contactInfo: {
-          email: signupData.email,
-          phone: signupData.phone,
-          address: signupData.address,
-        },
+        password: signupData.password,
+        confirmPassword: signupData.confirmPassword,
       })
 
       pushToast({
@@ -221,15 +217,14 @@ const Login = () => {
       setVerifiedUserInfo(null)
       setSignupData({
         username: '',
-        fullName: '',
-        nic: '',
+        businessName: '',
+        businessAddress: '',
+        gemDealerFileNo: '',
+        nicOrBrc: '',
+        mobileNumbers: [''],
+        email: '',
         password: '',
         confirmPassword: '',
-        email: '',
-        phone: '',
-        address: '',
-        tin: '',
-        vat: '',
       })
     } catch (error) {
       pushToast({
@@ -274,209 +269,88 @@ const Login = () => {
 
           <form onSubmit={handleSignup} className="mt-8 space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
               <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Username <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={signupData.username}
-                  onChange={handleSignupChange}
-                  placeholder="john_doe"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.username
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.username && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.username}</p>
-                )}
+                <label className="text-sm font-semibold text-ink-900">Username <span className="text-red-500">*</span></label>
+                <input type="text" name="username" value={signupData.username} onChange={handleSignupChange} placeholder="abc_gems"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.username ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.username && <p className="mt-1 text-xs text-red-500">{signupErrors.username}</p>}
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={signupData.fullName}
-                  onChange={handleSignupChange}
-                  placeholder="John Doe"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.fullName
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.fullName && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.fullName}</p>
-                )}
+                <label className="text-sm font-semibold text-ink-900">Business Name <span className="text-red-500">*</span></label>
+                <input type="text" name="businessName" value={signupData.businessName} onChange={handleSignupChange} placeholder="ABC Gems Pvt Ltd"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.businessName ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.businessName && <p className="mt-1 text-xs text-red-500">{signupErrors.businessName}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold text-ink-900">Business Address <span className="text-red-500">*</span></label>
+                <input type="text" name="businessAddress" value={signupData.businessAddress} onChange={handleSignupChange} placeholder="123 Main Street, Colombo"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.businessAddress ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.businessAddress && <p className="mt-1 text-xs text-red-500">{signupErrors.businessAddress}</p>}
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  NIC <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="nic"
-                  value={signupData.nic}
-                  onChange={handleSignupChange}
-                  placeholder="12345678977V"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.nic
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.nic && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.nic}</p>
-                )}
+                <label className="text-sm font-semibold text-ink-900">Gem Dealer File No. <span className="text-red-500">*</span></label>
+                <input type="text" name="gemDealerFileNo" value={signupData.gemDealerFileNo} onChange={handleSignupChange} placeholder="GDF123456"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.gemDealerFileNo ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.gemDealerFileNo && <p className="mt-1 text-xs text-red-500">{signupErrors.gemDealerFileNo}</p>}
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={signupData.email}
-                  onChange={handleSignupChange}
-                  placeholder="john@example.com"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.email
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.email && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.email}</p>
-                )}
+                <label className="text-sm font-semibold text-ink-900">NIC / BRC Number <span className="text-red-500">*</span></label>
+                <input type="text" name="nicOrBrc" value={signupData.nicOrBrc} onChange={handleSignupChange} placeholder="123456789V"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.nicOrBrc ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.nicOrBrc && <p className="mt-1 text-xs text-red-500">{signupErrors.nicOrBrc}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold text-ink-900">Mobile Numbers <span className="text-red-500">*</span></label>
+                {signupData.mobileNumbers.map((mobile, index) => (
+                  <div key={index} className="mt-2 flex gap-2">
+                    <input type="tel" value={mobile} onChange={(e) => handleMobileChange(index, e.target.value)} placeholder="0771234567"
+                      className={`flex-1 rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.mobileNumbers ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                    {signupData.mobileNumbers.length > 1 && (
+                      <button type="button" onClick={() => handleRemoveMobile(index)}
+                        className="rounded-lg border border-red-200 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors">
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {signupErrors.mobileNumbers && <p className="mt-1 text-xs text-red-500">{signupErrors.mobileNumbers}</p>}
+                <button type="button" onClick={handleAddMobile}
+                  className="mt-2 text-xs font-semibold text-azure-600 hover:text-azure-700 transition-colors">
+                  + Add Another Mobile Number
+                </button>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold text-ink-900">Email <span className="text-ink-400 font-normal">(Optional)</span></label>
+                <input type="email" name="email" value={signupData.email} onChange={handleSignupChange} placeholder="info@abcgems.com"
+                  className="mt-2 w-full rounded-lg border border-ink-200 px-4 py-2 text-sm outline-none transition-colors focus:border-azure-500" />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={signupData.phone}
-                  onChange={handleSignupChange}
-                  placeholder="0771234567"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.phone
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.phone && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.phone}</p>
-                )}
+                <label className="text-sm font-semibold text-ink-900">Password <span className="text-red-500">*</span></label>
+                <input type="password" name="password" value={signupData.password} onChange={handleSignupChange} placeholder="Create secure password"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.password ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.password && <p className="mt-1 text-xs text-red-500">{signupErrors.password}</p>}
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={signupData.address}
-                  onChange={handleSignupChange}
-                  placeholder="123 Main St"
-                  className="mt-2 w-full rounded-lg border border-ink-200 px-4 py-2 text-sm outline-none transition-colors focus:border-azure-500"
-                />
+                <label className="text-sm font-semibold text-ink-900">Confirm Password <span className="text-red-500">*</span></label>
+                <input type="password" name="confirmPassword" value={signupData.confirmPassword} onChange={handleSignupChange} placeholder="Confirm password"
+                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.confirmPassword ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                {signupErrors.confirmPassword && <p className="mt-1 text-xs text-red-500">{signupErrors.confirmPassword}</p>}
               </div>
 
-              <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  TIN
-                </label>
-                <input
-                  type="text"
-                  name="tin"
-                  value={signupData.tin}
-                  onChange={handleSignupChange}
-                  placeholder="TIN123"
-                  className="mt-2 w-full rounded-lg border border-ink-200 px-4 py-2 text-sm outline-none transition-colors focus:border-azure-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  VAT
-                </label>
-                <input
-                  type="text"
-                  name="vat"
-                  value={signupData.vat}
-                  onChange={handleSignupChange}
-                  placeholder="VAT123"
-                  className="mt-2 w-full rounded-lg border border-ink-200 px-4 py-2 text-sm outline-none transition-colors focus:border-azure-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Password <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={signupData.password}
-                  onChange={handleSignupChange}
-                  placeholder="Create secure password"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.password
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.password && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.password}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-ink-900">
-                  Confirm Password <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={signupData.confirmPassword}
-                  onChange={handleSignupChange}
-                  placeholder="Confirm password"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${
-                    signupErrors.confirmPassword
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-ink-200 focus:border-azure-500'
-                  }`}
-                />
-                {signupErrors.confirmPassword && (
-                  <p className="mt-1 text-xs text-red-500">{signupErrors.confirmPassword}</p>
-                )}
-              </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSigningUp}
-              className="w-full rounded-lg bg-azure-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-azure-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isSigningUp ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                'Create Account'
-              )}
+            <button type="submit" disabled={isSigningUp}
+              className="w-full rounded-lg bg-azure-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-azure-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              {isSigningUp ? (<><Loader2 className="w-4 h-4 animate-spin" />Creating Account...</>) : 'Create Account'}
             </button>
           </form>
         </div>
