@@ -87,7 +87,7 @@ export const AppProvider = ({ children }) => {
     setUsers(normalizedUsers)
 
     const userMap = new Map(normalizedUsers.map((item) => [item.id, item]))
-    const normalizedRegistrations = (pendingData || []).map((item) => {
+    const normalizedRegistrations = (Array.isArray(pendingData) ? pendingData : []).map((item) => {
       const profile = userMap.get(item.userId) || {}
       return {
         id: item.id,
@@ -110,6 +110,20 @@ export const AppProvider = ({ children }) => {
 
     setRegistrations(normalizedRegistrations)
   }, [])
+
+  const refreshPendingUsers = useCallback(async (page = 1, limit = 10) => {
+    const data = await api.get(`/admin/registrations/pending-users?page=${page}&limit=${limit}`)
+    return data
+  }, [])
+
+  const approvePendingUser = useCallback(async (userId, approvalNotes = '') => {
+    if (!user?.id) return
+    const data = await api.put(`/admin/registrations/${userId}/approve`, {
+      approvedBy: user.id,
+      approvalNotes,
+    })
+    return data
+  }, [user?.id])
 
   // Verify username
   const verifyUsername = async (username) => {
@@ -253,6 +267,8 @@ export const AppProvider = ({ children }) => {
       generateInvoiceNumber,
       pushToast,
       dismissToast,
+      refreshPendingUsers,
+      approvePendingUser,
     }),
     [
       role,

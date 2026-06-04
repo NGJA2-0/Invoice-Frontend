@@ -1,85 +1,121 @@
 import { useEffect, useState } from 'react'
-import RegistrationCard from '../../components/cards/RegistrationCard'
-import ConfirmModal from '../../components/modals/ConfirmModal'
+import { Loader2, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 
 const PendingRegistrations = () => {
-  const { registrations, updateRegistrationStatus, pushToast, refreshAdminData } = useApp()
-  const pending = registrations.filter((item) => item.status === 'pending')
-  const [selected, setSelected] = useState(null)
-  const [action, setAction] = useState(null)
+  const { refreshPendingUsers, approvePendingUser, pushToast, user } = useApp()
+
+  const [registrations, setRegistrations] = useState([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [approvingId, setApprovingId] = useState(null)
+  const LIMIT = 10
+
+  const loadRegistrations = async (p = 1) => {
+    setIsLoading(true)
+    try {
+      const res = await refreshPendingUsers(p, LIMIT)
+      setRegistrations(res?.registrations || [])
+      setTotalPages(res?.totalPages || 1)
+      setTotal(res?.total || 0)
+      setPage(p)
+    } catch (error) {
+      pushToast({ title: 'Error', message: 'Failed to load pending registrations.', tone: 'danger' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    refreshAdminData()
-  }, [refreshAdminData])
+    loadRegistrations(1)
+  }, [])
 
-  const openModal = (item, nextAction) => {
-    setSelected(item)
-    setAction(nextAction)
-  }
-
-  const closeModal = () => {
-    setSelected(null)
-    setAction(null)
-  }
-
-  const handleConfirm = () => {
-    if (!selected || !action) return
-    const nextStatus = action === 'Approved' ? 'approved' : 'rejected'
-    updateRegistrationStatus(selected.userId, nextStatus)
-    pushToast({
-      title: `Registration ${action.toLowerCase()}`,
-      message: `${selected.dealerName} is now ${action}.`,
-      tone: action === 'Approved' ? 'success' : 'danger',
-    })
-    closeModal()
+  const handleApprove = async (userId) => {
+    setApprovingId(userId)
+    try {
+      await approvePendingUser(userId, 'Documents verified')
+      pushToast({ title: 'Approved', message: 'User registration approved successfully.', tone: 'success' })
+      loadRegistrations(page)
+    } catch (error) {
+      pushToast({ title: 'Error', message: error.message || 'Failed to approve user.', tone: 'danger' })
+    } finally {
+      setApprovingId(null)
+    }
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="glass-card rounded-2xl border px-6 py-6">
-        <h3 className="text-xl font-semibold text-ink-900">
-          Pending Registrations
-        </h3>
-        <p className="mt-2 text-sm text-ink-600">
-          Review dealer documents and approve or reject submissions.
-        </p>
-      </div>
-      <div className="grid gap-6">
-        {pending.map((item) => (
-          <RegistrationCard
-            key={item.id}
-            data={item}
-            onView={() => setSelected(item)}
-            onApprove={() => openModal(item, 'Approved')}
-            onReject={() => openModal(item, 'Rejected')}
-          />
-        ))}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-ink-500">{total} pending registration{total !== 1 ? 's' : ''}</p>
       </div>
 
-      <ConfirmModal
-        open={!!action}
-        title={`Confirm ${action}`}
-        description={`Are you sure you want to mark ${selected?.dealerName} as ${action}?`}
-        onConfirm={handleConfirm}
-        onClose={closeModal}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin text-azure-500" />
+        </div>
+      ) : registrations.length === 0 ? (
+        <div className="rounded-xl border border-ink-100 bg-white p-12 text-center">
+          <p className="text-sm text-ink-500">No pending registrations.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {registrations.map((reg) => (
+            <div key={reg.id} className="glass-card rounded-xl border p-5 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-ink-900">{reg.businessName}</p>
+                  <p className="text-xs text-ink-500 mt-0.5">@{reg.username}</p>
+                </div>
+                <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-600">
+                  {reg.status}
+                </span>
+              </div>
 
-      {selected && !action ? (
-        <ConfirmModal
-          open={!!selected}
-          title="Submission Details"
-          description={`Gem Dealer: ${selected.documents.gemDealer}, Jewellery: ${
-            selected.documents.jewellery
-          }, Customs: ${selected.documents.customs}. TIN: ${
-            selected.tin
-          }, VAT: ${selected.vat}.`}
-          onConfirm={closeModal}
-          onClose={closeModal}
-          confirmLabel="Close"
-          showCancel={false}
-        />
-      ) : null}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div><span className="text-ink-400">Address: </span><span className="text-ink-700">{reg.businessAddress}</span></div>
+                <div><span className="text-ink-400">File No: </span><span className="text-ink-700">{reg.gemDealerFileNo}</span></div>
+                <div><span className="text-ink-400">NIC/BRC: </span><span className="text-ink-700">{reg.nicOrBrc}</span></div>
+                <div><span className="text-ink-400">Email: </span><span className="text-ink-700">{reg.email || '—'}</span></div>
+                <div>
+                  <span className="text-ink-400">Mobile: </span>
+                  <span className="text-ink-700">{reg.mobileNumbers?.join(', ')}</span>
+                </div>
+                <div><span className="text-ink-400">Registered: </span><span className="text-ink-700">{new Date(reg.registeredAt).toISOString().slice(0, 10)}</span></div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => handleApprove(reg.id)}
+                  disabled={approvingId === reg.id}
+                  className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {approvingId === reg.id ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
+                  ) : (
+                    <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
+                  )}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button onClick={() => loadRegistrations(page - 1)} disabled={page === 1}
+            className="rounded-lg border border-ink-200 p-2 text-ink-500 hover:bg-ink-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm text-ink-600">Page {page} of {totalPages}</span>
+          <button onClick={() => loadRegistrations(page + 1)} disabled={page === totalPages}
+            className="rounded-lg border border-ink-200 p-2 text-ink-500 hover:bg-ink-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
