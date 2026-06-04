@@ -111,6 +111,35 @@ export const AppProvider = ({ children }) => {
     setRegistrations(normalizedRegistrations)
   }, [])
 
+  // Verify username
+  const verifyUsername = async (username) => {
+    const data = await api.post('/auth/verify-username', { username })
+    return data
+  }
+
+  // User login
+  const userLogin = async (username, password) => {
+    const data = await api.post('/auth/user-login', { username, password })
+    setRole('user')
+    localStorage.setItem(ROLE_KEY, 'user')
+    storeUser(data)
+    setUserStatus(data.status || 'not_verified')
+    await refreshInvoices(data.id)
+    return data
+  }
+
+  // Admin login
+  const adminLogin = async (username, password) => {
+    const data = await api.post('/auth/admin-login', { username, password })
+    setRole('admin')
+    localStorage.setItem(ROLE_KEY, 'admin')
+    storeUser(data)
+    setUserStatus(data.status || 'not_verified')
+    await refreshAdminData()
+    return data
+  }
+
+  // Legacy login method (kept for backward compatibility)
   const login = async ({ nic, password }) => {
     const data = await api.post('/auth/login', { nic, password })
     const nextRole = data.role || role || 'user'
@@ -208,6 +237,9 @@ export const AppProvider = ({ children }) => {
       toasts,
       selectRole,
       login,
+      userLogin,
+      adminLogin,
+      verifyUsername,
       signUp,
       logout,
       setUserStatus,

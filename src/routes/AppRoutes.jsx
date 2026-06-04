@@ -3,7 +3,6 @@ import { Route, Routes, useLocation, Navigate } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
 import UserLayout from '../layouts/UserLayout'
 import Login from '../pages/auth/Login'
-import RoleSelect from '../pages/auth/RoleSelect'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
 import ApprovedDealers from '../pages/admin/ApprovedDealers'
@@ -24,7 +23,7 @@ const AppRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<RoleSelect />} />
+        <Route path="/" element={<Navigate to="/auth/login" replace />} />
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
 
