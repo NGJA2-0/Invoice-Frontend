@@ -252,7 +252,11 @@ const Login = () => {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '2rem 1rem',
-    background: '#f0f2f5',
+    backgroundImage: 'url(/src/assets/signup.jpg)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    position: 'relative',
   }
 
   const inputStyle = (hasError) => ({
@@ -304,68 +308,145 @@ const Login = () => {
 
   // ─── Signup View ─────────────────────────────────────────────────────────────
 
+  // Branding component (shared by both login and signup)
+  const BrandingPanel = () => (
+    <div className="login-left">
+      {/* Gem icon */}
+      <div style={{
+        width: '90px', height: '90px', marginBottom: '1.5rem',
+        borderRadius: '24px',
+        background: 'linear-gradient(135deg, #003A6B 0%, #005fa3 100%)',
+        border: '2px solid rgba(255,222,26,0.4)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,222,26,0.15)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <polygon points="24,4 44,16 44,32 24,44 4,32 4,16" fill="rgba(255,222,26,0.15)" stroke="#ffde1a" strokeWidth="1.5"/>
+          <polygon points="24,10 38,19 38,29 24,38 10,29 10,19" fill="rgba(255,222,26,0.25)" stroke="#ffde1a" strokeWidth="1"/>
+          <polygon points="24,16 32,21 32,27 24,32 16,27 16,21" fill="#ffde1a" opacity="0.9"/>
+        </svg>
+      </div>
+
+      {/* NGJA */}
+      <h1 style={{
+        margin: '0 0 6px',
+        fontSize: '3.5rem',
+        fontWeight: '900',
+        letterSpacing: '0.18em',
+        color: '#ffffff',
+        textShadow: '0 2px 20px rgba(0,0,0,0.5)',
+        lineHeight: 1,
+      }}>
+        NGJA
+      </h1>
+
+      {/* Sinhala name */}
+      <p style={{
+        margin: '0 0 1.25rem',
+        fontSize: '1.35rem',
+        fontWeight: '700',
+        color: '#ffde1a',
+        letterSpacing: '0.06em',
+        textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+      }}>
+        රත්නදීප
+      </p>
+
+      {/* Divider line */}
+      <div style={{
+        width: '48px', height: '2px',
+        background: 'linear-gradient(90deg, transparent, #ffde1a, transparent)',
+        marginBottom: '1.1rem',
+      }} />
+
+      <p style={{
+        margin: 0,
+        fontSize: '0.78rem',
+        fontWeight: '600',
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.5)',
+        textAlign: 'center',
+      }}>
+        National Gem & Jewellery Authority
+      </p>
+    </div>
+  )
+
   if (showSignUp) {
     return (
       <div style={pageStyle}>
         <div style={{
-          width: '100%',
-          maxWidth: '680px',
-          background: '#ffffff',
-          borderRadius: '20px',
-          border: '1px solid #e2e8f0',
-          padding: '2.5rem',
-          boxShadow: '0 4px 24px rgba(0,58,107,0.07)',
-        }}>
+          position: 'fixed', inset: 0,
+          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+          background: 'rgba(0, 20, 50, 0.50)', zIndex: 0,
+        }} />
 
-          {/* Header */}
-          <div style={{ marginBottom: '2rem' }}>
-            <button
-              onClick={() => { setShowSignUp(false); setSignupErrors({}) }}
-              type="button"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#003A6B',
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                letterSpacing: '0.04em',
-                padding: '0',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              ← Back to login
-            </button>
+        <div className="login-layout" style={{ alignItems: 'flex-start', paddingTop: '2rem' }}>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                background: '#003A6B',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <div style={{ width: '20px', height: '3px', background: '#ffde1a', borderRadius: '2px' }} />
+          {/* ── LEFT: Branding ── */}
+          <BrandingPanel />
+
+          {/* ── RIGHT: Signup card ── */}
+          <div className="login-right">
+            <div style={{
+              width: '100%', maxWidth: '680px',
+              background: 'rgba(255,255,255,0.97)',
+              borderRadius: '20px',
+              border: '1px solid rgba(255,255,255,0.3)',
+              padding: '2.5rem',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+            }}>
+
+              {/* Header */}
+              <div style={{ marginBottom: '2rem' }}>
+                <button
+                  onClick={() => { setShowSignUp(false); setSignupErrors({}) }}
+                  type="button"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#003A6B',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    letterSpacing: '0.04em',
+                    padding: '0',
+                    marginBottom: '1.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  ← Back to login
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '10px',
+                    background: '#003A6B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <div style={{ width: '20px', height: '3px', background: '#ffde1a', borderRadius: '2px' }} />
+                  </div>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#003A6B', lineHeight: 1.2 }}>
+                      Create Account
+                    </h1>
+                    <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                      Register for NGJA export invoice access
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#003A6B', lineHeight: 1.2 }}>
-                  Create Account
-                </h1>
-                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#64748b' }}>
-                  Register for NGJA export invoice access
-                </p>
-              </div>
-            </div>
-          </div>
 
-          {/* Divider */}
-          <div style={{ height: '1px', background: '#eef2f7', marginBottom: '1.75rem' }} />
+              {/* Divider */}
+              <div style={{ height: '1px', background: '#eef2f7', marginBottom: '1.75rem' }} />
 
           <form onSubmit={handleSignup}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -523,11 +604,23 @@ const Login = () => {
                 ? (<><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />Creating Account...</>)
                 : 'Create Account →'
               }
-            </button>
-          </form>
+              </button>
+            </form>
+          </div>
         </div>
+      </div>
 
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <style>{`
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          .login-layout { display: flex; align-items: center; width: 100%; max-width: 1100px; gap: 0; position: relative; z-index: 1; }
+          .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+          .login-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+          @media (max-width: 768px) {
+            .login-layout { flex-direction: column; }
+            .login-left { padding: 2rem 1rem 0.5rem; }
+            .login-right { width: 100%; }
+          }
+        `}</style>
       </div>
     )
   }
@@ -537,16 +630,28 @@ const Login = () => {
   return (
     <div style={pageStyle}>
       <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        background: '#ffffff',
-        borderRadius: '20px',
-        border: '1px solid #e2e8f0',
-        overflow: 'hidden',
-        boxShadow: '0 4px 24px rgba(0,58,107,0.07)',
-      }}>
+        position: 'fixed', inset: 0,
+        backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        background: 'rgba(0, 20, 50, 0.50)', zIndex: 0,
+      }} />
 
-        {/* Top accent bar */}
+      <div className="login-layout">
+
+        {/* ── LEFT: Branding ── */}
+        <BrandingPanel />
+
+        {/* ── RIGHT: Login card ── */}
+        <div className="login-right">
+          <div style={{
+            width: '100%', maxWidth: '420px',
+            background: 'rgba(255,255,255,0.97)',
+            borderRadius: '20px',
+            border: '1px solid rgba(255,255,255,0.2)',
+            overflow: 'hidden',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+          }}>
+
+            {/* Top accent bar */}
         <div style={{
           background: '#003A6B',
           padding: '1.75rem 2rem',
@@ -736,10 +841,22 @@ const Login = () => {
 
             </form>
           )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .login-layout { display: flex; align-items: center; width: 100%; max-width: 1100px; gap: 0; position: relative; z-index: 1; }
+        .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+        .login-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        @media (max-width: 768px) {
+          .login-layout { flex-direction: column; }
+          .login-left { padding: 2rem 1rem 0.5rem; }
+          .login-right { width: 100%; }
+        }
+      `}</style>
     </div>
   )
 }
