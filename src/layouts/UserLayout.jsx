@@ -60,11 +60,28 @@ const UserLayout = () => {
       <style>{`
         /* ── Reset & base ── */
         .ul-root {
-          display: grid;
-          min-height: 100vh;
-          grid-template-columns: 280px 1fr;
-          background: #f3f4f6;
+        display: grid;
+        min-height: 100vh;
+        grid-template-columns: 280px 1fr;
+        background-color: #000;
+      }
+        .ul-root::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background-image: url('/src/assets/signup.jpg');
+          background-size: cover;
+          background-position: center;
+          filter: blur(8px);
+          transform: scale(1.05);
+          z-index: 0;
         }
+
+        .ul-root > * {
+          position: relative;
+          z-index: 1;
+        }
+
         @media (max-width: 768px) {
           .ul-root {
             grid-template-columns: 1fr;
@@ -92,16 +109,18 @@ const UserLayout = () => {
 
         /* ── Top nav card ── */
         .ul-topnav {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
-          background: #ffffff;
-          border: 1px solid #e9eaec;
-          border-radius: 999px;
-          padding: 0.65rem 1rem 0.65rem 1.5rem;
-          margin-bottom: 1.75rem;
-        }
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 999px;
+        padding: 0.65rem 1rem 0.65rem 1.5rem;
+        margin-bottom: 1.75rem;
+      }
 
         /* Left: system label + page title */
         .ul-topnav-left {
@@ -115,13 +134,13 @@ const UserLayout = () => {
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: #a0a0a0;
+          color: rgba(255, 255, 255, 0.7);
           white-space: nowrap;
         }
         .ul-topnav-title {
           font-size: 1rem;
           font-weight: 600;
-          color: #111;
+          color: #ffffff;
           letter-spacing: -0.02em;
           white-space: nowrap;
           overflow: hidden;
@@ -160,19 +179,19 @@ const UserLayout = () => {
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          border: 1px solid #e9eaec;
-          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.15);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #666;
+          color: #fff;
           transition: background 0.15s, border-color 0.15s;
           flex-shrink: 0;
         }
         .ul-icon-btn:hover {
-          background: #f4f4f5;
-          border-color: #d4d4d8;
+          background: rgba(255, 255, 255, 0.25);
+          border-color: rgba(255, 255, 255, 0.5);
         }
         .ul-icon-btn svg {
           width: 16px;
@@ -187,21 +206,21 @@ const UserLayout = () => {
           gap: 8px;
           padding: 3px 12px 3px 3px;
           border-radius: 999px;
-          border: 1px solid #e9eaec;
-          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.15);
           cursor: pointer;
           transition: background 0.15s;
           flex-shrink: 0;
         }
         .ul-avatar-pill:hover {
-          background: #f4f4f5;
+          background: rgba(255, 255, 255, 0.25);
         }
         .ul-avatar {
           width: 30px;
           height: 30px;
           border-radius: 50%;
-          background: #e8edf7;
-          color: #3b5bb5;
+          background: rgba(255, 255, 255, 0.25);
+          color: #fff;
           font-size: 12px;
           font-weight: 600;
           display: flex;
@@ -213,7 +232,7 @@ const UserLayout = () => {
         .ul-avatar-label {
           font-size: 13px;
           font-weight: 500;
-          color: #333;
+          color: #fff;
           white-space: nowrap;
         }
 
@@ -223,12 +242,12 @@ const UserLayout = () => {
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          border: 1px solid #e9eaec;
-          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.15);
           cursor: pointer;
           align-items: center;
           justify-content: center;
-          color: #666;
+          color: #fff;
           flex-shrink: 0;
         }
         .ul-hamburger svg {

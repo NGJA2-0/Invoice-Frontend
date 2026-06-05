@@ -14,7 +14,7 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-6 border-r border-cloud-200 bg-white/80 px-6 py-8 transition-transform duration-300 md:relative md:inset-auto md:w-auto md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-6 border-r border-white/20 bg-white/10 backdrop-blur-xl px-6 py-8 transition-transform duration-300 md:relative md:inset-auto md:w-auto md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -28,10 +28,10 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
         </button>
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-azure-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
             {subtitle}
           </p>
-          <h1 className="mt-2 font-display text-2xl text-ink-900">{title}</h1>
+          <h1 className="mt-2 font-display text-2xl text-white">{title}</h1>
         </div>
         <nav className="flex flex-col gap-2">
           {items.map((item) => (
@@ -42,8 +42,8 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
                   isActive
-                    ? 'bg-azure-50 text-azure-700 shadow-soft'
-                    : 'text-ink-700 hover:bg-cloud-100'
+                    ? 'bg-white/25 text-white shadow-soft'
+                    : 'text-white/70 hover:bg-white/15 hover:text-white'
                 }`
               }
             >
