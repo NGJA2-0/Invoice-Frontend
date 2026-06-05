@@ -123,7 +123,6 @@ const Login = () => {
       ...prev,
       [name]: value,
     }))
-    // Clear error for this field when user starts typing
     if (signupErrors[name]) {
       setSignupErrors((prev) => ({
         ...prev,
@@ -131,6 +130,7 @@ const Login = () => {
       }))
     }
   }
+
   const handleAddMobile = () => {
     setSignupData(prev => ({ ...prev, mobileNumbers: [...prev.mobileNumbers, ''] }))
   }
@@ -209,7 +209,6 @@ const Login = () => {
         tone: 'success',
       })
 
-      // Reset form and go back to login
       setShowSignUp(false)
       setUsername('')
       setPassword('')
@@ -245,238 +244,502 @@ const Login = () => {
     setVerifiedUserInfo(null)
   }
 
+  // ─── Shared styles ───────────────────────────────────────────────────────────
+
+  const pageStyle = {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2rem 1rem',
+    background: '#f0f2f5',
+  }
+
+  const inputStyle = (hasError) => ({
+    width: '100%',
+    padding: '0.65rem 1rem',
+    fontSize: '0.875rem',
+    border: `1.5px solid ${hasError ? '#e53e3e' : '#d1d9e6'}`,
+    borderRadius: '10px',
+    outline: 'none',
+    background: '#f8f9fc',
+    color: '#1a202c',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    boxSizing: 'border-box',
+  })
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#003A6B',
+    marginBottom: '6px',
+  }
+
+  const errorStyle = {
+    fontSize: '0.72rem',
+    color: '#e53e3e',
+    marginTop: '4px',
+  }
+
+  const primaryBtnStyle = (disabled) => ({
+    width: '100%',
+    padding: '0.75rem',
+    borderRadius: '10px',
+    border: 'none',
+    background: disabled ? '#b0bec5' : '#003A6B',
+    color: disabled ? '#fff' : '#ffde1a',
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    letterSpacing: '0.03em',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    transition: 'background 0.2s, transform 0.1s',
+  })
+
+  // ─── Signup View ─────────────────────────────────────────────────────────────
+
   if (showSignUp) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="glass-card w-full max-w-2xl rounded-2xl border px-6 py-8 sm:px-8 sm:py-10">
-          <div className="mb-6 flex items-center gap-3">
+      <div style={pageStyle}>
+        <div style={{
+          width: '100%',
+          maxWidth: '680px',
+          background: '#ffffff',
+          borderRadius: '20px',
+          border: '1px solid #e2e8f0',
+          padding: '2.5rem',
+          boxShadow: '0 4px 24px rgba(0,58,107,0.07)',
+        }}>
+
+          {/* Header */}
+          <div style={{ marginBottom: '2rem' }}>
             <button
-              onClick={() => {
-                setShowSignUp(false)
-                setSignupErrors({})
-              }}
-              className="text-azure-600 hover:text-azure-700 transition-colors"
+              onClick={() => { setShowSignUp(false); setSignupErrors({}) }}
               type="button"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#003A6B',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                letterSpacing: '0.04em',
+                padding: '0',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
             >
-              ← Back
+              ← Back to login
             </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '10px',
+                background: '#003A6B',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <div style={{ width: '20px', height: '3px', background: '#ffde1a', borderRadius: '2px' }} />
+              </div>
+              <div>
+                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#003A6B', lineHeight: 1.2 }}>
+                  Create Account
+                </h1>
+                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                  Register for NGJA export invoice access
+                </p>
+              </div>
+            </div>
           </div>
 
-          <h1 className="font-display text-3xl text-ink-900">Create Account</h1>
-          <p className="mt-2 text-sm text-ink-600">
-            Register for NGJA export invoice access.
-          </p>
+          {/* Divider */}
+          <div style={{ height: '1px', background: '#eef2f7', marginBottom: '1.75rem' }} />
 
-          <form onSubmit={handleSignup} className="mt-8 space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <form onSubmit={handleSignup}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
 
+              {/* Username */}
               <div>
-                <label className="text-sm font-semibold text-ink-900">Username <span className="text-red-500">*</span></label>
-                <input type="text" name="username" value={signupData.username} onChange={handleSignupChange} placeholder="abc_gems"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.username ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.username && <p className="mt-1 text-xs text-red-500">{signupErrors.username}</p>}
+                <label style={labelStyle}>Username <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="text" name="username" value={signupData.username}
+                  onChange={handleSignupChange} placeholder="abc_gems"
+                  style={inputStyle(signupErrors.username)}
+                />
+                {signupErrors.username && <p style={errorStyle}>{signupErrors.username}</p>}
               </div>
 
+              {/* Business Name */}
               <div>
-                <label className="text-sm font-semibold text-ink-900">Business Name <span className="text-red-500">*</span></label>
-                <input type="text" name="businessName" value={signupData.businessName} onChange={handleSignupChange} placeholder="ABC Gems Pvt Ltd"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.businessName ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.businessName && <p className="mt-1 text-xs text-red-500">{signupErrors.businessName}</p>}
+                <label style={labelStyle}>Business Name <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="text" name="businessName" value={signupData.businessName}
+                  onChange={handleSignupChange} placeholder="ABC Gems Pvt Ltd"
+                  style={inputStyle(signupErrors.businessName)}
+                />
+                {signupErrors.businessName && <p style={errorStyle}>{signupErrors.businessName}</p>}
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="text-sm font-semibold text-ink-900">Business Address <span className="text-red-500">*</span></label>
-                <input type="text" name="businessAddress" value={signupData.businessAddress} onChange={handleSignupChange} placeholder="123 Main Street, Colombo"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.businessAddress ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.businessAddress && <p className="mt-1 text-xs text-red-500">{signupErrors.businessAddress}</p>}
+              {/* Business Address — full width */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Business Address <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="text" name="businessAddress" value={signupData.businessAddress}
+                  onChange={handleSignupChange} placeholder="123 Main Street, Colombo"
+                  style={inputStyle(signupErrors.businessAddress)}
+                />
+                {signupErrors.businessAddress && <p style={errorStyle}>{signupErrors.businessAddress}</p>}
               </div>
 
+              {/* Gem Dealer File No */}
               <div>
-                <label className="text-sm font-semibold text-ink-900">Gem Dealer File No. <span className="text-red-500">*</span></label>
-                <input type="text" name="gemDealerFileNo" value={signupData.gemDealerFileNo} onChange={handleSignupChange} placeholder="GDF123456"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.gemDealerFileNo ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.gemDealerFileNo && <p className="mt-1 text-xs text-red-500">{signupErrors.gemDealerFileNo}</p>}
+                <label style={labelStyle}>Gem Dealer File No. <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="text" name="gemDealerFileNo" value={signupData.gemDealerFileNo}
+                  onChange={handleSignupChange} placeholder="GDF123456"
+                  style={inputStyle(signupErrors.gemDealerFileNo)}
+                />
+                {signupErrors.gemDealerFileNo && <p style={errorStyle}>{signupErrors.gemDealerFileNo}</p>}
               </div>
 
+              {/* NIC / BRC */}
               <div>
-                <label className="text-sm font-semibold text-ink-900">NIC / BRC Number <span className="text-red-500">*</span></label>
-                <input type="text" name="nicOrBrc" value={signupData.nicOrBrc} onChange={handleSignupChange} placeholder="123456789V"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.nicOrBrc ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.nicOrBrc && <p className="mt-1 text-xs text-red-500">{signupErrors.nicOrBrc}</p>}
+                <label style={labelStyle}>NIC / BRC Number <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="text" name="nicOrBrc" value={signupData.nicOrBrc}
+                  onChange={handleSignupChange} placeholder="123456789V"
+                  style={inputStyle(signupErrors.nicOrBrc)}
+                />
+                {signupErrors.nicOrBrc && <p style={errorStyle}>{signupErrors.nicOrBrc}</p>}
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="text-sm font-semibold text-ink-900">Mobile Numbers <span className="text-red-500">*</span></label>
+              {/* Mobile Numbers — full width */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Mobile Numbers <span style={{ color: '#e53e3e' }}>*</span></label>
                 {signupData.mobileNumbers.map((mobile, index) => (
-                  <div key={index} className="mt-2 flex gap-2">
-                    <input type="tel" value={mobile} onChange={(e) => handleMobileChange(index, e.target.value)} placeholder="0771234567"
-                      className={`flex-1 rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.mobileNumbers ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
+                  <div key={index} style={{ display: 'flex', gap: '8px', marginTop: index === 0 ? '0' : '8px' }}>
+                    <input
+                      type="tel" value={mobile}
+                      onChange={(e) => handleMobileChange(index, e.target.value)}
+                      placeholder="0771234567"
+                      style={{ ...inputStyle(signupErrors.mobileNumbers), flex: 1 }}
+                    />
                     {signupData.mobileNumbers.length > 1 && (
-                      <button type="button" onClick={() => handleRemoveMobile(index)}
-                        className="rounded-lg border border-red-200 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors">
+                      <button
+                        type="button" onClick={() => handleRemoveMobile(index)}
+                        style={{
+                          padding: '0 14px',
+                          borderRadius: '10px',
+                          border: '1.5px solid #fecaca',
+                          background: '#fff5f5',
+                          color: '#e53e3e',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         Remove
                       </button>
                     )}
                   </div>
                 ))}
-                {signupErrors.mobileNumbers && <p className="mt-1 text-xs text-red-500">{signupErrors.mobileNumbers}</p>}
-                <button type="button" onClick={handleAddMobile}
-                  className="mt-2 text-xs font-semibold text-azure-600 hover:text-azure-700 transition-colors">
-                  + Add Another Mobile Number
+                {signupErrors.mobileNumbers && <p style={errorStyle}>{signupErrors.mobileNumbers}</p>}
+                <button
+                  type="button" onClick={handleAddMobile}
+                  style={{
+                    marginTop: '8px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#003A6B',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    padding: '0',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  + Add Another Number
                 </button>
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="text-sm font-semibold text-ink-900">Email <span className="text-ink-400 font-normal">(Optional)</span></label>
-                <input type="email" name="email" value={signupData.email} onChange={handleSignupChange} placeholder="info@abcgems.com"
-                  className="mt-2 w-full rounded-lg border border-ink-200 px-4 py-2 text-sm outline-none transition-colors focus:border-azure-500" />
+              {/* Email — full width */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>
+                  Email <span style={{ color: '#94a3b8', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <input
+                  type="email" name="email" value={signupData.email}
+                  onChange={handleSignupChange} placeholder="info@abcgems.com"
+                  style={inputStyle(false)}
+                />
               </div>
 
+              {/* Password */}
               <div>
-                <label className="text-sm font-semibold text-ink-900">Password <span className="text-red-500">*</span></label>
-                <input type="password" name="password" value={signupData.password} onChange={handleSignupChange} placeholder="Create secure password"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.password ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.password && <p className="mt-1 text-xs text-red-500">{signupErrors.password}</p>}
+                <label style={labelStyle}>Password <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="password" name="password" value={signupData.password}
+                  onChange={handleSignupChange} placeholder="Min. 6 characters"
+                  style={inputStyle(signupErrors.password)}
+                />
+                {signupErrors.password && <p style={errorStyle}>{signupErrors.password}</p>}
               </div>
 
+              {/* Confirm Password */}
               <div>
-                <label className="text-sm font-semibold text-ink-900">Confirm Password <span className="text-red-500">*</span></label>
-                <input type="password" name="confirmPassword" value={signupData.confirmPassword} onChange={handleSignupChange} placeholder="Confirm password"
-                  className={`mt-2 w-full rounded-lg border px-4 py-2 text-sm outline-none transition-colors ${signupErrors.confirmPassword ? 'border-red-500' : 'border-ink-200 focus:border-azure-500'}`} />
-                {signupErrors.confirmPassword && <p className="mt-1 text-xs text-red-500">{signupErrors.confirmPassword}</p>}
+                <label style={labelStyle}>Confirm Password <span style={{ color: '#e53e3e' }}>*</span></label>
+                <input
+                  type="password" name="confirmPassword" value={signupData.confirmPassword}
+                  onChange={handleSignupChange} placeholder="Repeat password"
+                  style={inputStyle(signupErrors.confirmPassword)}
+                />
+                {signupErrors.confirmPassword && <p style={errorStyle}>{signupErrors.confirmPassword}</p>}
               </div>
 
             </div>
 
-            <button type="submit" disabled={isSigningUp}
-              className="w-full rounded-lg bg-azure-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-azure-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-              {isSigningUp ? (<><Loader2 className="w-4 h-4 animate-spin" />Creating Account...</>) : 'Create Account'}
+            {/* Divider */}
+            <div style={{ height: '1px', background: '#eef2f7', margin: '1.75rem 0' }} />
+
+            <button
+              type="submit"
+              disabled={isSigningUp}
+              style={primaryBtnStyle(isSigningUp)}
+            >
+              {isSigningUp
+                ? (<><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />Creating Account...</>)
+                : 'Create Account →'
+              }
             </button>
           </form>
         </div>
+
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
+  // ─── Login View ───────────────────────────────────────────────────────────────
+
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-      <div className="glass-card w-full max-w-md rounded-2xl border px-6 py-8 sm:px-8 sm:py-10">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl text-ink-900">Welcome</h1>
-          <p className="mt-2 text-sm text-ink-600">
-            Sign in to your NGJA export invoice account.
+    <div style={pageStyle}>
+      <div style={{
+        width: '100%',
+        maxWidth: '420px',
+        background: '#ffffff',
+        borderRadius: '20px',
+        border: '1px solid #e2e8f0',
+        overflow: 'hidden',
+        boxShadow: '0 4px 24px rgba(0,58,107,0.07)',
+      }}>
+
+        {/* Top accent bar */}
+        <div style={{
+          background: '#003A6B',
+          padding: '1.75rem 2rem',
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginBottom: '1rem',
+          }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ffde1a' }} />
+            <span style={{ fontSize: '0.65rem', fontWeight: '700', letterSpacing: '0.12em', color: 'rgba(255,222,26,0.8)', textTransform: 'uppercase' }}>
+              NGJA Portal
+            </span>
+          </div>
+          <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', lineHeight: 1.2 }}>
+            Welcome back
+          </h1>
+          <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)' }}>
+            Sign in to your export invoice account
           </p>
         </div>
 
-        {/* Username Verification */}
-        {!isUsernameVerified ? (
-          <form onSubmit={handleVerifyUsername} className="space-y-5">
-            <div>
-              <label className="text-sm font-semibold text-ink-900">
-                Username
-              </label>
-              <div className="relative mt-2">
-                <User className="absolute left-4 top-3 h-5 w-5 text-ink-400" />
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="john_doe"
-                  className="w-full rounded-lg border border-ink-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-azure-500 focus:ring-1 focus:ring-azure-200"
-                />
+        {/* Form area */}
+        <div style={{ padding: '2rem' }}>
+
+          {/* ── Step 1: Username Verification ── */}
+          {!isUsernameVerified ? (
+            <form onSubmit={handleVerifyUsername} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+              <div>
+                <label style={labelStyle}>Username</label>
+                <div style={{ position: 'relative' }}>
+                  <User style={{
+                    position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+                    width: 16, height: 16, color: '#94a3b8',
+                  }} />
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="john_doe"
+                    style={{ ...inputStyle(false), paddingLeft: '38px' }}
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isVerifying || !username.trim()}
-              className="w-full rounded-lg bg-azure-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-azure-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isVerifying ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  Verify <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+              <button
+                type="submit"
+                disabled={isVerifying || !username.trim()}
+                style={primaryBtnStyle(isVerifying || !username.trim())}
+              >
+                {isVerifying
+                  ? (<><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />Verifying...</>)
+                  : (<>Continue <ArrowRight style={{ width: 15, height: 15 }} /></>)
+                }
+              </button>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-ink-200"></div>
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ flex: 1, height: '1px', background: '#eef2f7' }} />
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '600', letterSpacing: '0.06em' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', background: '#eef2f7' }} />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-2 text-ink-500">Or</span>
+
+              <button
+                type="button"
+                onClick={() => setShowSignUp(true)}
+                style={{
+                  width: '100%',
+                  padding: '0.72rem',
+                  borderRadius: '10px',
+                  border: '1.5px solid #003A6B',
+                  background: 'transparent',
+                  color: '#003A6B',
+                  fontSize: '0.875rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  letterSpacing: '0.02em',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f0f5fb'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                Create New Account
+              </button>
+
+            </form>
+
+          ) : (
+
+            /* ── Step 2: Password Entry ── */
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+              {/* Verified user badge */}
+              <div style={{
+                background: '#003A6B',
+                borderRadius: '12px',
+                padding: '1rem 1.1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: '#ffde1a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <User style={{ width: 18, height: 18, color: '#003A6B' }} />
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: '#ffffff', lineHeight: 1.3 }}>
+                    {verifiedUserInfo.fullName}
+                  </p>
+                  <span style={{
+                    display: 'inline-block',
+                    marginTop: '3px',
+                    padding: '1px 8px',
+                    borderRadius: '20px',
+                    background: 'rgba(255,222,26,0.15)',
+                    color: '#ffde1a',
+                    fontSize: '0.68rem',
+                    fontWeight: '700',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}>
+                    {verifiedUserInfo.isAdmin ? 'Administrator' : 'User'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={() => setShowSignUp(true)}
-              className="w-full rounded-lg border border-azure-600 py-2.5 text-sm font-semibold text-azure-600 transition-all hover:bg-azure-50"
-            >
-              Create New Account
-            </button>
-          </form>
-        ) : (
-          /* Password Entry */
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Verified User Info */}
-            <div className="rounded-lg bg-azure-50 border border-azure-200 p-4">
-              <p className="text-xs text-ink-600">Verified as</p>
-              <p className="text-sm font-semibold text-ink-900 mt-1">
-                {verifiedUserInfo.fullName}
-              </p>
-              <p className="text-xs text-ink-500 mt-0.5">
-                {verifiedUserInfo.isAdmin ? 'Administrator' : 'User'}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-semibold text-ink-900">
-                Password
-              </label>
-              <div className="relative mt-2">
-                <Lock className="absolute left-4 top-3 h-5 w-5 text-ink-400" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full rounded-lg border border-ink-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition-colors focus:border-azure-500 focus:ring-1 focus:ring-azure-200"
-                  autoFocus
-                />
+              {/* Password field */}
+              <div>
+                <label style={labelStyle}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock style={{
+                    position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+                    width: 16, height: 16, color: '#94a3b8',
+                  }} />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    autoFocus
+                    style={{ ...inputStyle(false), paddingLeft: '38px' }}
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoggingIn || !password.trim()}
-              className="w-full rounded-lg bg-azure-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-azure-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+              <button
+                type="submit"
+                disabled={isLoggingIn || !password.trim()}
+                style={primaryBtnStyle(isLoggingIn || !password.trim())}
+              >
+                {isLoggingIn
+                  ? (<><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />Signing in...</>)
+                  : 'Sign In →'
+                }
+              </button>
 
-            <button
-              type="button"
-              onClick={handleResetLogin}
-              className="w-full text-center text-xs font-semibold text-ink-500 hover:text-ink-700 transition-colors"
-            >
-              ← Use Different Username
-            </button>
-          </form>
-        )}
+              <button
+                type="button"
+                onClick={handleResetLogin}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  fontSize: '0.78rem',
+                  fontWeight: '600',
+                  letterSpacing: '0.02em',
+                  padding: '0',
+                  textAlign: 'center',
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = '#003A6B'}
+                onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+              >
+                ← Use Different Username
+              </button>
+
+            </form>
+          )}
+        </div>
       </div>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
