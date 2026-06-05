@@ -14,6 +14,9 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [showSignupPassword, setShowSignupPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isUsernameVerified, setIsUsernameVerified] = useState(false)
   const [verifiedUserInfo, setVerifiedUserInfo] = useState(null)
 
@@ -329,41 +332,30 @@ const Login = () => {
         </svg>
       </div>
 
-      {/* NGJA */}
-      <h1 style={{
-        margin: '0 0 6px',
-        fontSize: '3.5rem',
-        fontWeight: '900',
-        letterSpacing: '0.18em',
-        color: '#ffffff',
-        textShadow: '0 2px 20px rgba(0,0,0,0.5)',
-        lineHeight: 1,
-      }}>
-        NGJA
-      </h1>
-
       {/* Sinhala name */}
-      <p style={{
+      <p className="sinhala-title" style={{
         margin: '0 0 1.25rem',
-        fontSize: '1.35rem',
+        fontSize: '4.3rem',
         fontWeight: '700',
         color: '#ffde1a',
-        letterSpacing: '0.06em',
-        textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+        letterSpacing: '0.08em',
+        textShadow: '0 0 30px rgba(255,222,26,0.45), 0 4px 20px rgba(0,0,0,0.6)',
+        lineHeight: 1.2,
+        fontFamily: "'Noto Serif Sinhala', serif",
       }}>
         රත්නදීප
       </p>
 
       {/* Divider line */}
       <div style={{
-        width: '48px', height: '2px',
+        width: '128px', height: '2px',
         background: 'linear-gradient(90deg, transparent, #ffde1a, transparent)',
         marginBottom: '1.1rem',
       }} />
 
       <p style={{
         margin: 0,
-        fontSize: '0.78rem',
+        fontSize: '0.98rem',
         fontWeight: '600',
         letterSpacing: '0.14em',
         textTransform: 'uppercase',
@@ -392,7 +384,7 @@ const Login = () => {
           {/* ── RIGHT: Signup card ── */}
           <div className="login-right">
             <div style={{
-              width: '100%', maxWidth: '680px',
+              width: '100%', maxWidth: '860px',
               background: 'rgba(255,255,255,0.08)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
@@ -575,22 +567,62 @@ const Login = () => {
               {/* Password */}
               <div>
                 <label style={labelStyle}>Password <span style={{ color: '#e53e3e' }}>*</span></label>
-                <input
-                  type="password" name="password" value={signupData.password}
-                  onChange={handleSignupChange} placeholder="Min. 6 characters"
-                  style={inputStyle(signupErrors.password)}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showSignupPassword ? 'text' : 'password'}
+                    name="password" value={signupData.password}
+                    onChange={handleSignupChange} placeholder="Min. 6 characters"
+                    style={{ ...inputStyle(signupErrors.password), paddingRight: '42px' }}
+                  />
+                  <button type="button" onClick={() => setShowSignupPassword(p => !p)}
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    {showSignupPassword ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {signupErrors.password && <p style={errorStyle}>{signupErrors.password}</p>}
               </div>
 
               {/* Confirm Password */}
               <div>
                 <label style={labelStyle}>Confirm Password <span style={{ color: '#e53e3e' }}>*</span></label>
-                <input
-                  type="password" name="confirmPassword" value={signupData.confirmPassword}
-                  onChange={handleSignupChange} placeholder="Repeat password"
-                  style={inputStyle(signupErrors.confirmPassword)}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    name="confirmPassword" value={signupData.confirmPassword}
+                    onChange={handleSignupChange} placeholder="Repeat password"
+                    style={{ ...inputStyle(signupErrors.confirmPassword), paddingRight: '42px' }}
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(p => !p)}
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    {showConfirmPassword ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {signupErrors.confirmPassword && <p style={errorStyle}>{signupErrors.confirmPassword}</p>}
               </div>
 
@@ -620,6 +652,7 @@ const Login = () => {
           .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
           .login-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
           @media (max-width: 768px) {
+            .sinhala-title { font-size: 2rem !important; }
             .login-layout { flex-direction: column; }
             .login-left { padding: 2rem 1rem 0.5rem; }
             .login-right { width: 100%; }
@@ -805,16 +838,35 @@ const Login = () => {
                 <div style={{ position: 'relative' }}>
                   <Lock style={{
                     position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                    width: 16, height: 16, color: 'rgba(255,255,255,0.4)',
+                    width: 16, height: 16, color: '#94a3b8',
                   }} />
                   <input
-                    type="password"
+                    type={showLoginPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     autoFocus
-                    style={{ ...inputStyle(false), paddingLeft: '38px' }}
+                    style={{ ...inputStyle(false), paddingLeft: '38px', paddingRight: '42px' }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(p => !p)}
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    {showLoginPassword ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -863,6 +915,7 @@ const Login = () => {
         .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
         .login-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
         @media (max-width: 768px) {
+          .sinhala-title { font-size: 3.5rem !important; }
           .login-layout { flex-direction: column; }
           .login-left { padding: 2rem 1rem 0.5rem; }
           .login-right { width: 100%; }
