@@ -376,7 +376,7 @@ const Login = () => {
           background: 'rgba(0, 20, 50, 0.50)', zIndex: 0,
         }} />
 
-        <div className="login-layout" style={{ alignItems: 'flex-start', paddingTop: '2rem' }}>
+        <div className="login-layout signup-layout" style={{ alignItems: 'flex-start', paddingTop: '2rem' }}>
 
           {/* ── LEFT: Branding ── */}
           <BrandingPanel />
@@ -651,11 +651,14 @@ const Login = () => {
           .login-layout { display: flex; align-items: center; width: 100%; max-width: 1100px; gap: 0; position: relative; z-index: 1; }
           .login-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
           .login-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+          @media (min-width: 769px) {
+           .signup-layout { align-items: center !important; padding-top: 0 !important; margin-top: -25px; }
+          }
           @media (max-width: 768px) {
-            .sinhala-title { font-size: 2rem !important; }
             .login-layout { flex-direction: column; }
             .login-left { padding: 2rem 1rem 0.5rem; }
             .login-right { width: 100%; }
+            .sinhala-title { font-size: 2rem !important; }
           }
         `}</style>
       </div>
@@ -809,7 +812,7 @@ const Login = () => {
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <User style={{ width: 18, height: 18, color: 'rgba(255,255,255,0.75)' }} />
+                  <User style={{ width: 18, height: 18, color: '#003A6B' }} />
                 </div>
                 <div>
                   <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: '#ffffff', lineHeight: 1.3 }}>
