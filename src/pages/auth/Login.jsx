@@ -263,11 +263,13 @@ const Login = () => {
     width: '100%',
     padding: '0.65rem 1rem',
     fontSize: '0.875rem',
-    border: `1.5px solid ${hasError ? '#e53e3e' : '#d1d9e6'}`,
+    border: `1.5px solid ${hasError ? '#ff6b6b' : 'rgba(255,255,255,0.2)'}`,
     borderRadius: '10px',
     outline: 'none',
-    background: '#f8f9fc',
-    color: '#1a202c',
+    background: 'rgba(255,255,255,0.1)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    color: '#ffffff',
     transition: 'border-color 0.2s, box-shadow 0.2s',
     boxSizing: 'border-box',
   })
@@ -278,13 +280,13 @@ const Login = () => {
     fontWeight: '700',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#003A6B',
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: '6px',
   }
 
   const errorStyle = {
     fontSize: '0.72rem',
-    color: '#e53e3e',
+    color: '#ff8a8a',
     marginTop: '4px',
   }
 
@@ -391,11 +393,13 @@ const Login = () => {
           <div className="login-right">
             <div style={{
               width: '100%', maxWidth: '680px',
-              background: 'rgba(255,255,255,0.97)',
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               borderRadius: '20px',
-              border: '1px solid rgba(255,255,255,0.3)',
+              border: '1px solid rgba(255,255,255,0.18)',
               padding: '2.5rem',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
             }}>
 
               {/* Header */}
@@ -407,7 +411,7 @@ const Login = () => {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#003A6B',
+                    color: 'rgba(255,255,255,0.7)',
                     fontSize: '0.8rem',
                     fontWeight: '700',
                     letterSpacing: '0.04em',
@@ -435,10 +439,10 @@ const Login = () => {
                     <div style={{ width: '20px', height: '3px', background: '#ffde1a', borderRadius: '2px' }} />
                   </div>
                   <div>
-                    <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#003A6B', lineHeight: 1.2 }}>
+                    <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: 'rgba(255,255,255,0.75)', lineHeight: 1.2 }}>
                       Create Account
                     </h1>
-                    <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                    <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', }}>
                       Register for NGJA export invoice access
                     </p>
                   </div>
@@ -446,7 +450,7 @@ const Login = () => {
               </div>
 
               {/* Divider */}
-              <div style={{ height: '1px', background: '#eef2f7', marginBottom: '1.75rem' }} />
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', marginBottom: '1.75rem' }} />
 
           <form onSubmit={handleSignup}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -525,7 +529,7 @@ const Login = () => {
                           borderRadius: '10px',
                           border: '1.5px solid #fecaca',
                           background: '#fff5f5',
-                          color: '#e53e3e',
+                          color: '#ff8a8a',
                           fontSize: '0.75rem',
                           fontWeight: '600',
                           cursor: 'pointer',
@@ -545,7 +549,7 @@ const Login = () => {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#003A6B',
+                    color: 'rgba(255,255,255,0.7)',
                     fontSize: '0.78rem',
                     fontWeight: '700',
                     padding: '0',
@@ -559,7 +563,7 @@ const Login = () => {
               {/* Email — full width */}
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>
-                  Email <span style={{ color: '#94a3b8', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                  Email <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
                 </label>
                 <input
                   type="email" name="email" value={signupData.email}
@@ -593,7 +597,7 @@ const Login = () => {
             </div>
 
             {/* Divider */}
-            <div style={{ height: '1px', background: '#eef2f7', margin: '1.75rem 0' }} />
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '1.75rem 0' }} />
 
             <button
               type="submit"
@@ -644,16 +648,21 @@ const Login = () => {
         <div className="login-right">
           <div style={{
             width: '100%', maxWidth: '420px',
-            background: 'rgba(255,255,255,0.97)',
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '20px',
-            border: '1px solid rgba(255,255,255,0.2)',
+            border: '1px solid rgba(255,255,255,0.18)',
             overflow: 'hidden',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
           }}>
 
             {/* Top accent bar */}
         <div style={{
-          background: '#003A6B',
+          background: 'rgba(0,40,90,0.55)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
           padding: '1.75rem 2rem',
         }}>
           <div style={{
@@ -676,7 +685,9 @@ const Login = () => {
         </div>
 
         {/* Form area */}
-        <div style={{ padding: '2rem' }}>
+        <div style={{ padding: '2rem',
+                      background: 'transparent',
+                    }}>
 
           {/* ── Step 1: Username Verification ── */}
           {!isUsernameVerified ? (
@@ -687,7 +698,7 @@ const Login = () => {
                 <div style={{ position: 'relative' }}>
                   <User style={{
                     position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                    width: 16, height: 16, color: '#94a3b8',
+                    width: 16, height: 16, color: 'rgba(255,255,255,0.4)',
                   }} />
                   <input
                     type="text"
@@ -712,9 +723,9 @@ const Login = () => {
 
               {/* Divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ flex: 1, height: '1px', background: '#eef2f7' }} />
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '600', letterSpacing: '0.06em' }}>OR</span>
-                <div style={{ flex: 1, height: '1px', background: '#eef2f7' }} />
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)', }} />
+                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600', letterSpacing: '0.06em' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)', }} />
               </div>
 
               <button
@@ -724,17 +735,17 @@ const Login = () => {
                   width: '100%',
                   padding: '0.72rem',
                   borderRadius: '10px',
-                  border: '1.5px solid #003A6B',
-                  background: 'transparent',
-                  color: '#003A6B',
+                  border: '1.5px solid rgba(255,255,255,0.3)',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#ffffff',
                   fontSize: '0.875rem',
                   fontWeight: '700',
                   cursor: 'pointer',
                   letterSpacing: '0.02em',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f0f5fb'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
               >
                 Create New Account
               </button>
@@ -765,7 +776,7 @@ const Login = () => {
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <User style={{ width: 18, height: 18, color: '#003A6B' }} />
+                  <User style={{ width: 18, height: 18, color: 'rgba(255,255,255,0.75)' }} />
                 </div>
                 <div>
                   <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '700', color: '#ffffff', lineHeight: 1.3 }}>
@@ -794,7 +805,7 @@ const Login = () => {
                 <div style={{ position: 'relative' }}>
                   <Lock style={{
                     position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                    width: 16, height: 16, color: '#94a3b8',
+                    width: 16, height: 16, color: 'rgba(255,255,255,0.4)',
                   }} />
                   <input
                     type="password"
@@ -825,7 +836,7 @@ const Login = () => {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#94a3b8',
+                  color: 'rgba(255,255,255,0.4)',
                   fontSize: '0.78rem',
                   fontWeight: '600',
                   letterSpacing: '0.02em',
