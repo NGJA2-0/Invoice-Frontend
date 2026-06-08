@@ -39,7 +39,7 @@ const Currencies = () => {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
-  const [filterActive, setFilterActive] = useState('') // '', 'true', 'false'
+  const [filterActive, setFilterActive] = useState('')
   const [deletingId, setDeletingId] = useState(null)
   const [togglingId, setTogglingId] = useState(null)
 
@@ -52,7 +52,6 @@ const Currencies = () => {
       if (search.trim()) params.search = search.trim()
       if (filterActive !== '') params.isActive = filterActive
       const data = await currencyApi.getAll(params)
-      // Support both { currencies, total } and flat array responses
       if (Array.isArray(data)) {
         setCurrencies(data)
         setTotal(data.length)
@@ -71,15 +70,15 @@ const Currencies = () => {
     fetchCurrencies()
   }, [fetchCurrencies])
 
-  // Debounce search — reset to page 1 on new search
   useEffect(() => {
     setPage(1)
   }, [search, filterActive])
 
   const handleToggleStatus = async (currency) => {
-    setTogglingId(currency._id)
+    const cid = currency._id || currency.id
+    setTogglingId(cid)
     try {
-      await currencyApi.updateStatus(currency._id, !currency.isActive)
+      await currencyApi.updateStatus(cid, !currency.isActive)
       pushToast({
         title: 'Updated',
         message: `${currency.currencyCode} is now ${!currency.isActive ? 'active' : 'inactive'}.`,
@@ -95,9 +94,10 @@ const Currencies = () => {
 
   const handleDelete = async (currency) => {
     if (!window.confirm(`Delete ${currency.currencyCode} (${currency.currencyName})?`)) return
-    setDeletingId(currency._id)
+    const cid = currency._id || currency.id
+    setDeletingId(cid)
     try {
-      await currencyApi.delete(currency._id)
+      await currencyApi.delete(cid)
       pushToast({
         title: 'Deleted',
         message: `${currency.currencyCode} has been removed.`,
@@ -176,7 +176,6 @@ const Currencies = () => {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Symbol</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Rate (LKR)</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Updated By</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
               </tr>
             </thead>
@@ -184,7 +183,7 @@ const Currencies = () => {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-gray-100 rounded w-full" />
                       </td>
@@ -193,62 +192,66 @@ const Currencies = () => {
                 ))
               ) : currencies.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
                     <Coins className="w-8 h-8 mx-auto mb-2 opacity-30" />
                     No currencies found.
                   </td>
                 </tr>
               ) : (
-                currencies.map((c) => (
-                  <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <span className="font-mono font-semibold text-gray-900">{c.currencyCode}</span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{c.currencyName}</td>
-                    <td className="px-4 py-3 font-medium text-gray-600">{c.symbol || '—'}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-900">
-                      {Number(c.exchangeRate).toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge isActive={c.isActive} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
-                      {c.updatedBy || '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {/* Edit */}
-                        <button
-                          onClick={() => navigate(`/admin/currencies/${c._id}`)}
-                          className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        {/* Toggle status */}
-                        <button
-                          onClick={() => handleToggleStatus(c)}
-                          disabled={togglingId === c._id}
-                          className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors disabled:opacity-40"
-                          title={c.isActive ? 'Disable' : 'Enable'}
-                        >
-                          {c.isActive
-                            ? <ToggleRight className="w-4 h-4 text-emerald-500" />
-                            : <ToggleLeft className="w-4 h-4" />}
-                        </button>
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDelete(c)}
-                          disabled={deletingId === c._id}
-                          className="p-1.5 rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-40"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                currencies.map((c) => {
+                  const cid = c._id || c.id
+                  return (
+                    <tr key={cid} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="font-mono font-semibold text-gray-900">{c.currencyCode}</span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">{c.currencyName}</td>
+                      <td className="px-4 py-3 font-medium text-gray-600">{c.symbol || '—'}</td>
+                      <td className="px-4 py-3 text-right font-mono text-gray-900">
+                        {Number(c.exchangeRate).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge isActive={c.isActive} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Edit */}
+                          <button
+                            onClick={() => navigate(`/admin/currencies/${cid}`)}
+                            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          {/* Toggle status */}
+                          <button
+                            onClick={() => handleToggleStatus(c)}
+                            disabled={togglingId === cid}
+                            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors disabled:opacity-40"
+                            title={c.isActive ? 'Disable' : 'Enable'}
+                          >
+                            {togglingId === cid
+                              ? <RefreshCw className="w-4 h-4 animate-spin" />
+                              : c.isActive
+                                ? <ToggleRight className="w-4 h-4 text-emerald-500" />
+                                : <ToggleLeft className="w-4 h-4" />}
+                          </button>
+                          {/* Delete */}
+                          <button
+                            onClick={() => handleDelete(c)}
+                            disabled={deletingId === cid}
+                            className="p-1.5 rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-40"
+                            title="Delete"
+                          >
+                            {deletingId === cid
+                              ? <RefreshCw className="w-4 h-4 animate-spin" />
+                              : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>

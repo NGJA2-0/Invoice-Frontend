@@ -9,6 +9,7 @@ import {
   User,
   ToggleLeft,
   ToggleRight,
+  RefreshCw,
 } from 'lucide-react'
 import { currencyApi } from '../../services/currencyApi'
 import { useApp } from '../../context/AppContext'
@@ -94,7 +95,6 @@ const CurrencyDetail = () => {
         currencyName: form.currencyName.trim(),
         symbol: form.symbol.trim() || undefined,
         exchangeRate: Number(form.exchangeRate),
-        isActive: form.isActive,
       })
       pushToast({ title: 'Saved', message: 'Currency updated.', tone: 'success' })
       navigate('/admin/currencies')
@@ -190,9 +190,11 @@ const CurrencyDetail = () => {
             disabled={toggling}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 transition-colors"
           >
-            {form.isActive
-              ? <ToggleRight className="w-4 h-4 text-emerald-500" />
-              : <ToggleLeft className="w-4 h-4 text-gray-400" />}
+            {toggling
+              ? <RefreshCw className="w-4 h-4 animate-spin" />
+              : form.isActive
+                ? <ToggleRight className="w-4 h-4 text-emerald-500" />
+                : <ToggleLeft className="w-4 h-4 text-gray-400" />}
             {form.isActive ? 'Disable' : 'Enable'}
           </button>
         </div>
@@ -285,7 +287,9 @@ const CurrencyDetail = () => {
             disabled={deleting}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            {deleting
+              ? <RefreshCw className="w-4 h-4 animate-spin" />
+              : <Trash2 className="w-4 h-4" />}
             {deleting ? 'Deleting…' : 'Delete'}
           </button>
 

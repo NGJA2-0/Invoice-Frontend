@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, RefreshCw, Save, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Plus, RefreshCw, Save, X } from 'lucide-react'
 import { currencyApi } from '../../services/currencyApi'
 import { useApp } from '../../context/AppContext'
 
@@ -14,9 +14,9 @@ const BulkRateUpdate = () => {
   const { pushToast } = useApp()
 
   const [rows, setRows] = useState([emptyRow()])
-  const [errors, setErrors] = useState({}) // keyed by row._key
+  const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null) // success summary
+  const [result, setResult] = useState(null)
 
   const addRow = () => setRows((prev) => [...prev, emptyRow()])
 
@@ -42,7 +42,6 @@ const BulkRateUpdate = () => {
       if (Object.keys(rowErr).length) e[row._key] = rowErr
     })
 
-    // Check for duplicate codes
     const codes = rows.map((r) => r.currencyCode.trim().toUpperCase()).filter(Boolean)
     const dupes = codes.filter((c, i) => codes.indexOf(c) !== i)
     if (dupes.length) {
@@ -66,7 +65,7 @@ const BulkRateUpdate = () => {
         currencyCode: r.currencyCode.trim().toUpperCase(),
         exchangeRate: Number(r.exchangeRate),
       }))
-      const data = await currencyApi.bulkUpdate(currencies)
+      await currencyApi.bulkUpdate(currencies)
       setResult({ count: currencies.length, updated: currencies })
       pushToast({
         title: 'Rates Updated',
@@ -159,7 +158,7 @@ const BulkRateUpdate = () => {
 
             {/* Rows */}
             <div className="flex flex-col gap-3">
-              {rows.map((row, idx) => (
+              {rows.map((row) => (
                 <div key={row._key} className="grid grid-cols-[1fr_1fr_auto] gap-3 items-start">
                   <div className="flex flex-col gap-1">
                     <input
@@ -241,7 +240,9 @@ const BulkRateUpdate = () => {
                   disabled={loading}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  <Save className="w-4 h-4" />
+                  {loading
+                    ? <RefreshCw className="w-4 h-4 animate-spin" />
+                    : <Save className="w-4 h-4" />}
                   {loading ? 'Updating…' : `Update ${rows.length} Rate${rows.length > 1 ? 's' : ''}`}
                 </button>
               </div>
