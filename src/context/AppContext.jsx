@@ -137,7 +137,11 @@ export const AppProvider = ({ children }) => {
     setRole('user')
     localStorage.setItem(ROLE_KEY, 'user')
     storeUser(data)
-    setUserStatus(data.status || 'not_verified')
+    if (data.id) {
+      await refreshUserProfile(data.id)
+    } else {
+      setUserStatus(data.status || 'not_verified')
+    }
     await refreshInvoices(data.id)
     return data
   }
@@ -148,7 +152,11 @@ export const AppProvider = ({ children }) => {
     setRole('admin')
     localStorage.setItem(ROLE_KEY, 'admin')
     storeUser(data)
-    setUserStatus(data.status || 'not_verified')
+    if (data.id) {
+      await refreshUserProfile(data.id)
+    } else {
+      setUserStatus(data.status || 'not_verified')
+    }
     await refreshAdminData()
     return data
   }
@@ -160,7 +168,11 @@ export const AppProvider = ({ children }) => {
     setRole(nextRole)
     localStorage.setItem(ROLE_KEY, nextRole)
     storeUser(data)
-    setUserStatus(data.status || 'not_verified')
+    if (data.id) {
+      await refreshUserProfile(data.id)
+    } else {
+      setUserStatus(data.status || 'not_verified')
+    }
     await refreshInvoices(data.id)
     if (nextRole === 'admin') {
       await refreshAdminData()
