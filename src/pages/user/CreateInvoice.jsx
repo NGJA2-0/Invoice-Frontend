@@ -390,9 +390,13 @@ const CreateInvoice = () => {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          padding-bottom: 2rem;
-          border-bottom: 1px solid rgba(0,0,0,0.07);
-          margin-bottom: 2.5rem;
+          padding: 1.75rem 2rem;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          margin-bottom: 1rem;
         }
         .ci-hero-left {}
         .ci-eyebrow {
@@ -452,7 +456,13 @@ const CreateInvoice = () => {
           display: flex;
           align-items: center;
           gap: 0;
-          margin-bottom: 2.5rem;
+          margin-bottom: 1.5rem;
+          padding: 1rem 2rem;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
         }
         .ci-step {
           display: flex;

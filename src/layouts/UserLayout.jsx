@@ -77,6 +77,14 @@ const UserLayout = () => {
           z-index: 0;
         }
 
+        .ul-root::after {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background: rgba(255, 255, 255, 0.45);
+          z-index: 0;
+        }
+
         .ul-root > * {
           position: relative;
           z-index: 1;
@@ -109,18 +117,18 @@ const UserLayout = () => {
 
         /* ── Top nav card ── */
         .ul-topnav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 999px;
-        padding: 0.65rem 1rem 0.65rem 1.5rem;
-        margin-bottom: 1.75rem;
-      }
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          background: rgba(255, 255, 255, 0.55);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          border-radius: 999px;
+          padding: 0.65rem 1rem 0.65rem 1.5rem;
+          margin-bottom: 1.75rem;
+        }
 
         /* Left: system label + page title */
         .ul-topnav-left {
@@ -134,13 +142,13 @@ const UserLayout = () => {
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.7);
+          color: #6b7280;
           white-space: nowrap;
         }
         .ul-topnav-title {
           font-size: 1rem;
           font-weight: 600;
-          color: #ffffff;
+          color: #111827;
           letter-spacing: -0.02em;
           white-space: nowrap;
           overflow: hidden;
@@ -179,19 +187,19 @@ const UserLayout = () => {
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background: rgba(255, 255, 255, 0.5);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #fff;
+          color: #374151;
           transition: background 0.15s, border-color 0.15s;
           flex-shrink: 0;
         }
         .ul-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.25);
-          border-color: rgba(255, 255, 255, 0.5);
+          background: rgba(255, 255, 255, 0.7);
+          border-color: rgba(0, 0, 0, 0.2);
         }
         .ul-icon-btn svg {
           width: 16px;
@@ -199,28 +207,27 @@ const UserLayout = () => {
           stroke-width: 1.8px;
         }
 
-        /* Avatar + name pill */
         .ul-avatar-pill {
           display: flex;
           align-items: center;
           gap: 8px;
           padding: 3px 12px 3px 3px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background: rgba(255, 255, 255, 0.5);
           cursor: pointer;
           transition: background 0.15s;
           flex-shrink: 0;
         }
         .ul-avatar-pill:hover {
-          background: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.7);
         }
         .ul-avatar {
           width: 30px;
           height: 30px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.25);
-          color: #fff;
+          background: #e8edf7;
+          color: #3b5bb5;
           font-size: 12px;
           font-weight: 600;
           display: flex;
@@ -232,7 +239,7 @@ const UserLayout = () => {
         .ul-avatar-label {
           font-size: 13px;
           font-weight: 500;
-          color: #fff;
+          color: #111827;
           white-space: nowrap;
         }
 
