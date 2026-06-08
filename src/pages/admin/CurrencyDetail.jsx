@@ -106,18 +106,29 @@ const CurrencyDetail = () => {
   }
 
   const handleToggle = async () => {
+    const nextActive = !form.isActive
     setToggling(true)
-    const next = !form.isActive
+
+    // Optimistically flip the UI right away
+    setForm((prev) => ({ ...prev, isActive: nextActive }))
+
     try {
-      await currencyApi.updateStatus(id, next)
-      setForm((p) => ({ ...p, isActive: next }))
+      await currencyApi.updateStatus(id, nextActive)
+      // Keep currency state in sync so subsequent toggles use the right value
+      setCurrency((prev) => ({ ...prev, isActive: nextActive }))
       pushToast({
         title: 'Status Updated',
-        message: `${currency.currencyCode} is now ${next ? 'active' : 'inactive'}.`,
+        message: `${currency.currencyCode} is now ${nextActive ? 'active' : 'inactive'}.`,
         tone: 'success',
       })
-    } catch {
-      pushToast({ title: 'Error', message: 'Status update failed.', tone: 'error' })
+    } catch (err) {
+      // Roll back on failure
+      setForm((prev) => ({ ...prev, isActive: !nextActive }))
+      pushToast({
+        title: 'Error',
+        message: err?.message || 'Status update failed.',
+        tone: 'error',
+      })
     } finally {
       setToggling(false)
     }
@@ -190,11 +201,13 @@ const CurrencyDetail = () => {
             disabled={toggling}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 transition-colors"
           >
-            {toggling
-              ? <RefreshCw className="w-4 h-4 animate-spin" />
-              : form.isActive
-                ? <ToggleRight className="w-4 h-4 text-emerald-500" />
-                : <ToggleLeft className="w-4 h-4 text-gray-400" />}
+            {toggling ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : form.isActive ? (
+              <ToggleRight className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <ToggleLeft className="w-4 h-4 text-gray-400" />
+            )}
             {form.isActive ? 'Disable' : 'Enable'}
           </button>
         </div>
@@ -287,9 +300,11 @@ const CurrencyDetail = () => {
             disabled={deleting}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors"
           >
-            {deleting
-              ? <RefreshCw className="w-4 h-4 animate-spin" />
-              : <Trash2 className="w-4 h-4" />}
+            {deleting ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
             {deleting ? 'Deleting…' : 'Delete'}
           </button>
 

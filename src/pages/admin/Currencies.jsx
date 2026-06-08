@@ -76,17 +76,35 @@ const Currencies = () => {
 
   const handleToggleStatus = async (currency) => {
     const cid = currency._id || currency.id
+    const nextActive = !currency.isActive
     setTogglingId(cid)
+
+    // Optimistically update the row so the badge flips immediately
+    setCurrencies((prev) =>
+      prev.map((c) =>
+        (c._id || c.id) === cid ? { ...c, isActive: nextActive } : c
+      )
+    )
+
     try {
-      await currencyApi.updateStatus(cid, !currency.isActive)
+      await currencyApi.updateStatus(cid, nextActive)
       pushToast({
         title: 'Updated',
-        message: `${currency.currencyCode} is now ${!currency.isActive ? 'active' : 'inactive'}.`,
+        message: `${currency.currencyCode} is now ${nextActive ? 'active' : 'inactive'}.`,
         tone: 'success',
       })
-      fetchCurrencies()
-    } catch {
-      pushToast({ title: 'Error', message: 'Status update failed.', tone: 'error' })
+    } catch (err) {
+      // Roll back the optimistic update on failure
+      setCurrencies((prev) =>
+        prev.map((c) =>
+          (c._id || c.id) === cid ? { ...c, isActive: currency.isActive } : c
+        )
+      )
+      pushToast({
+        title: 'Error',
+        message: err?.message || 'Status update failed.',
+        tone: 'error',
+      })
     } finally {
       setTogglingId(null)
     }
@@ -230,11 +248,13 @@ const Currencies = () => {
                             className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors disabled:opacity-40"
                             title={c.isActive ? 'Disable' : 'Enable'}
                           >
-                            {togglingId === cid
-                              ? <RefreshCw className="w-4 h-4 animate-spin" />
-                              : c.isActive
-                                ? <ToggleRight className="w-4 h-4 text-emerald-500" />
-                                : <ToggleLeft className="w-4 h-4" />}
+                            {togglingId === cid ? (
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : c.isActive ? (
+                              <ToggleRight className="w-4 h-4 text-emerald-500" />
+                            ) : (
+                              <ToggleLeft className="w-4 h-4" />
+                            )}
                           </button>
                           {/* Delete */}
                           <button
@@ -243,9 +263,11 @@ const Currencies = () => {
                             className="p-1.5 rounded-md text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-40"
                             title="Delete"
                           >
-                            {deletingId === cid
-                              ? <RefreshCw className="w-4 h-4 animate-spin" />
-                              : <Trash2 className="w-4 h-4" />}
+                            {deletingId === cid ? (
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>
