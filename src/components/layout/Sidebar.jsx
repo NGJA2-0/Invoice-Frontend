@@ -33,24 +33,40 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
           </p>
           <h1 className="mt-2 font-display text-2xl text-gray-900">{title}</h1>
         </div>
+
         <nav className="flex flex-col gap-2">
-          {items.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                  isActive
-                    ? 'bg-white/60 text-gray-900 shadow-soft'
-                    : 'text-gray-700 hover:bg-white/40 hover:text-gray-900'
-                }`
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </NavLink>
-          ))}
+          {items.map((item, index) => {
+            // Render section divider
+            if (item.type === 'divider') {
+              return (
+                <div key={`divider-${index}`} className="mt-2 mb-1">
+                  <p className="px-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+                    {item.label}
+                  </p>
+                </div>
+              )
+            }
+
+            // Render normal nav link
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                    isActive
+                      ? 'bg-white/60 text-gray-900 shadow-soft'
+                      : 'text-gray-700 hover:bg-white/40 hover:text-gray-900'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </NavLink>
+            )
+          })}
         </nav>
       </aside>
     </>

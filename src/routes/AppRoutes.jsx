@@ -10,12 +10,26 @@ import InvoiceManagement from '../pages/admin/InvoiceManagement'
 import PendingRegistrations from '../pages/admin/PendingRegistrations'
 import RejectedDealers from '../pages/admin/RejectedDealers'
 import Users from '../pages/admin/Users'
+import Currencies from '../pages/admin/Currencies'
+import CurrencyDetail from '../pages/admin/CurrencyDetail'
+import CreateCurrency from '../pages/admin/CreateCurrency'
+import BulkRateUpdate from '../pages/admin/BulkRateUpdate'
 import DealerRegistration from '../pages/user/DealerRegistration'
 import EditProfile from '../pages/user/EditProfile'
 import CreateInvoice from '../pages/user/CreateInvoice'
 import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
+import { useApp } from '../context/AppContext'
+
+// Guard component: redirects to /admin/dashboard if the user is not a super admin
+const SuperAdminRoute = ({ children }) => {
+  const { user } = useApp()
+  if (user?.role !== 'superadmin') {
+    return <Navigate to="/admin/dashboard" replace />
+  }
+  return children
+}
 
 const AppRoutes = () => {
   const location = useLocation()
@@ -45,6 +59,40 @@ const AppRoutes = () => {
           <Route path="rejected-dealers" element={<RejectedDealers />} />
           <Route path="invoice-management" element={<InvoiceManagement />} />
           <Route path="users" element={<Users />} />
+
+          {/* Super Admin only routes */}
+          <Route
+            path="currencies"
+            element={
+              <SuperAdminRoute>
+                <Currencies />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="currencies/new"
+            element={
+              <SuperAdminRoute>
+                <CreateCurrency />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="currencies/bulk-update"
+            element={
+              <SuperAdminRoute>
+                <BulkRateUpdate />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="currencies/:id"
+            element={
+              <SuperAdminRoute>
+                <CurrencyDetail />
+              </SuperAdminRoute>
+            }
+          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
