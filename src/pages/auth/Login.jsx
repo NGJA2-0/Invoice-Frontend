@@ -316,7 +316,7 @@ const Login = () => {
   // Branding component (shared by both login and signup)
   const BrandingPanel = () => (
     <div className="login-left">
-      {/* Gem icon */}
+      {/* Gem icon
       <div style={{
         width: '90px', height: '90px', marginBottom: '1.5rem',
         borderRadius: '24px',
@@ -330,7 +330,7 @@ const Login = () => {
           <polygon points="24,10 38,19 38,29 24,38 10,29 10,19" fill="rgba(255,222,26,0.25)" stroke="#ffde1a" strokeWidth="1"/>
           <polygon points="24,16 32,21 32,27 24,32 16,27 16,21" fill="#ffde1a" opacity="0.9"/>
         </svg>
-      </div>
+      </div> */}
 
       {/* Sinhala name */}
       <p className="sinhala-title" style={{
