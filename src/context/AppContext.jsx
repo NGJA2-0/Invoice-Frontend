@@ -149,14 +149,11 @@ export const AppProvider = ({ children }) => {
   // Admin login
   const adminLogin = async (username, password) => {
     const data = await api.post('/auth/admin-login', { username, password })
-    setRole('admin')
-    localStorage.setItem(ROLE_KEY, 'admin')
+    const nextRole = data.role || 'admin'
+    setRole(nextRole)
+    localStorage.setItem(ROLE_KEY, nextRole)
     storeUser(data)
-    if (data.id) {
-      await refreshUserProfile(data.id)
-    } else {
-      setUserStatus(data.status || 'not_verified')
-    }
+    setUserStatus('verified')
     await refreshAdminData()
     return data
   }
@@ -168,14 +165,16 @@ export const AppProvider = ({ children }) => {
     setRole(nextRole)
     localStorage.setItem(ROLE_KEY, nextRole)
     storeUser(data)
-    if (data.id) {
-      await refreshUserProfile(data.id)
-    } else {
-      setUserStatus(data.status || 'not_verified')
-    }
-    await refreshInvoices(data.id)
     if (nextRole === 'admin') {
+      setUserStatus('verified')
       await refreshAdminData()
+    } else {
+      if (data.id) {
+        await refreshUserProfile(data.id)
+      } else {
+        setUserStatus(data.status || 'not_verified')
+      }
+      await refreshInvoices(data.id)
     }
     return data
   }
@@ -296,10 +295,11 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?.id) {
-      refreshUserProfile(user.id)
-      refreshInvoices(user.id)
       if (role === 'admin') {
         refreshAdminData()
+      } else {
+        refreshUserProfile(user.id)
+        refreshInvoices(user.id)
       }
     }
   }, [user?.id, role])
