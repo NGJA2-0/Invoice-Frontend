@@ -21,6 +21,7 @@ import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
 import { useApp } from '../context/AppContext'
+import Items from '../pages/admin/Items'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -90,6 +91,14 @@ const AppRoutes = () => {
             element={
               <SuperAdminRoute>
                 <CurrencyDetail />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="items"
+            element={
+              <SuperAdminRoute>
+                <Items />
               </SuperAdminRoute>
             }
           />

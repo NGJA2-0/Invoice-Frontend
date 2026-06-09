@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   ShieldX,
   Users,
+  Package,
 } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Breadcrumbs from '../components/layout/Breadcrumbs'
@@ -36,6 +37,7 @@ const adminNavItems = [
 const superAdminNavItems = [
   { label: 'Currencies', path: '/admin/currencies', icon: Coins },
   { label: 'Bulk Rate Update', path: '/admin/currencies/bulk-update', icon: RefreshCw },
+  { label: 'Items', path: '/admin/items', icon: Package },
 ]
 
 const pageLabels = {
@@ -48,6 +50,7 @@ const pageLabels = {
   '/admin/currencies': 'Currencies',
   '/admin/currencies/new': 'New Currency',
   '/admin/currencies/bulk-update': 'Bulk Rate Update',
+  '/admin/items': 'Items',
 }
 
 const AdminLayout = () => {
