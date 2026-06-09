@@ -25,9 +25,9 @@ export default function Items() {
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const res = await itemApi.getAll()
-      setItems(res.data.data)
-      setTotal(res.data.total)
+        const res = await itemApi.getAll()
+        setItems(res.data ?? [])
+        setTotal(res.total ?? 0)
     } finally {
       setLoading(false)
     }
@@ -41,7 +41,7 @@ export default function Items() {
     const t = setTimeout(async () => {
       try {
         const res = await itemApi.suggest(query)
-        setSuggestions(res.data.data ?? [])
+        setSuggestions(res.data ?? [])
         setShowSuggestions(true)
       } catch { setSuggestions([]) }
     }, 250)
@@ -53,9 +53,9 @@ export default function Items() {
     if (!q.trim()) { fetchAll(); return }
     setLoading(true)
     try {
-      const res = await itemApi.search(q)
-      setItems(res.data.data ?? [])
-      setTotal(res.data.total ?? res.data.data?.length ?? 0)
+        const res = await itemApi.search(q)
+        setItems(res.data ?? [])
+        setTotal(res.total ?? res.data?.length ?? 0)
     } finally { setLoading(false) }
   }
 
