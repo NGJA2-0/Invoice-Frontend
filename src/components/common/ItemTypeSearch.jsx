@@ -15,11 +15,12 @@ import { itemApi } from '../../services/itemApi'
  */
 const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', className = '', disabled = false }) => {
   const [inputValue, setInputValue]     = useState(value)
-  const [suggestions, setSuggestions]   = useState([])   // [{ id, itemName }]
+  const [suggestions, setSuggestions]   = useState([])
   const [isOpen, setIsOpen]             = useState(false)
   const [isLoading, setIsLoading]       = useState(false)
-  const [activeIndex, setActiveIndex]   = useState(-1)   // keyboard nav
-  const [initialItems, setInitialItems] = useState([])   // items loaded on mount
+  const [activeIndex, setActiveIndex]   = useState(-1)
+  const [initialItems, setInitialItems] = useState([])
+  const [dropdownStyle, setDropdownStyle] = useState({})   // ← NEW
 
   const debounceTimer = useRef(null)
   const containerRef  = useRef(null)
@@ -32,9 +33,7 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
       if (cancelled) return
       const items = res?.data ?? []
       setInitialItems(items)
-    }).catch(() => {
-      // silently fail – user can still type to search
-    })
+    }).catch(() => {})
     return () => { cancelled = true }
   }, [])
 
@@ -49,7 +48,6 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false)
         setActiveIndex(-1)
-        // If user blurred without picking, restore last committed value
         setInputValue(value)
       }
     }
@@ -57,12 +55,46 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [value])
 
+  // ── Reposition dropdown on scroll/resize so it tracks the input ──────────
+  useEffect(() => {
+    if (!isOpen) return
+    const reposition = () => {
+      if (!inputRef.current) return
+      const rect = inputRef.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top:      rect.bottom,
+        left:     rect.left,
+        minWidth: rect.width,
+        zIndex:   9999,
+      })
+    }
+    window.addEventListener('scroll',  reposition, true)
+    window.addEventListener('resize',  reposition)
+    return () => {
+      window.removeEventListener('scroll',  reposition, true)
+      window.removeEventListener('resize',  reposition)
+    }
+  }, [isOpen])
+
+  // ── Calculate dropdown position from input bounding rect ─────────────────
+  const updateDropdownPosition = useCallback(() => {
+    if (!inputRef.current) return
+    const rect = inputRef.current.getBoundingClientRect()
+    setDropdownStyle({
+      position: 'fixed',
+      top:      rect.bottom,
+      left:     rect.left,
+      minWidth: rect.width,
+      zIndex:   9999,
+    })
+  }, [])
+
   // ── Debounced suggest call ────────────────────────────────────────────────
   const fetchSuggestions = useCallback((q) => {
     clearTimeout(debounceTimer.current)
 
     if (!q.trim()) {
-      // Show all initial items when input is cleared
       setSuggestions(initialItems)
       setIsOpen(initialItems.length > 0)
       setIsLoading(false)
@@ -94,6 +126,7 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
 
   // ── Focus: show all items immediately ────────────────────────────────────
   const handleFocus = () => {
+    updateDropdownPosition()   // ← calculate position before opening
     if (!inputValue.trim()) {
       setSuggestions(initialItems)
       setIsOpen(initialItems.length > 0)
@@ -139,7 +172,7 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
     }
   }
 
-  // ── Styles (mirror ValuationTable's baseClassName) ───────────────────────
+  // ── Styles ────────────────────────────────────────────────────────────────
   const inputClass = [
     'border-0 rounded-none bg-transparent shadow-none px-2 py-1 text-xs text-ink-900',
     'placeholder:text-ink-400 outline-none w-full',
@@ -167,10 +200,8 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
       {isOpen && (
         <ul
           role="listbox"
-          className={[
-            'absolute left-0 z-50 mt-1 max-h-48 w-max min-w-full overflow-y-auto',
-            'rounded-lg border border-cloud-200 bg-white shadow-md text-xs',
-          ].join(' ')}
+          style={dropdownStyle}
+          className="max-h-48 overflow-y-auto rounded-lg border border-cloud-200 bg-white shadow-md text-xs"
         >
           {isLoading ? (
             <li className="px-3 py-2 text-ink-400">Loading…</li>
@@ -183,7 +214,6 @@ const ItemTypeSearch = ({ value = '', onChange, placeholder = 'Item Type', class
                 role="option"
                 aria-selected={idx === activeIndex}
                 onMouseDown={(e) => {
-                  // mousedown fires before blur; prevent input blur before select
                   e.preventDefault()
                   handleSelect(item.itemName)
                 }}

@@ -9,11 +9,10 @@ import { currencyApi } from '../../services/currencyApi'
 
 const ValuationTable = ({ control, register, watch, setValue, section }) => {
   // ── Currency dropdown state ────────────────────────────────────────────
-  const [currencyCodes, setCurrencyCodes]     = useState([])    // ['USD', 'YUAN', ...]
+  const [currencyCodes, setCurrencyCodes]       = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('')
-  const [currencyLoading, setCurrencyLoading] = useState(false)
+  const [currencyLoading, setCurrencyLoading]   = useState(false)
 
-  // Load all currency codes on mount (only for the valuationTable section)
   const isValuationTable = (section?.key || 'valuation') === 'valuationTable'
 
   useEffect(() => {
@@ -23,12 +22,9 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
         const codes = (res?.data ?? []).map((c) => c.currencyCode).filter(Boolean)
         setCurrencyCodes(codes)
       })
-      .catch(() => {
-        // Leave dropdown empty; user sees no options but form still works
-      })
+      .catch(() => {})
   }, [isValuationTable])
 
-  // Fetch exchange rate whenever the selected currency changes
   useEffect(() => {
     if (!isValuationTable || !selectedCurrency) return
     setCurrencyLoading(true)
@@ -36,8 +32,6 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       .then((res) => {
         const rate = res?.exchangeRate
         if (rate !== undefined && rate !== null) {
-          // This is the only line that changes the exchange rate source;
-          // all downstream calculations already watch this path.
           setValue(`invoiceData.exchangeRateSection.exchangeRate`, Number(rate), {
             shouldValidate: false,
             shouldDirty: true,
@@ -48,7 +42,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       .finally(() => setCurrencyLoading(false))
   }, [selectedCurrency, isValuationTable, setValue])
 
-  // ── Existing config (unchanged) ────────────────────────────────────────
+  // ── Table config ───────────────────────────────────────────────────────
   const tableConfig = section?.table || {
     key: 'valuationItems',
     allowAddRows: true,
@@ -67,17 +61,16 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     ],
   }
 
-  const sectionKey     = section?.key || 'valuation'
-  const fieldPath      = `invoiceData.${sectionKey}`
-  const itemsKey       = tableConfig.key || (sectionKey === 'valuationTable' ? 'valuationItems' : 'items')
-  const itemsPath      = `${fieldPath}.${itemsKey}`
-  const exchangeRatePath = 'invoiceData.exchangeRateSection'
+  const sectionKey           = section?.key || 'valuation'
+  const fieldPath            = `invoiceData.${sectionKey}`
+  const itemsKey             = tableConfig.key || (sectionKey === 'valuationTable' ? 'valuationItems' : 'items')
+  const itemsPath            = `${fieldPath}.${itemsKey}`
+  const exchangeRatePath     = 'invoiceData.exchangeRateSection'
 
   const { fields, append, remove, update } = useFieldArray({ control, name: itemsPath })
-
   const items = watch(itemsPath) || []
 
-  // ── Column helpers (unchanged) ─────────────────────────────────────────
+  // ── Column helpers ─────────────────────────────────────────────────────
   const getColumnOptions = (column) => {
     if (column.options) return column.options
     if (/weightUnit|rateUnit/i.test(column.key)) {
@@ -115,13 +108,13 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const findColumnKey = (pattern, excludePattern) =>
     tableConfig.columns.find((col) => pattern.test(col.key) && !excludePattern?.test(col.key))?.key
 
-  const amountKey  = findColumnKey(/amount/i)                                 || 'amount'
-  const weightKey  = findColumnKey(/weight/i, /unit/i)                        || 'weight'
-  const rateKey    = findColumnKey(/rate/i,   /unit/i)                        || 'ratePer'
-  const piecesKey  = findColumnKey(/pcs|pieces|quantity|qty|numberOfItems|noOf/i) || 'noOfPcs'
+  const amountKey       = findColumnKey(/amount/i)                                          || 'amount'
+  const weightKey       = findColumnKey(/weight/i, /unit/i)                                 || 'weight'
+  const rateKey         = findColumnKey(/rate/i,   /unit/i)                                 || 'ratePer'
+  const piecesKey       = findColumnKey(/pcs|pieces|quantity|qty|numberOfItems|noOf/i)      || 'noOfPcs'
   const hasAmountColumn = tableConfig.columns.some((col) => col.key === amountKey)
 
-  // ── Formula computation (unchanged) ───────────────────────────────────
+  // ── Formula computation ────────────────────────────────────────────────
   const computeFormulaValue = (formula, item) => {
     if (!formula) return 0
     const sanitized = formula.replace(/\s+/g, '')
@@ -155,7 +148,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     })
   }, [items, itemsPath, setValue, tableConfig.columns])
 
-  // ── Totals (unchanged) ─────────────────────────────────────────────────
+  // ── Totals ─────────────────────────────────────────────────────────────
   const totals = useMemo(() => {
     const totalsMap = {}
     if (Array.isArray(tableConfig.totals)) {
@@ -170,28 +163,28 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     const completedItems = items.filter(
       (item) => item?.isDone || (Number(item?.[amountKey]) || 0) > 0,
     )
-    const baseItems = tableConfig.totals?.length ? items : completedItems
-    const totalPieces  = totalsMap.totalPieces         ?? baseItems.reduce((s, i) => s + (Number(i?.[piecesKey]) || 0), 0)
-    const totalWeight  = totalsMap.totalCombinedWeight ?? totalsMap.totalWeight ?? baseItems.reduce((s, i) => s + (Number(i?.[weightKey]) || 0), 0)
-    const totalAmount  = totalsMap.totalAmount         ?? totalsMap.totalValue  ?? baseItems.reduce((s, i) => s + (Number(i?.[amountKey]) || 0), 0)
+    const baseItems      = tableConfig.totals?.length ? items : completedItems
+    const totalPieces    = totalsMap.totalPieces         ?? baseItems.reduce((s, i) => s + (Number(i?.[piecesKey]) || 0), 0)
+    const totalWeight    = totalsMap.totalCombinedWeight ?? totalsMap.totalWeight ?? baseItems.reduce((s, i) => s + (Number(i?.[weightKey]) || 0), 0)
+    const totalAmount    = totalsMap.totalAmount         ?? totalsMap.totalValue  ?? baseItems.reduce((s, i) => s + (Number(i?.[amountKey]) || 0), 0)
     return { totalPieces, totalWeight, totalAmount, totalsMap }
   }, [items, amountKey, weightKey, piecesKey, tableConfig.totals])
 
-  // ── Exchange rate & CIF calculations (unchanged logic; source changes) ─
-  const exchangeRate = Number(watch(`${exchangeRatePath}.exchangeRate`)) || 0
-  const freight      = Number(watch(`${exchangeRatePath}.freight`))      || 0
-  const insurance    = Number(watch(`${exchangeRatePath}.insurance`))    || 0
+  // ── Exchange rate & CIF ────────────────────────────────────────────────
+  const exchangeRate       = Number(watch(`${exchangeRatePath}.exchangeRate`)) || 0
+  const freight            = Number(watch(`${exchangeRatePath}.freight`))      || 0
+  const insurance          = Number(watch(`${exchangeRatePath}.insurance`))    || 0
 
-  const fobUsd            = totals.totalAmount
-  const valueAdditionUsd  = totals.totalsMap?.totalValueAddition ?? 0
-  const valueAdditionLkr  = valueAdditionUsd  * exchangeRate
-  const cifUsd            = fobUsd + freight + insurance
-  const fobLkr            = fobUsd            * exchangeRate
-  const freightLkr        = freight           * exchangeRate
-  const insuranceLkr      = insurance         * exchangeRate
-  const cifLkr            = cifUsd            * exchangeRate
+  const fobUsd             = totals.totalAmount
+  const valueAdditionUsd   = totals.totalsMap?.totalValueAddition ?? 0
+  const valueAdditionLkr   = valueAdditionUsd  * exchangeRate
+  const cifUsd             = fobUsd + freight + insurance
+  const fobLkr             = fobUsd            * exchangeRate
+  const freightLkr         = freight           * exchangeRate
+  const insuranceLkr       = insurance         * exchangeRate
+  const cifLkr             = cifUsd            * exchangeRate
 
-  // ── Row "Done" handler (unchanged) ────────────────────────────────────
+  // ── Row "Done" handler ─────────────────────────────────────────────────
   const handleRowDone = (index) => {
     if (!hasAmountColumn) return
     const item = items[index] || {}
@@ -226,10 +219,22 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     setValue(`${exchangeRatePath}.cifLkr`, Number(cifLkr.toFixed(2)),  { shouldValidate: false })
   }, [fobUsd, cifUsd, cifLkr, exchangeRatePath, setValue])
 
-  // ── Field renderer ────────────────────────────────────────────────────
+  // ── Field renderer ─────────────────────────────────────────────────────
   const renderFieldInput = (column, index, value, item) => {
     const fieldName     = `${itemsPath}.${index}.${column.key}`
     const baseClassName = 'border-0 rounded-none bg-transparent shadow-none px-2 py-1 text-xs text-ink-900 placeholder:text-ink-400'
+
+    // ── FIX: Auto-fill Item No with row index + 1 ──────────────────────
+    if (column.key === 'itemNo') {
+      return (
+        <Input
+          type="text"
+          value={index + 1}
+          readOnly
+          className={baseClassName}
+        />
+      )
+    }
 
     if (column.readOnly || column.dataType === 'computed') {
       const displayValue = Number(item?.[column.key]) || 0
@@ -244,7 +249,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       )
     }
 
-    // ── NEW: searchable dropdown for Item Type ──────────────────────────
+    // ── Searchable dropdown for Item Type ──────────────────────────────
     if (column.dataType === 'searchable-dropdown' || column.key === 'itemType') {
       return (
         <ItemTypeSearch
@@ -292,14 +297,13 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     )
   }
 
-  // ── Render ────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Currency + Exchange Rate (replaces the old manual Input) ── */}
+      {/* Currency + Exchange Rate */}
       {sectionKey === 'valuationTable' && (
         <div className="flex flex-wrap items-end gap-3 max-w-lg">
-          {/* Currency dropdown */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-ink-600">Currency</label>
             <Select
@@ -314,7 +318,6 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
             </Select>
           </div>
 
-          {/* Exchange Rate — read-only, auto-filled from API */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-ink-600">
               Exchange Rate (1 {selectedCurrency || 'USD'} = ? LKR)
@@ -329,7 +332,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
         </div>
       )}
 
-      {/* ── Table (structure & logic entirely unchanged) ── */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="valuation-table min-w-full text-left text-xs">
           <thead className="bg-cloud-50 text-xs uppercase tracking-[0.16em] text-ink-500">
@@ -419,9 +422,9 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Input label="Total Pieces"      type="number" value={totals.totalPieces.toFixed(2)}  readOnly />
-        <Input label="Total Weight"      type="number" value={totals.totalWeight.toFixed(2)}  readOnly />
-        <Input label="Total Amount (USD)" type="number" value={totals.totalAmount.toFixed(2)} readOnly />
+        <Input label="Total Pieces"       type="number" value={totals.totalPieces.toFixed(2)}  readOnly />
+        <Input label="Total Weight"       type="number" value={totals.totalWeight.toFixed(2)}  readOnly />
+        <Input label="Total Amount (USD)" type="number" value={totals.totalAmount.toFixed(2)}  readOnly />
       </div>
 
       {tableConfig.totals?.length ? (
