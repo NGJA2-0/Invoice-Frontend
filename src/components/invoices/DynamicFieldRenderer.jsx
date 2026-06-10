@@ -4,7 +4,7 @@ import Input from '../common/Input'
 import Textarea from '../common/Textarea'
 import Select from '../common/Select'
 
-const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, setValue }) => {
+const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, setValue, disabled }) => {
   if (field.dataType === 'array') {
     return null
   }
@@ -49,7 +49,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
     return (
       <Select
         label={label}
-        disabled={field.readOnly}
+        disabled={field.readOnly || disabled}
         {...register(name, registerOptions)}
       >
         <option value="">{field.placeholder || 'Select...'}</option>
@@ -69,7 +69,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
         label={label}
         type="date"
         placeholder={field.placeholder || field.label}
-        readOnly={field.readOnly}
+        readOnly={field.readOnly || disabled}
         {...register(name, registerOptions)}
       />
     )
@@ -81,7 +81,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
       <Textarea
         label={label}
         placeholder={field.placeholder || field.label}
-        readOnly={field.readOnly}
+        readOnly={field.readOnly || disabled}
         {...register(name, registerOptions)}
       />
     )
@@ -94,7 +94,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
         label={label}
         type="number"
         placeholder={field.placeholder || field.label}
-        readOnly={field.readOnly}
+        readOnly={field.readOnly || disabled}
         {...register(name, { valueAsNumber: true, ...registerOptions })}
       />
     )
@@ -111,7 +111,7 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
       label={label}
       type="text"
       placeholder={field.placeholder || field.label}
-      readOnly={field.readOnly}
+      readOnly={field.readOnly || disabled}
       {...register(name, registerOptions)}
     />
   )
