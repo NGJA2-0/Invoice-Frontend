@@ -91,6 +91,7 @@ const TemplateEngine = ({
               {section.sectionType !== 'table'
                 ? section.fields
                     .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
+                    .filter((field) => field.key !== 'remarks')
                     .map((field) => {
                       const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
                       const requiresNi = templateKey === 'TEMPLATE_3' || templateKey === 'TEMPLATE_4'

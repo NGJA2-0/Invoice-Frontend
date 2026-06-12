@@ -743,7 +743,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
               : <div style={styles.logoPlaceholder}>LOGO</div>
             }
             <div style={styles.headerLeftText}>
-              <div style={styles.docLabel}>NGJA Export Invoice</div>
+              {/* <div style={styles.docLabel}>NGJA Export Invoice</div> */}
               {/* Company name replaces invoice number */}
               <div style={styles.docTitle}>
                 {companyHeader.companyName || meta.companyName || 'Company Name'}
@@ -781,7 +781,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
               ['Invoice No',   invoiceMeta.invoiceNumber || meta.invoiceNumber],
               ['Export Type',  meta.templateKey || invoiceMeta.exportType],
               ['Country',      invoiceMeta.countryOfOrigin],
-              ['Remarks',      invoiceMeta.remarks],
+              // ['Remarks',      invoiceMeta.remarks],
             ].map(([lbl, val]) => (
               <div key={lbl} style={styles.metaChip}>
                 <span style={styles.metaLabel}>{lbl}</span>
