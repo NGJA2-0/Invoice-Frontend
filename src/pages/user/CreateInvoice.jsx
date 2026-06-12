@@ -118,21 +118,6 @@ const CreateInvoice = () => {
 
   const { register, control, watch, setValue, getValues, reset } = form
 
-  // Sync companyHeader → senderInfo automatically
-  const companyHeader = watch('invoiceData.companyHeader')
-  useEffect(() => {
-    setValue('invoiceData.senderInfo.senderName',    companyHeader?.companyName    ?? '')
-    setValue('invoiceData.senderInfo.senderAddress', companyHeader?.companyAddress ?? '')
-    setValue('invoiceData.senderInfo.senderPhone',   companyHeader?.companyPhone   ?? '')
-    setValue('invoiceData.senderInfo.senderWebsite', companyHeader?.companyWebsite ?? '')
-  }, [
-    companyHeader?.companyName,
-    companyHeader?.companyAddress,
-    companyHeader?.companyPhone,
-    companyHeader?.companyWebsite,
-    setValue,
-  ])
-
   const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
   const isTemplate3 = templateKey === 'TEMPLATE_3'
   const isTemplate4 = templateKey === 'TEMPLATE_4'

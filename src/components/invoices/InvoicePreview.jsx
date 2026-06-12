@@ -622,32 +622,26 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   ].filter(([, v]) => v !== null && v !== undefined && v !== '')
 
   const sectionOverrides = {
-    buyerInfo:           { label: 'TO',            dataKey: 'receiverInfo'    },
-    buyerInformation:    { label: 'TO',            dataKey: 'receiverInfo'    },
-    receiverInfo:        { label: 'TO',            dataKey: 'receiverInfo'    },
-    deliveryInfo:        { label: 'FROM',          dataKey: 'senderInfo'      },
-    deliveryInformation: { label: 'FROM',          dataKey: 'senderInfo'      },
-    senderInfo:          { label: 'FROM',          dataKey: 'senderInfo'      },
-    transportDetails:    { label: 'Delivery Type', dataKey: 'deliveryInfo'    },
+    buyerInfo:        { label: 'TO',            dataKey: 'receiverInfo' },
+    receiverInfo:     { label: 'TO',            dataKey: 'receiverInfo' },
+    deliveryInfo:     { label: 'FROM',          dataKey: 'senderInfo'   },
+    senderInfo:       { label: 'FROM',          dataKey: 'senderInfo'   },
+    transportDetails: { label: 'Delivery Type', dataKey: 'deliveryInfo' },
   }
 
   const shouldHide = (s) => {
     const k = String(s?.key   || '').toLowerCase()
     const l = String(s?.label || '').toLowerCase()
-    const resolvedLabel   = String(sectionOverrides[s?.key]?.label   || '').toLowerCase()
-    const resolvedDataKey = String(sectionOverrides[s?.key]?.dataKey || '').toLowerCase()
     return (
       k.includes('cert') || k.includes('signature') ||
       l.includes('cert') || l.includes('signature') ||
-      k === 'companyheader' || k === 'company_header' || l === 'company header' ||
-      k === 'senderinfo'    || k === 'sender_info'    || k === 'deliveryinfo'   ||
-      l === 'sender info'   || l === 'from'           ||
-      resolvedLabel   === 'from' ||
-      resolvedDataKey === 'senderinfo'
+      // hide companyHeader section since we moved it to the header
+      k === 'companyheader' || k === 'company_header' || l === 'company header'
     )
   }
 
   const sections = (preview.sections || []).filter((s) => !shouldHide(s))
+
   const WIDE_KEYS     = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
   const DELIVERY_KEYS = ['deliveryInfo','transportDetails']
   const CARRIER_KEYS  = ['carrierDetails']
@@ -666,9 +660,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     if (wideSections.includes(s) || deliverySections.includes(s)) return false
     const resolved = sectionOverrides[s.key]?.dataKey || s.key
     const label    = String(s.label || '').toLowerCase()
-    if (CARRIER_KEYS.includes(resolved) || label.includes('carrier')) return false
-    if (resolved === 'senderInfo' || label === 'from' || label.includes('sender') || label.includes('delivery information')) return false
-    return true
+    return !CARRIER_KEYS.includes(resolved) && !label.includes('carrier')
   })
 
   // resolve label + key for a section

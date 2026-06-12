@@ -93,12 +93,9 @@ const TemplateEngine = ({
                     .map((field) => {
                       const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
                       const requiresNi = templateKey === 'TEMPLATE_3' || templateKey === 'TEMPLATE_4'
-                      const isSenderInfo = section.key === 'senderInfo'
                       const adjustedField =
                         requiresNi && section.key === 'niDetails'
                           ? { ...field, required: true }
-                          : isSenderInfo
-                          ? { ...field, disabled: true }
                           : field
 
                       return (
@@ -110,7 +107,6 @@ const TemplateEngine = ({
                           watch={watch}
                           control={control}
                           setValue={setValue}
-                          disabled={isSenderInfo}
                         />
                       )
                     })
