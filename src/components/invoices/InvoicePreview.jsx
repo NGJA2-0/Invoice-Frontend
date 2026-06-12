@@ -624,8 +624,6 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const sectionOverrides = {
     buyerInfo:        { label: 'TO',            dataKey: 'receiverInfo' },
     receiverInfo:     { label: 'TO',            dataKey: 'receiverInfo' },
-    deliveryInfo:     { label: 'FROM',          dataKey: 'senderInfo'   },
-    senderInfo:       { label: 'FROM',          dataKey: 'senderInfo'   },
     transportDetails: { label: 'Delivery Type', dataKey: 'deliveryInfo' },
   }
 
@@ -635,12 +633,15 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     return (
       k.includes('cert') || k.includes('signature') ||
       l.includes('cert') || l.includes('signature') ||
-      // hide companyHeader section since we moved it to the header
-      k === 'companyheader' || k === 'company_header' || l === 'company header'
+      k === 'companyheader' || k === 'company_header' || l === 'company header' ||
+      k === 'senderinfo' || l === 'from'
     )
   }
 
-  const sections = (preview.sections || []).filter((s) => !shouldHide(s))
+  const sections = (preview.sections || []).filter((s) => !shouldHide(s)).filter((s) => {
+    const resolvedDataKey = String(sectionOverrides[s.key]?.dataKey || s.key).toLowerCase()
+    return resolvedDataKey !== 'senderinfo'
+  })
 
   const WIDE_KEYS     = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
   const DELIVERY_KEYS = ['deliveryInfo','transportDetails']
@@ -660,6 +661,8 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     if (wideSections.includes(s) || deliverySections.includes(s)) return false
     const resolved = sectionOverrides[s.key]?.dataKey || s.key
     const label    = String(s.label || '').toLowerCase()
+    if (resolved === 'senderInfo' || resolved === 'senderinfo') return false
+    if (label === 'from' || label.includes('sender')) return false
     return !CARRIER_KEYS.includes(resolved) && !label.includes('carrier')
   })
 
@@ -682,6 +685,8 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
 
   const renderNarrowSec = (section) => {
     const { sectionLabel, sectionKey } = resolveSection(section)
+    if (sectionKey === 'senderInfo' || sectionKey === 'senderinfo') return null
+    if (String(sectionLabel || '').toLowerCase() === 'from') return null
     return (
       <div key={section.key} style={styles.section}>
         <div style={styles.sectionHead}>{sectionLabel}</div>
