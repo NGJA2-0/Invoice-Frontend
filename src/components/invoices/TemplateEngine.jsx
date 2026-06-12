@@ -54,6 +54,7 @@ const TemplateEngine = ({
         const formValues = watch()
         if (!shouldShowSection(section, formValues)) return null
         if (section.key === 'exchangeRateSection' || section.key === 'cifSummary') return null
+        if (section.key === 'senderInfo') return null
 
         return (
           <div key={section.key} className="surface-card rounded-2xl border px-6 py-6">
@@ -90,6 +91,7 @@ const TemplateEngine = ({
               {section.sectionType !== 'table'
                 ? section.fields
                     .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
+                    .filter((field) => field.key !== 'remarks')
                     .map((field) => {
                       const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
                       const requiresNi = templateKey === 'TEMPLATE_3' || templateKey === 'TEMPLATE_4'

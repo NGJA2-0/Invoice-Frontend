@@ -90,6 +90,15 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     return []
   }
 
+  useEffect(() => {
+    fields.forEach((_, index) => {
+      setValue(`${itemsPath}.${index}.itemNo`, index + 1, {
+        shouldValidate: false,
+        shouldDirty: true,
+      })
+    })
+  }, [fields.length])
+
   const addItem = () => {
     const defaultItem = {}
     tableConfig.columns.forEach((col) => {
