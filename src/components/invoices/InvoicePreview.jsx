@@ -126,7 +126,7 @@ const ValuationSection = ({ data, templateKey }) => {
           <tbody>
             {items.map((item, i) => (
               <tr key={i}>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no'])) !== '—' ? formatValue(pickValue(item, ['itemNo','itemNumber','no'])) : i + 1}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
                 {isTemplate4 ? (
