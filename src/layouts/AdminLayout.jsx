@@ -1,15 +1,5 @@
 import { useState } from 'react'
-import {
-  Coins,
-  FileCheck,
-  LayoutGrid,
-  ListChecks,
-  RefreshCw,
-  ShieldCheck,
-  ShieldX,
-  Users,
-  Package,
-} from 'lucide-react'
+import { Coins, FileCheck, LayoutGrid, ListChecks, Layers, RefreshCw, ShieldCheck, ShieldX, Users, Package } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Breadcrumbs from '../components/layout/Breadcrumbs'
 import Sidebar from '../components/layout/Sidebar'
@@ -38,6 +28,7 @@ const superAdminNavItems = [
   { label: 'Currencies', path: '/admin/currencies', icon: Coins },
   { label: 'Bulk Rate Update', path: '/admin/currencies/bulk-update', icon: RefreshCw },
   { label: 'Items', path: '/admin/items', icon: Package },
+  { label: 'Stock Values', path: '/admin/stock-values', icon: Layers },
 ]
 
 const pageLabels = {
@@ -51,6 +42,7 @@ const pageLabels = {
   '/admin/currencies/new': 'New Currency',
   '/admin/currencies/bulk-update': 'Bulk Rate Update',
   '/admin/items': 'Items',
+  '/admin/stock-values': 'Stock Values',
 }
 
 const AdminLayout = () => {
