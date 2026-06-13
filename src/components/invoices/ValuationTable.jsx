@@ -9,9 +9,10 @@ import { currencyApi } from '../../services/currencyApi'
 
 const ValuationTable = ({ control, register, watch, setValue, section }) => {
   // ── Currency dropdown state ────────────────────────────────────────────
-  const [currencyCodes, setCurrencyCodes]       = useState([])
+  const [currencyCodes, setCurrencyCodes] = useState([])
+  const [currencyList, setCurrencyList] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('')
-  const [currencyLoading, setCurrencyLoading]   = useState(false)
+  const [currencyLoading, setCurrencyLoading] = useState(false)
 
   const isValuationTable = (section?.key || 'valuation') === 'valuationTable'
 
@@ -19,10 +20,12 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     if (!isValuationTable) return
     currencyApi.getAllPublic()
       .then((res) => {
-        const codes = (res?.data ?? []).map((c) => c.currencyCode).filter(Boolean)
+        const list = res?.data ?? []
+        const codes = list.map((c) => c.currencyCode).filter(Boolean)
         setCurrencyCodes(codes)
+        setCurrencyList(list)
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [isValuationTable])
 
   useEffect(() => {
@@ -38,7 +41,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
           })
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setCurrencyLoading(false))
   }, [selectedCurrency, isValuationTable, setValue])
 
@@ -48,24 +51,24 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     allowAddRows: true,
     allowRemoveRows: true,
     columns: [
-      { key: 'itemNo',      label: 'Item No',              dataType: 'string',   width: '80px' },
-      { key: 'itemType',    label: 'Item Type',            dataType: 'string' },
+      { key: 'itemNo', label: 'Item No', dataType: 'string', width: '80px' },
+      { key: 'itemType', label: 'Item Type', dataType: 'string' },
       { key: 'description', label: 'Description of Goods', dataType: 'string' },
-      { key: 'noOfPcs',     label: 'No of Pcs',            dataType: 'number' },
-      { key: 'unitType',    label: 'Unit Type',            dataType: 'dropdown' },
-      { key: 'weight',      label: 'Weight',               dataType: 'number' },
-      { key: 'weightUnit',  label: 'Weight Unit',          dataType: 'dropdown' },
-      { key: 'ratePer',     label: 'Rate Per',             dataType: 'number' },
-      { key: 'rateUnit',    label: 'Rate Unit',            dataType: 'dropdown' },
-      { key: 'amount',      label: 'Amount (USD)',         dataType: 'number',   readOnly: true },
+      { key: 'noOfPcs', label: 'No of Pcs', dataType: 'number' },
+      { key: 'unitType', label: 'Unit Type', dataType: 'dropdown' },
+      { key: 'weight', label: 'Weight', dataType: 'number' },
+      { key: 'weightUnit', label: 'Weight Unit', dataType: 'dropdown' },
+      { key: 'ratePer', label: 'Rate Per', dataType: 'number' },
+      { key: 'rateUnit', label: 'Rate Unit', dataType: 'dropdown' },
+      { key: 'amount', label: 'Amount (USD)', dataType: 'number', readOnly: true },
     ],
   }
 
-  const sectionKey           = section?.key || 'valuation'
-  const fieldPath            = `invoiceData.${sectionKey}`
-  const itemsKey             = tableConfig.key || (sectionKey === 'valuationTable' ? 'valuationItems' : 'items')
-  const itemsPath            = `${fieldPath}.${itemsKey}`
-  const exchangeRatePath     = 'invoiceData.exchangeRateSection'
+  const sectionKey = section?.key || 'valuation'
+  const fieldPath = `invoiceData.${sectionKey}`
+  const itemsKey = tableConfig.key || (sectionKey === 'valuationTable' ? 'valuationItems' : 'items')
+  const itemsPath = `${fieldPath}.${itemsKey}`
+  const exchangeRatePath = 'invoiceData.exchangeRateSection'
 
   const { fields, append, remove, update } = useFieldArray({ control, name: itemsPath })
   const items = watch(itemsPath) || []
@@ -117,17 +120,17 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   const findColumnKey = (pattern, excludePattern) =>
     tableConfig.columns.find((col) => pattern.test(col.key) && !excludePattern?.test(col.key))?.key
 
-  const amountKey       = findColumnKey(/amount/i)                                          || 'amount'
-  const weightKey       = findColumnKey(/weight/i, /unit/i)                                 || 'weight'
-  const rateKey         = findColumnKey(/rate/i,   /unit/i)                                 || 'ratePer'
-  const piecesKey       = findColumnKey(/pcs|pieces|quantity|qty|numberOfItems|noOf/i)      || 'noOfPcs'
+  const amountKey = findColumnKey(/amount/i) || 'amount'
+  const weightKey = findColumnKey(/weight/i, /unit/i) || 'weight'
+  const rateKey = findColumnKey(/rate/i, /unit/i) || 'ratePer'
+  const piecesKey = findColumnKey(/pcs|pieces|quantity|qty|numberOfItems|noOf/i) || 'noOfPcs'
   const hasAmountColumn = tableConfig.columns.some((col) => col.key === amountKey)
 
   // ── Formula computation ────────────────────────────────────────────────
   const computeFormulaValue = (formula, item) => {
     if (!formula) return 0
     const sanitized = formula.replace(/\s+/g, '')
-    const getValue  = (key) => Number(item?.[key]) || 0
+    const getValue = (key) => Number(item?.[key]) || 0
 
     if (sanitized.includes('+') && !sanitized.includes('*') && !sanitized.includes('-') && !sanitized.includes('/')) {
       return sanitized.split('+').filter(Boolean).reduce((sum, key) => sum + getValue(key), 0)
@@ -145,7 +148,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     if (!computedColumns.length || !items.length) return
     items.forEach((item, index) => {
       computedColumns.forEach((col) => {
-        const value   = computeFormulaValue(col.formula, item)
+        const value = computeFormulaValue(col.formula, item)
         const rounded = Number(value.toFixed(2))
         const current = Number(item?.[col.key]) || 0
         if (!Number.isFinite(rounded) || rounded === current) return
@@ -172,26 +175,50 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
     const completedItems = items.filter(
       (item) => item?.isDone || (Number(item?.[amountKey]) || 0) > 0,
     )
-    const baseItems      = tableConfig.totals?.length ? items : completedItems
-    const totalPieces    = totalsMap.totalPieces         ?? baseItems.reduce((s, i) => s + (Number(i?.[piecesKey]) || 0), 0)
-    const totalWeight    = totalsMap.totalCombinedWeight ?? totalsMap.totalWeight ?? baseItems.reduce((s, i) => s + (Number(i?.[weightKey]) || 0), 0)
-    const totalAmount    = totalsMap.totalAmount         ?? totalsMap.totalValue  ?? baseItems.reduce((s, i) => s + (Number(i?.[amountKey]) || 0), 0)
+    const baseItems = tableConfig.totals?.length ? items : completedItems
+    const totalPieces = totalsMap.totalPieces ?? baseItems.reduce((s, i) => s + (Number(i?.[piecesKey]) || 0), 0)
+    const totalWeight = totalsMap.totalCombinedWeight ?? totalsMap.totalWeight ?? baseItems.reduce((s, i) => s + (Number(i?.[weightKey]) || 0), 0)
+    const totalAmount = totalsMap.totalAmount ?? totalsMap.totalValue ?? baseItems.reduce((s, i) => s + (Number(i?.[amountKey]) || 0), 0)
     return { totalPieces, totalWeight, totalAmount, totalsMap }
   }, [items, amountKey, weightKey, piecesKey, tableConfig.totals])
 
   // ── Exchange rate & CIF ────────────────────────────────────────────────
-  const exchangeRate       = Number(watch(`${exchangeRatePath}.exchangeRate`)) || 0
-  const freight            = Number(watch(`${exchangeRatePath}.freight`))      || 0
-  const insurance          = Number(watch(`${exchangeRatePath}.insurance`))    || 0
+  const exchangeRate = Number(watch(`${exchangeRatePath}.exchangeRate`)) || 0
+  const freight = Number(watch(`${exchangeRatePath}.freight`)) || 0
+  const insurance = Number(watch(`${exchangeRatePath}.insurance`)) || 0
 
-  const fobUsd             = totals.totalAmount
-  const valueAdditionUsd   = totals.totalsMap?.totalValueAddition ?? 0
-  const valueAdditionLkr   = valueAdditionUsd  * exchangeRate
-  const cifUsd             = fobUsd + freight + insurance
-  const fobLkr             = fobUsd            * exchangeRate
-  const freightLkr         = freight           * exchangeRate
-  const insuranceLkr       = insurance         * exchangeRate
-  const cifLkr             = cifUsd            * exchangeRate
+  const fobUsd = totals.totalAmount
+  const valueAdditionUsd = totals.totalsMap?.totalValueAddition ?? 0
+  const valueAdditionLkr = valueAdditionUsd * exchangeRate
+  const cifUsd = fobUsd + freight + insurance
+  const fobLkr = fobUsd * exchangeRate
+  const freightLkr = freight * exchangeRate
+  const insuranceLkr = insurance * exchangeRate
+  const cifLkr = cifUsd * exchangeRate
+
+  // ── Other currency conversions (for FOB/Freight/Insurance summary) ─────
+  const usdCurrencyEntry = currencyList.find((c) => c.currencyCode === 'USD')
+  const usdRateToLkr = Number(usdCurrencyEntry?.exchangeRate) || 0
+  const selectedCurrencyEntry = currencyList.find((c) => c.currencyCode === selectedCurrency)
+  const otherRateToLkr = Number(selectedCurrencyEntry?.exchangeRate) || 0
+  const showOtherCurrency = !!selectedCurrency && selectedCurrency !== 'USD' && otherRateToLkr > 0 && usdRateToLkr > 0
+
+  // FOB in "other currency" = the valuation table's total amount (as entered/selected)
+  const fobOther = totals.totalAmount
+  const fobOtherLkr = fobOther * otherRateToLkr
+  const fobOtherUsd = (fobOther * otherRateToLkr) / usdRateToLkr
+
+  const freightOther = Number(watch(`${exchangeRatePath}.freightOther`)) || 0
+  const freightOtherLkr = freightOther * otherRateToLkr
+  const freightOtherUsd = (freightOther * otherRateToLkr) / usdRateToLkr
+
+  const insuranceOther = Number(watch(`${exchangeRatePath}.insuranceOther`)) || 0
+  const insuranceOtherLkr = insuranceOther * otherRateToLkr
+  const insuranceOtherUsd = (insuranceOther * otherRateToLkr) / usdRateToLkr
+
+  const cifOther = fobOther + freightOther + insuranceOther
+  const cifOtherLkr = cifOther * otherRateToLkr
+  const cifOtherUsd = (cifOther * otherRateToLkr) / usdRateToLkr
 
   // ── Row "Done" handler ─────────────────────────────────────────────────
   const handleRowDone = (index) => {
@@ -212,7 +239,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       finalAmount = computedUpdates[amountKey] ?? 0
     } else {
       const valueAdditionKey = tableConfig.columns.find((col) => /valueAddition/i.test(col.key))?.key
-      const importValueKey   = tableConfig.columns.find((col) => /importValue/i.test(col.key))?.key
+      const importValueKey = tableConfig.columns.find((col) => /importValue/i.test(col.key))?.key
       if (valueAdditionKey && importValueKey) {
         finalAmount = Number(((Number(item?.[valueAdditionKey]) || 0) + (Number(item?.[importValueKey]) || 0)).toFixed(2))
       } else {
@@ -223,14 +250,21 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   }
 
   useEffect(() => {
-    setValue(`${exchangeRatePath}.fob`,    Number(fobUsd.toFixed(2)),  { shouldValidate: false })
-    setValue(`${exchangeRatePath}.cif`,    Number(cifUsd.toFixed(2)),  { shouldValidate: false })
-    setValue(`${exchangeRatePath}.cifLkr`, Number(cifLkr.toFixed(2)),  { shouldValidate: false })
-  }, [fobUsd, cifUsd, cifLkr, exchangeRatePath, setValue])
+    setValue(`${exchangeRatePath}.fob`, Number(fobUsd.toFixed(2)), { shouldValidate: false })
+    setValue(`${exchangeRatePath}.cif`, Number(cifUsd.toFixed(2)), { shouldValidate: false })
+    setValue(`${exchangeRatePath}.cifLkr`, Number(cifLkr.toFixed(2)), { shouldValidate: false })
+    if (showOtherCurrency) {
+      setValue(`${exchangeRatePath}.otherCurrencyCode`, selectedCurrency, { shouldValidate: false })
+      setValue(`${exchangeRatePath}.otherCurrencyRate`, otherRateToLkr, { shouldValidate: false })
+      setValue(`${exchangeRatePath}.usdToLkrRate`, usdRateToLkr, { shouldValidate: false })
+    } else {
+      setValue(`${exchangeRatePath}.otherCurrencyCode`, '', { shouldValidate: false })
+    }
+  }, [fobUsd, cifUsd, cifLkr, exchangeRatePath, setValue, showOtherCurrency, selectedCurrency, otherRateToLkr, usdRateToLkr])
 
   // ── Field renderer ─────────────────────────────────────────────────────
   const renderFieldInput = (column, index, value, item) => {
-    const fieldName     = `${itemsPath}.${index}.${column.key}`
+    const fieldName = `${itemsPath}.${index}.${column.key}`
     const baseClassName = 'border-0 rounded-none bg-transparent shadow-none px-2 py-1 text-xs text-ink-900 placeholder:text-ink-400'
 
     // ── FIX: Auto-fill Item No with row index + 1 ──────────────────────
@@ -408,15 +442,15 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
                 if (column.key === piecesKey || column.key === 'numberOfItems') {
                   return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalPieces.toFixed(2)}</td>
                 }
-                if (column.key === 'metalWeight')      return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalMetalWeight     ?? 0).toFixed(2)}</td>
-                if (column.key === 'mainStoneWeight')   return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalMainStoneWeight  ?? 0).toFixed(2)}</td>
-                if (column.key === 'otherStoneWeight')  return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalOtherStoneWeight ?? 0).toFixed(2)}</td>
-                if (column.key === 'totalWeight')       return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalWeight.toFixed(2)}</td>
-                if (column.key === 'valueAddition')     return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalValueAddition   ?? 0).toFixed(2)}</td>
-                if (column.key === 'importValue')       return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalImportValue      ?? 0).toFixed(2)}</td>
-                if (column.key === 'totalValue')        return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalValue            ?? 0).toFixed(2)}</td>
-                if (column.key === weightKey)           return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalWeight.toFixed(2)}</td>
-                if (column.key === amountKey)           return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalAmount.toFixed(2)}</td>
+                if (column.key === 'metalWeight') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalMetalWeight ?? 0).toFixed(2)}</td>
+                if (column.key === 'mainStoneWeight') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalMainStoneWeight ?? 0).toFixed(2)}</td>
+                if (column.key === 'otherStoneWeight') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalOtherStoneWeight ?? 0).toFixed(2)}</td>
+                if (column.key === 'totalWeight') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalWeight.toFixed(2)}</td>
+                if (column.key === 'valueAddition') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalValueAddition ?? 0).toFixed(2)}</td>
+                if (column.key === 'importValue') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalImportValue ?? 0).toFixed(2)}</td>
+                if (column.key === 'totalValue') return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{(totalsMap.totalValue ?? 0).toFixed(2)}</td>
+                if (column.key === weightKey) return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalWeight.toFixed(2)}</td>
+                if (column.key === amountKey) return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">{totals.totalAmount.toFixed(2)}</td>
                 if (column.key === tableConfig.columns[0]?.key) return <td key={`total-${column.key}`} className="px-4 py-3 font-semibold">Totals</td>
                 return <td key={`total-${column.key}`} className="px-4 py-3"></td>
               })}
@@ -431,20 +465,20 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Input label="Total Pieces"       type="number" value={totals.totalPieces.toFixed(2)}  readOnly />
-        <Input label="Total Weight"       type="number" value={totals.totalWeight.toFixed(2)}  readOnly />
-        <Input label="Total Amount (USD)" type="number" value={totals.totalAmount.toFixed(2)}  readOnly />
+        <Input label="Total Pieces" type="number" value={totals.totalPieces.toFixed(2)} readOnly />
+        <Input label="Total Weight" type="number" value={totals.totalWeight.toFixed(2)} readOnly />
+        <Input label="Total Amount (USD)" type="number" value={totals.totalAmount.toFixed(2)} readOnly />
       </div>
 
       {tableConfig.totals?.length ? (
         <div className="grid gap-3 md:grid-cols-3">
-          {'totalMetalWeight'      in totals.totalsMap && <Input label="Total Metal Weight"       type="number" value={(totals.totalsMap.totalMetalWeight      || 0).toFixed(2)} readOnly />}
-          {'totalMainStoneWeight'  in totals.totalsMap && <Input label="Total Main Stone Weight"  type="number" value={(totals.totalsMap.totalMainStoneWeight  || 0).toFixed(2)} readOnly />}
+          {'totalMetalWeight' in totals.totalsMap && <Input label="Total Metal Weight" type="number" value={(totals.totalsMap.totalMetalWeight || 0).toFixed(2)} readOnly />}
+          {'totalMainStoneWeight' in totals.totalsMap && <Input label="Total Main Stone Weight" type="number" value={(totals.totalsMap.totalMainStoneWeight || 0).toFixed(2)} readOnly />}
           {'totalOtherStoneWeight' in totals.totalsMap && <Input label="Total Other Stone Weight" type="number" value={(totals.totalsMap.totalOtherStoneWeight || 0).toFixed(2)} readOnly />}
-          {'totalCombinedWeight'   in totals.totalsMap && <Input label="Total Combined Weight"    type="number" value={(totals.totalsMap.totalCombinedWeight   || 0).toFixed(2)} readOnly />}
-          {'totalValueAddition'    in totals.totalsMap && <Input label="Total Value Addition"     type="number" value={(totals.totalsMap.totalValueAddition    || 0).toFixed(2)} readOnly />}
-          {'totalImportValue'      in totals.totalsMap && <Input label="Total Import Value"       type="number" value={(totals.totalsMap.totalImportValue      || 0).toFixed(2)} readOnly />}
-          {'totalValue'            in totals.totalsMap && <Input label="Total Value"              type="number" value={(totals.totalsMap.totalValue            || 0).toFixed(2)} readOnly />}
+          {'totalCombinedWeight' in totals.totalsMap && <Input label="Total Combined Weight" type="number" value={(totals.totalsMap.totalCombinedWeight || 0).toFixed(2)} readOnly />}
+          {'totalValueAddition' in totals.totalsMap && <Input label="Total Value Addition" type="number" value={(totals.totalsMap.totalValueAddition || 0).toFixed(2)} readOnly />}
+          {'totalImportValue' in totals.totalsMap && <Input label="Total Import Value" type="number" value={(totals.totalsMap.totalImportValue || 0).toFixed(2)} readOnly />}
+          {'totalValue' in totals.totalsMap && <Input label="Total Value" type="number" value={(totals.totalsMap.totalValue || 0).toFixed(2)} readOnly />}
         </div>
       ) : null}
 
@@ -462,6 +496,7 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
               <thead className="bg-cloud-50 text-xs uppercase tracking-[0.14em] text-ink-500">
                 <tr>
                   <th className="px-4 py-3">Description</th>
+                  {showOtherCurrency && <th className="px-4 py-3">{selectedCurrency}</th>}
                   <th className="px-4 py-3">USD</th>
                   <th className="px-4 py-3">LKR</th>
                 </tr>
@@ -470,33 +505,50 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
                 {totals.totalsMap?.totalValueAddition !== undefined && (
                   <tr>
                     <td className="px-4 py-3 font-semibold text-ink-700">Value Addition</td>
+                    {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value="—" readOnly /></td>}
                     <td className="px-4 py-3"><Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly /></td>
                     <td className="px-4 py-3"><Input type="number" value={valueAdditionLkr.toFixed(2)} readOnly /></td>
                   </tr>
                 )}
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">FOB</td>
-                  <td className="px-4 py-3"><Input type="number" value={fobUsd.toFixed(2)} readOnly /></td>
-                  <td className="px-4 py-3"><Input type="number" value={fobLkr.toFixed(2)} readOnly /></td>
+                  {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={fobOther.toFixed(2)} readOnly /></td>}
+                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? fobOtherUsd : fobUsd).toFixed(2)} readOnly /></td>
+                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? fobOtherLkr : fobLkr).toFixed(2)} readOnly /></td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">Freight</td>
+                  {showOtherCurrency && (
+                    <td className="px-4 py-3">
+                      <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freightOther`, { valueAsNumber: true })} />
+                    </td>
+                  )}
                   <td className="px-4 py-3">
-                    <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true })} />
+                    {showOtherCurrency
+                      ? <Input type="number" value={freightOtherUsd.toFixed(2)} readOnly />
+                      : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true })} />}
                   </td>
-                  <td className="px-4 py-3"><Input type="number" value={freightLkr.toFixed(2)} readOnly /></td>
+                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? freightOtherLkr : freightLkr).toFixed(2)} readOnly /></td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">Insurance</td>
+                  {showOtherCurrency && (
+                    <td className="px-4 py-3">
+                      <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insuranceOther`, { valueAsNumber: true })} />
+                    </td>
+                  )}
                   <td className="px-4 py-3">
-                    <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true })} />
+                    {showOtherCurrency
+                      ? <Input type="number" value={insuranceOtherUsd.toFixed(2)} readOnly />
+                      : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true })} />}
                   </td>
-                  <td className="px-4 py-3"><Input type="number" value={insuranceLkr.toFixed(2)} readOnly /></td>
+                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? insuranceOtherLkr : insuranceLkr).toFixed(2)} readOnly /></td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">CIF</td>
-                  <td className="px-4 py-3"><Input type="number" value={cifUsd.toFixed(2)} readOnly /></td>
-                  <td className="px-4 py-3"><Input type="number" value={cifLkr.toFixed(2)} readOnly /></td>
+                  {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={cifOther.toFixed(2)} readOnly /></td>}
+                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? cifOtherUsd : cifUsd).toFixed(2)} readOnly /></td>
+                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? cifOtherLkr : cifLkr).toFixed(2)} readOnly /></td>
                 </tr>
               </tbody>
             </table>

@@ -287,31 +287,81 @@ const ExchangeSection = ({ data }) => {
     Number(pickValue(valuation, ['totalValueAddition'])) ||
     items.reduce((sum, item) => sum + (Number(item?.valueAddition) || 0), 0)
   if (!Object.keys(ex).length) return null
-  const rows = [
-    ...(hasValueAddition
-      ? [['Value Addition', totalValueAddition, ex.exchangeRate ? (Number(totalValueAddition || 0) * Number(ex.exchangeRate || 0)).toString() : '—']]
-      : []),
-    ['FOB', ex.fob, ex.exchangeRate ? (Number(ex.fob||0)*Number(ex.exchangeRate||0)).toString() : '—'],
-    ['Freight', ex.freight, ex.exchangeRate ? (Number(ex.freight||0)*Number(ex.exchangeRate||0)).toString() : '—'],
-    ['Insurance', ex.insurance, ex.exchangeRate ? (Number(ex.insurance||0)*Number(ex.exchangeRate||0)).toString() : '—'],
-    ['CIF', ex.cif, ex.cifLkr],
-    ['Exchange Rate (1 USD)', '—', ex.exchangeRate],
-  ]
+
+  const otherCode = ex.otherCurrencyCode
+  const otherRate = Number(ex.otherCurrencyRate) || 0
+  const usdRate    = Number(ex.usdToLkrRate) || 0
+  const showOther  = !!otherCode && otherRate > 0 && usdRate > 0
+
+  const fobLkr   = ex.exchangeRate ? Number(ex.fob||0)*Number(ex.exchangeRate||0) : null
+  const freight  = Number(ex.freight) || 0
+  const insurance = Number(ex.insurance) || 0
+
+  let rows
+  if (showOther) {
+    const fobOther       = Number(ex.fob) || 0
+    const freightOther   = Number(ex.freightOther) || 0
+    const insuranceOther = Number(ex.insuranceOther) || 0
+    const cifOther       = fobOther + freightOther + insuranceOther
+
+    const toUsd = (val) => (val * otherRate) / usdRate
+    const toLkr = (val) => val * otherRate
+
+    rows = [
+      ...(hasValueAddition
+        ? [['Value Addition', null, totalValueAddition, ex.exchangeRate ? (Number(totalValueAddition || 0) * Number(ex.exchangeRate || 0)).toString() : '—']]
+        : []),
+      ['FOB',       fobOther,       toUsd(fobOther).toFixed(2),       toLkr(fobOther).toFixed(2)],
+      ['Freight',   freightOther,   toUsd(freightOther).toFixed(2),   toLkr(freightOther).toFixed(2)],
+      ['Insurance', insuranceOther, toUsd(insuranceOther).toFixed(2), toLkr(insuranceOther).toFixed(2)],
+      ['CIF',       cifOther,       toUsd(cifOther).toFixed(2),       toLkr(cifOther).toFixed(2)],
+      ['Exchange Rate (1 USD)', null, '—', ex.exchangeRate],
+    ]
+  } else {
+    rows = [
+      ...(hasValueAddition
+        ? [['Value Addition', totalValueAddition, ex.exchangeRate ? (Number(totalValueAddition || 0) * Number(ex.exchangeRate || 0)).toString() : '—']]
+        : []),
+      ['FOB', ex.fob, fobLkr !== null ? fobLkr : '—'],
+      ['Freight', ex.freight, ex.exchangeRate ? (freight*Number(ex.exchangeRate||0)).toString() : '—'],
+      ['Insurance', ex.insurance, ex.exchangeRate ? (insurance*Number(ex.exchangeRate||0)).toString() : '—'],
+      ['CIF', ex.cif, ex.cifLkr],
+      ['Exchange Rate (1 USD)', '—', ex.exchangeRate],
+    ]
+  }
+
   return (
     <table style={styles.tableExchange}>
       <thead>
         <tr>
-          {['Description','USD','LKR'].map((h) => <th key={h} style={styles.thExchange}>{h}</th>)}
+          <th style={styles.thExchange}>Description</th>
+          {showOther && <th style={styles.thExchange}>{otherCode}</th>}
+          <th style={styles.thExchange}>USD</th>
+          <th style={styles.thExchange}>LKR</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map(([desc, usd, lkr]) => (
-          <tr key={desc}>
-            <td style={styles.tdExchange}>{desc}</td>
-            <td style={styles.tdExchange}>{formatValue(usd)}</td>
-            <td style={styles.tdExchange}>{formatValue(lkr)}</td>
-          </tr>
-        ))}
+        {rows.map((row, i) => {
+          if (showOther) {
+            const [desc, other, usd, lkr] = row
+            return (
+              <tr key={desc}>
+                <td style={styles.tdExchange}>{desc}</td>
+                <td style={styles.tdExchange}>{other === null ? '—' : formatValue(other.toFixed?.(2) ?? other)}</td>
+                <td style={styles.tdExchange}>{formatValue(usd)}</td>
+                <td style={styles.tdExchange}>{formatValue(lkr)}</td>
+              </tr>
+            )
+          }
+          const [desc, usd, lkr] = row
+          return (
+            <tr key={desc}>
+              <td style={styles.tdExchange}>{desc}</td>
+              <td style={styles.tdExchange}>{formatValue(usd)}</td>
+              <td style={styles.tdExchange}>{formatValue(lkr)}</td>
+            </tr>
+          )
+        })}
       </tbody>
     </table>
   )
