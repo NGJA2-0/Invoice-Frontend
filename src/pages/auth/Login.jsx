@@ -30,6 +30,10 @@ const Login = () => {
     nicOrBrc: '',
     mobileNumbers: [''],
     email: '',
+    tin: '',
+    stockValueId: '',
+    stockValueName: '',
+    licenseExpiryDate: '',
     password: '',
     confirmPassword: '',
   })
@@ -99,11 +103,25 @@ const Login = () => {
         navigate('/admin/dashboard')
       } else {
         loggedIn = await userLogin(username, password)
-        pushToast({
-          title: 'Login Successful',
-          message: 'Welcome to the User Portal.',
-          tone: 'success',
-        })
+
+        // Show license warning if present (expired or expiring soon)
+        if (loggedIn?.licenseWarning) {
+          const isExpired = loggedIn.licenseWarning.toLowerCase().includes('expired') &&
+            !loggedIn.licenseWarning.toLowerCase().includes('will expire')
+          pushToast({
+            title: isExpired ? '⚠️ License Expired' : '⚠️ License Expiring Soon',
+            message: loggedIn.licenseWarning,
+            tone: isExpired ? 'danger' : 'warning',
+            duration: 8000,
+          })
+        } else {
+          pushToast({
+            title: 'Login Successful',
+            message: 'Welcome to the User Portal.',
+            tone: 'success',
+          })
+        }
+
         navigate('/user/dashboard')
       }
     } catch (error) {
@@ -202,6 +220,10 @@ const Login = () => {
         nicOrBrc: signupData.nicOrBrc,
         mobileNumbers: signupData.mobileNumbers.filter(m => m.trim()),
         email: signupData.email,
+        ...(signupData.tin && { tin: signupData.tin }),
+        ...(signupData.stockValueId && { stockValueId: signupData.stockValueId }),
+        ...(signupData.stockValueName && { stockValueName: signupData.stockValueName }),
+        ...(signupData.licenseExpiryDate && { licenseExpiryDate: signupData.licenseExpiryDate }),
         password: signupData.password,
         confirmPassword: signupData.confirmPassword,
       })
@@ -225,6 +247,10 @@ const Login = () => {
         nicOrBrc: '',
         mobileNumbers: [''],
         email: '',
+        tin: '',
+        stockValueId: '',
+        stockValueName: '',
+        licenseExpiryDate: '',
         password: '',
         confirmPassword: '',
       })
@@ -560,6 +586,54 @@ const Login = () => {
                 <input
                   type="email" name="email" value={signupData.email}
                   onChange={handleSignupChange} placeholder="info@abcgems.com"
+                  style={inputStyle(false)}
+                />
+              </div>
+
+              {/* TIN */}
+              <div>
+                <label style={labelStyle}>
+                  TIN <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <input
+                  type="text" name="tin" value={signupData.tin}
+                  onChange={handleSignupChange} placeholder="TIN-12345"
+                  style={inputStyle(false)}
+                />
+              </div>
+
+              {/* License Expiry Date */}
+              <div>
+                <label style={labelStyle}>
+                  License Expiry Date <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <input
+                  type="date" name="licenseExpiryDate" value={signupData.licenseExpiryDate}
+                  onChange={handleSignupChange}
+                  style={{ ...inputStyle(false), colorScheme: 'dark' }}
+                />
+              </div>
+
+              {/* Stock Value ID */}
+              <div>
+                <label style={labelStyle}>
+                  Stock Value ID <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <input
+                  type="text" name="stockValueId" value={signupData.stockValueId}
+                  onChange={handleSignupChange} placeholder="SV001"
+                  style={inputStyle(false)}
+                />
+              </div>
+
+              {/* Stock Value Name */}
+              <div>
+                <label style={labelStyle}>
+                  Stock Value Name <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </label>
+                <input
+                  type="text" name="stockValueName" value={signupData.stockValueName}
+                  onChange={handleSignupChange} placeholder="High Stock Value"
                   style={inputStyle(false)}
                 />
               </div>

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import {
+  AlertTriangle,
   FileText,
   LayoutGrid,
   PencilLine,
   ScrollText,
   Send,
+  X,
 } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Breadcrumbs from '../components/layout/Breadcrumbs'
@@ -51,6 +53,12 @@ const UserLayout = () => {
   const { userStatus, user } = useApp()
   const label = pageLabels[location.pathname] || 'Dashboard'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [licenseWarningDismissed, setLicenseWarningDismissed] = useState(false)
+
+  const licenseWarning = user?.licenseWarning || null
+  const isLicenseExpired = licenseWarning &&
+    licenseWarning.toLowerCase().includes('expired') &&
+    !licenseWarning.toLowerCase().includes('will expire')
 
   const tone = statusTone[userStatus] || 'info'
   const badge = toneStyles[tone]
@@ -273,6 +281,49 @@ const UserLayout = () => {
           }
         }
 
+        /* ── License warning banner ── */
+        .ul-license-banner {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          border-radius: 14px;
+          padding: 12px 16px;
+          margin-bottom: 1rem;
+          font-size: 0.84rem;
+          font-weight: 500;
+          line-height: 1.4;
+          border: 1.5px solid;
+          animation: slideDown 0.3s ease;
+        }
+        .ul-license-banner.expired {
+          background: rgba(254, 226, 226, 0.92);
+          border-color: #fca5a5;
+          color: #991b1b;
+        }
+        .ul-license-banner.expiring {
+          background: rgba(254, 243, 199, 0.92);
+          border-color: #fcd34d;
+          color: #92400e;
+        }
+        .ul-license-banner-dismiss {
+          margin-left: auto;
+          flex-shrink: 0;
+          background: none;
+          border: none;
+          cursor: pointer;
+          opacity: 0.6;
+          transition: opacity 0.15s;
+          color: inherit;
+          padding: 0;
+          display: flex;
+          align-items: center;
+        }
+        .ul-license-banner-dismiss:hover { opacity: 1; }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
         /* ── Page shell ── */
         .ul-shell {
           flex: 1;
@@ -379,6 +430,22 @@ const UserLayout = () => {
               </button>
             </div>
           </div>
+
+          {/* License warning banner */}
+          {licenseWarning && !licenseWarningDismissed && (
+            <div className={`ul-license-banner ${isLicenseExpired ? 'expired' : 'expiring'}`}>
+              <AlertTriangle style={{ width: 18, height: 18, flexShrink: 0, marginTop: 1 }} />
+              <span>{licenseWarning}</span>
+              <button
+                type="button"
+                className="ul-license-banner-dismiss"
+                aria-label="Dismiss license warning"
+                onClick={() => setLicenseWarningDismissed(true)}
+              >
+                <X style={{ width: 15, height: 15 }} />
+              </button>
+            </div>
+          )}
 
           {/* Page content */}
           <section className="ul-shell">

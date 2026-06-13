@@ -17,11 +17,24 @@ const parseResponse = async (response) => {
   return payload ?? null
 }
 
+const getStoredUserId = () => {
+  try {
+    const raw = localStorage.getItem('ngja_user')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed?.id || null
+  } catch {
+    return null
+  }
+}
+
 const request = async (path, options = {}) => {
+  const userId = getStoredUserId()
   const response = await fetch(buildUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(userId ? { 'X-User-Id': userId } : {}),
       ...(options.headers || {}),
     },
   })
