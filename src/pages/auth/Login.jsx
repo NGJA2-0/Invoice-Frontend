@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Lock, User, Loader2, ArrowRight, Mail, Phone, MapPin } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
 import { useApp } from '../../context/AppContext'
+import { api } from '../../services/api'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -39,6 +40,16 @@ const Login = () => {
   })
   const [isSigningUp, setIsSigningUp] = useState(false)
   const [signupErrors, setSignupErrors] = useState({})
+  const [stockValues, setStockValues] = useState([])
+
+  // Fetch stock values when signup form is shown
+  useEffect(() => {
+    if (showSignUp) {
+      api.get('/stock-values').then((data) => {
+        setStockValues(Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [])
+      }).catch(() => setStockValues([]))
+    }
+  }, [showSignUp])
 
   // Handle username verification
   const handleVerifyUsername = async (e) => {
@@ -183,6 +194,9 @@ const Login = () => {
     if (!signupData.businessAddress.trim()) errors.businessAddress = 'Business address is required'
     if (!signupData.gemDealerFileNo.trim()) errors.gemDealerFileNo = 'Gem dealer file number is required'
     if (!signupData.nicOrBrc.trim()) errors.nicOrBrc = 'NIC/BRC number is required'
+    if (!signupData.tin.trim()) errors.tin = 'TIN is required'
+    if (!signupData.licenseExpiryDate) errors.licenseExpiryDate = 'License expiry date is required'
+    if (!signupData.stockValueId) errors.stockValueId = 'Stock value is required'
 
     const validMobiles = signupData.mobileNumbers.filter(m => m.trim())
     if (validMobiles.length === 0) errors.mobileNumbers = 'At least one mobile number is required'
@@ -592,50 +606,56 @@ const Login = () => {
 
               {/* TIN */}
               <div>
-                <label style={labelStyle}>
-                  TIN <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-                </label>
+                <label style={labelStyle}>TIN <span style={{ color: '#e53e3e' }}>*</span></label>
                 <input
                   type="text" name="tin" value={signupData.tin}
                   onChange={handleSignupChange} placeholder="TIN-12345"
-                  style={inputStyle(false)}
+                  style={inputStyle(signupErrors.tin)}
                 />
+                {signupErrors.tin && <p style={errorStyle}>{signupErrors.tin}</p>}
               </div>
 
               {/* License Expiry Date */}
               <div>
-                <label style={labelStyle}>
-                  License Expiry Date <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-                </label>
+                <label style={labelStyle}>License Expiry Date <span style={{ color: '#e53e3e' }}>*</span></label>
                 <input
                   type="date" name="licenseExpiryDate" value={signupData.licenseExpiryDate}
                   onChange={handleSignupChange}
-                  style={{ ...inputStyle(false), colorScheme: 'dark' }}
+                  style={{ ...inputStyle(signupErrors.licenseExpiryDate), colorScheme: 'dark' }}
                 />
+                {signupErrors.licenseExpiryDate && <p style={errorStyle}>{signupErrors.licenseExpiryDate}</p>}
               </div>
 
-              {/* Stock Value ID */}
-              <div>
+              {/* Stock Value — full width dropdown */}
+              <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>
-                  Stock Value ID <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                  Stock Value <span style={{ color: '#e53e3e' }}>*</span>
                 </label>
-                <input
-                  type="text" name="stockValueId" value={signupData.stockValueId}
-                  onChange={handleSignupChange} placeholder="SV001"
-                  style={inputStyle(false)}
-                />
-              </div>
-
-              {/* Stock Value Name */}
-              <div>
-                <label style={labelStyle}>
-                  Stock Value Name <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '500', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-                </label>
-                <input
-                  type="text" name="stockValueName" value={signupData.stockValueName}
-                  onChange={handleSignupChange} placeholder="High Stock Value"
-                  style={inputStyle(false)}
-                />
+                <select
+                  value={signupData.stockValueId}
+                  onChange={(e) => {
+                    const selected = stockValues.find(sv => sv.stockValueId === e.target.value)
+                    setSignupData(prev => ({
+                      ...prev,
+                      stockValueId: selected ? selected.stockValueId : '',
+                      stockValueName: selected ? selected.stockValueName : '',
+                    }))
+                  }}
+                  style={{
+                    ...inputStyle(false),
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="" style={{ background: '#1a2a4a', color: '#fff' }}>— Select stock value —</option>
+                  {stockValues.map(sv => (
+                    <option key={sv.id} value={sv.stockValueId} style={{ background: '#1a2a4a', color: '#fff' }}>
+                      {sv.stockValueName}
+                    </option>
+                  ))}
+                </select>
+                {signupErrors.stockValueId && <p style={errorStyle}>{signupErrors.stockValueId}</p>}
               </div>
 
               {/* Password */}
