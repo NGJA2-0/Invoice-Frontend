@@ -13,6 +13,11 @@ const AppContext = createContext(null)
 const ROLE_KEY = 'ngja_role'
 const USER_KEY = 'ngja_user'
 
+// Monotonically incrementing counter guarantees unique toast IDs
+// even when multiple toasts are pushed in the same millisecond.
+let _toastCounter = 0
+const nextToastId = () => `toast-${++_toastCounter}`
+
 const readStoredUser = () => {
   try {
     const raw = localStorage.getItem(USER_KEY)
@@ -73,9 +78,13 @@ export const AppProvider = ({ children }) => {
   const refreshUserProfile = useCallback(async (userId) => {
     if (!userId) return
     const profile = await api.get(`/users/${userId}`)
-    storeUser(profile)
+    setUser((prev) => {
+      const merged = { ...profile, licenseWarning: prev?.licenseWarning || profile.licenseWarning }
+      localStorage.setItem(USER_KEY, JSON.stringify(merged))
+      return merged
+    })
     setUserStatus(profile.status || 'not_verified')
-  }, [storeUser])
+  }, [])
 
   const refreshAdminData = useCallback(async () => {
     const [usersData, pendingData] = await Promise.all([
@@ -136,9 +145,14 @@ export const AppProvider = ({ children }) => {
     const data = await api.post('/auth/user-login', { username, password })
     setRole('user')
     localStorage.setItem(ROLE_KEY, 'user')
+    // Persist licenseWarning alongside the user data so UI can read it
     storeUser(data)
     if (data.id) {
       await refreshUserProfile(data.id)
+      // After refreshUserProfile overwrites the stored user, re-apply licenseWarning
+      if (data.licenseWarning) {
+        setUser((prev) => prev ? { ...prev, licenseWarning: data.licenseWarning } : prev)
+      }
     } else {
       setUserStatus(data.status || 'not_verified')
     }
@@ -195,6 +209,15 @@ export const AppProvider = ({ children }) => {
     return data
   }
 
+  const submitLicenseRenewal = async ({ newLicenseId, submittedExpiryDate }) => {
+    if (!user?.id) throw new Error('User not authenticated')
+    const data = await api.submitLicenseRenewal(user.id, {
+      newLicenseId,
+      submittedExpiryDate,
+    })
+    return data
+  }
+
   const submitRegistration = async ({ userId, tin, vat, documents }) => {
     const formData = new FormData()
     formData.append('userId', userId)
@@ -238,12 +261,12 @@ export const AppProvider = ({ children }) => {
     return data?.invoiceNumber || ''
   }
 
-  const pushToast = ({ title, message, tone = 'info' }) => {
-    const id = `toast-${Date.now()}`
+  const pushToast = ({ title, message, tone = 'info', duration = 3200 }) => {
+    const id = nextToastId()
     setToasts((prev) => [...prev, { id, title, message, tone }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id))
-    }, 3200)
+    }, duration)
   }
 
   const dismissToast = (id) => {
@@ -266,6 +289,7 @@ export const AppProvider = ({ children }) => {
       adminLogin,
       verifyUsername,
       signUp,
+      submitLicenseRenewal,
       logout,
       setUserStatus,
       refreshInvoices,
