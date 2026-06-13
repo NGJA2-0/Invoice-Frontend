@@ -22,6 +22,7 @@ import MyInvoices from '../pages/user/MyInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
 import { useApp } from '../context/AppContext'
 import Items from '../pages/admin/Items'
+import StockValues from '../pages/admin/StockValues'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -102,8 +103,15 @@ const AppRoutes = () => {
               </SuperAdminRoute>
             }
           />
+          <Route
+            path="stock-values"
+            element={
+              <SuperAdminRoute>
+                <StockValues />
+              </SuperAdminRoute>
+            }
+          />
         </Route>
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
