@@ -23,6 +23,7 @@ import ProcedureFlow from '../pages/user/ProcedureFlow'
 import { useApp } from '../context/AppContext'
 import Items from '../pages/admin/Items'
 import StockValues from '../pages/admin/StockValues'
+import LicenseRenewals from '../pages/admin/LicenseRenewals'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -108,6 +109,14 @@ const AppRoutes = () => {
             element={
               <SuperAdminRoute>
                 <StockValues />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="license-renewals"
+            element={
+              <SuperAdminRoute>
+                <LicenseRenewals />
               </SuperAdminRoute>
             }
           />
