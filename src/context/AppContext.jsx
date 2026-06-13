@@ -205,6 +205,15 @@ export const AppProvider = ({ children }) => {
     return data
   }
 
+  const submitLicenseRenewal = async ({ newLicenseId, submittedExpiryDate }) => {
+    if (!user?.id) throw new Error('User not authenticated')
+    const data = await api.submitLicenseRenewal(user.id, {
+      newLicenseId,
+      submittedExpiryDate,
+    })
+    return data
+  }
+
   const submitRegistration = async ({ userId, tin, vat, documents }) => {
     const formData = new FormData()
     formData.append('userId', userId)
@@ -276,6 +285,7 @@ export const AppProvider = ({ children }) => {
       adminLogin,
       verifyUsername,
       signUp,
+      submitLicenseRenewal,
       logout,
       setUserStatus,
       refreshInvoices,

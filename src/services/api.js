@@ -50,8 +50,24 @@ const requestForm = async (path, formData, options = {}) => {
   return parseResponse(response)
 }
 
+const requestWithUserIdHeader = async (path, body, userId) => {
+  const response = await fetch(buildUrl(path), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': String(userId),
+    },
+    body: JSON.stringify(body),
+  })
+  return parseResponse(response)
+}
+
 export const api = {
   get: (path) => request(path, { method: 'GET' }),
+  submitLicenseRenewal: (userId, body) => {
+    if (!userId) throw new Error('User ID is required for license renewal')
+    return requestWithUserIdHeader('/license-renewals/submit', body, userId)
+  },
   post: (path, body) =>
     request(path, { method: 'POST', body: JSON.stringify(body) }),
   put: (path, body) =>
