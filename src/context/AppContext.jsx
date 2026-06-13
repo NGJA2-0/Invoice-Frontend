@@ -78,9 +78,13 @@ export const AppProvider = ({ children }) => {
   const refreshUserProfile = useCallback(async (userId) => {
     if (!userId) return
     const profile = await api.get(`/users/${userId}`)
-    storeUser(profile)
+    setUser((prev) => {
+      const merged = { ...profile, licenseWarning: prev?.licenseWarning || profile.licenseWarning }
+      localStorage.setItem(USER_KEY, JSON.stringify(merged))
+      return merged
+    })
     setUserStatus(profile.status || 'not_verified')
-  }, [storeUser])
+  }, [])
 
   const refreshAdminData = useCallback(async () => {
     const [usersData, pendingData] = await Promise.all([
