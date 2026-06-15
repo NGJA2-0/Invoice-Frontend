@@ -110,6 +110,7 @@ const CreateInvoice = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [terms, setTerms] = useState([])
   const [selectedTerm, setSelectedTerm] = useState('')
+  const [businessProfile, setBusinessProfile] = useState(null)
   const previewRef = useRef(null)
 
   const form = useForm({
@@ -172,6 +173,21 @@ const CreateInvoice = () => {
   }, [])
 
   useEffect(() => {
+    const loadBusinessProfile = async () => {
+      if (!user?.id) return
+      try {
+        const res = await invoiceService.getBusinessProfile(user.id)
+        if (res) {
+          setBusinessProfile(res)
+        }
+      } catch (error) {
+        // silently fail — fields will just be empty
+      }
+    }
+    loadBusinessProfile()
+  }, [user?.id])
+
+  useEffect(() => {
     const loadNumber = async () => {
       try {
         const nextNumber = await invoiceService.generateNumber()
@@ -196,13 +212,21 @@ const CreateInvoice = () => {
         setSubCategories(normalizeOptions(data))
         setSubCategory('')
         setTemplateConfig(null)
-        reset({ invoiceData: buildDefaultInvoiceData() })
+        const defaults = buildDefaultInvoiceData()
+        if (businessProfile) {
+          defaults.companyHeader.companyName    = businessProfile.businessName || ''
+          defaults.companyHeader.companyAddress = businessProfile.businessAddress || ''
+          defaults.companyHeader.companyPhone   = (businessProfile.mobileNumbers || [])[0] || ''
+          defaults.companyHeader.tin            = businessProfile.tin || ''
+          defaults.companyHeader.stockValueName = businessProfile.stockValueName || ''
+        }
+        reset({ invoiceData: defaults })
       } catch (error) {
         setSubCategories([])
       }
     }
     loadSubCategories()
-  }, [category, reset])
+  }, [category, reset, businessProfile])
 
   useEffect(() => {
     const shouldLoad = category && (subCategories.length === 0 || subCategory)
@@ -214,7 +238,6 @@ const CreateInvoice = () => {
     const loadTemplate = async () => {
       setLoadingConfig(true)
       try {
-        // Step 1: Resolve template to get the template key
         const templateResolution = await invoiceService.resolveTemplate({
           category,
           subCategory,
@@ -229,9 +252,7 @@ const CreateInvoice = () => {
           throw new Error('Unable to determine template for this category')
         }
 
-        // Step 2: Get full template structure using the template key
         const templateStructure = await invoiceService.getTemplate(templateKey)
-        
         setTemplateConfig(templateStructure)
       } catch (error) {
         pushToast({
@@ -246,6 +267,16 @@ const CreateInvoice = () => {
     }
     loadTemplate()
   }, [category, subCategory, subCategories.length, pushToast])
+
+  // Re-apply business profile values whenever template config becomes available
+  useEffect(() => {
+    if (!templateConfig || !businessProfile) return
+    setValue('invoiceData.companyHeader.companyName',    businessProfile.businessName || '',                        { shouldValidate: false })
+    setValue('invoiceData.companyHeader.companyAddress', businessProfile.businessAddress || '',                     { shouldValidate: false })
+    setValue('invoiceData.companyHeader.companyPhone',   (businessProfile.mobileNumbers || [])[0] || '',           { shouldValidate: false })
+    setValue('invoiceData.companyHeader.tin',            businessProfile.tin || '',                                 { shouldValidate: false })
+    setValue('invoiceData.companyHeader.stockValueName', businessProfile.stockValueName || '',                      { shouldValidate: false })
+  }, [templateConfig, businessProfile, setValue])
 
   const formReady = useMemo(() => Boolean(category && templateConfig), [category, templateConfig])
 
@@ -1062,6 +1093,7 @@ const CreateInvoice = () => {
               setValue={setValue}
               onLogoUpload={handleLogoUpload}
               uploadingLogo={uploadingLogo}
+              businessProfile={businessProfile}
             />
 
             {/* ── Action Bar ── */}

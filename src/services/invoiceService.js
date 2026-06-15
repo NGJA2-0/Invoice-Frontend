@@ -90,4 +90,9 @@ export const invoiceService = {
     const response = await api.get('/terms')
     return response
   },
+
+  getBusinessProfile: async (userId) => {
+    const response = await api.get(`/users/${userId}/business-profile`)
+    return response
+  },
 }
