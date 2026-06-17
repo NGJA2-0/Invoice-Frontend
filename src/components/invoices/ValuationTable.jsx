@@ -7,7 +7,7 @@ import ItemTypeSearch from '../common/ItemTypeSearch'
 import { Check, Trash2 } from 'lucide-react'
 import { currencyApi } from '../../services/currencyApi'
 
-const ValuationTable = ({ control, register, watch, setValue, section, businessProfile }) => {
+const ValuationTable = ({ control, register, watch, setValue, section, businessProfile, pushToast }) => {
   // ── Currency dropdown state ────────────────────────────────────────────
   const [currencyCodes, setCurrencyCodes] = useState([])
   const [currencyList, setCurrencyList] = useState([])
@@ -103,6 +103,17 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   }, [fields.length])
 
   const addItem = () => {
+    if (isValuationTable && isStockExhausted) {
+      if (typeof pushToast === 'function') {
+        pushToast({
+          title: 'Stock value limit reached',
+          message: 'You have reached your stock value, please contact NGJA for increase it or more details.',
+          tone: 'danger',
+        })
+      }
+      return
+    }
+
     const defaultItem = {}
     tableConfig.columns.forEach((col) => {
       if (col.dataType === 'number' || col.dataType === 'computed' || col.readOnly) {
@@ -219,6 +230,38 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   const cifOther = fobOther + freightOther + insuranceOther
   const cifOtherLkr = cifOther * otherRateToLkr
   const cifOtherUsd = (cifOther * otherRateToLkr) / usdRateToLkr
+
+  // ── Stock value tracking (compared against FOB's LKR value) ───────────
+  const fobLkrForStock = showOtherCurrency ? fobOtherLkr : fobLkr
+
+  const stockValueNumber = useMemo(() => {
+    const raw = businessProfile?.stockValueName
+    if (raw === undefined || raw === null) return 0
+    const cleaned = String(raw).replace(/[^0-9.-]/g, '')
+    const value = Number(cleaned)
+    return Number.isFinite(value) ? value : 0
+  }, [businessProfile?.stockValueName])
+
+  const remainingStockValue = stockValueNumber - fobLkrForStock
+
+  const remainingPercentage = stockValueNumber > 0
+    ? (remainingStockValue / stockValueNumber) * 100
+    : 100
+
+  const isStockExhausted = stockValueNumber > 0 && remainingStockValue <= 0
+
+  // green: > 70% remaining | yellow: 10%–70% remaining | red: 0%–10% remaining
+  const stockValueStatus = remainingPercentage <= 10
+    ? 'red'
+    : remainingPercentage <= 70
+      ? 'yellow'
+      : 'green'
+
+  const stockValueStyles = {
+    green: 'border-emerald-300 bg-emerald-50 text-emerald-700',
+    yellow: 'border-amber-300 bg-amber-50 text-amber-700',
+    red: 'border-red-300 bg-red-50 text-red-700',
+  }
 
   // ── Row "Done" handler ─────────────────────────────────────────────────
   const handleRowDone = (index) => {
@@ -344,15 +387,32 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Stock Value (display-only label, not an input) */}
+      {/* Stock Value (display-only, live remaining balance, color-coded by status) */}
       {sectionKey === 'valuationTable' && businessProfile?.stockValueName ? (
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">
-            Stock Value:
-          </span>
-          <span className="text-sm font-medium text-ink-700 break-words">
-            {businessProfile.stockValueName}
-          </span>
+        <div
+          className={`flex flex-col gap-2 rounded-2xl border px-4 py-3 transition-colors duration-300 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${stockValueStyles[stockValueStatus]}`}
+        >
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+              Stock Value:
+            </span>
+            <span className="text-sm font-semibold break-words">
+              {stockValueNumber.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+              Remaining:
+            </span>
+            <span className="text-sm font-semibold break-words">
+              {remainingStockValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          {isStockExhausted ? (
+            <p className="text-xs font-medium leading-relaxed sm:max-w-[260px]">
+              You have reached your stock value, please contact NGJA for increase it or more details.
+            </p>
+          ) : null}
         </div>
       ) : null}
 

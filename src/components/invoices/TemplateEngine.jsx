@@ -183,6 +183,7 @@ const TemplateEngine = ({
   onLogoUpload,
   uploadingLogo,
   businessProfile,
+  pushToast,
 }) => {
   useEffect(() => {
     if (!businessProfile || !templateConfig) return
@@ -289,6 +290,7 @@ const TemplateEngine = ({
                     setValue={setValue}
                     section={section}
                     businessProfile={businessProfile}
+                    pushToast={pushToast}
                   />
                 </div>
               ) : null}

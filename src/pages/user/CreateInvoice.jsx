@@ -1029,6 +1029,7 @@ const CreateInvoice = () => {
               onLogoUpload={handleLogoUpload}
               uploadingLogo={uploadingLogo}
               businessProfile={businessProfile}
+              pushToast={pushToast}
             />
 
             {/* ── Action Bar ── */}
