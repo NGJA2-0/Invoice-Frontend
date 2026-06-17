@@ -653,7 +653,7 @@ const DownloadButton = ({ targetRef }) => {
 }
 
 /* ─── Main component ───────────────────────────────────────── */
-const InvoicePreview = forwardRef(({ preview, selectedTerm, terms }, _ref) => {
+const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const pageRef = useRef(null)
 
   if (!preview) return null
@@ -826,23 +826,17 @@ const InvoicePreview = forwardRef(({ preview, selectedTerm, terms }, _ref) => {
           </div>
 
           <div style={styles.headerRight}>
-            {(() => {
-              const selectedTermTitle = selectedTerm
-                ? (terms || []).find((t) => t.id === selectedTerm)?.title || ''
-                : ''
-              return [
-                ['Invoice Date', invoiceMeta.invoiceDate],
-                ['Invoice No',   invoiceMeta.invoiceNumber || meta.invoiceNumber],
-                ['Export Type',  meta.templateKey || invoiceMeta.exportType],
-                ...(selectedTermTitle ? [['Terms', selectedTermTitle]] : []),
-                ['Country',      invoiceMeta.countryOfOrigin],
-              ].map(([lbl, val]) => (
-                <div key={lbl} style={styles.metaChip}>
-                  <span style={styles.metaLabel}>{lbl}</span>
-                  <span style={styles.metaValue}>{formatValue(val)}</span>
-                </div>
-              ))
-            })()}
+            {[
+              ['Invoice Date', invoiceMeta.invoiceDate],
+              ['Invoice No',   invoiceMeta.invoiceNumber || meta.invoiceNumber],
+              ['Export Type',  meta.templateKey || invoiceMeta.exportType],
+              ['Country',      invoiceMeta.countryOfOrigin],
+            ].map(([lbl, val]) => (
+              <div key={lbl} style={styles.metaChip}>
+                <span style={styles.metaLabel}>{lbl}</span>
+                <span style={styles.metaValue}>{formatValue(val)}</span>
+              </div>
+            ))}
           </div>
         </div>
 
