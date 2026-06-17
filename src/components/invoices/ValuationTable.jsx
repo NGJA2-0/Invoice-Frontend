@@ -7,7 +7,7 @@ import ItemTypeSearch from '../common/ItemTypeSearch'
 import { Check, Trash2 } from 'lucide-react'
 import { currencyApi } from '../../services/currencyApi'
 
-const ValuationTable = ({ control, register, watch, setValue, section }) => {
+const ValuationTable = ({ control, register, watch, setValue, section, businessProfile }) => {
   // ── Currency dropdown state ────────────────────────────────────────────
   const [currencyCodes, setCurrencyCodes] = useState([])
   const [currencyList, setCurrencyList] = useState([])
@@ -343,6 +343,18 @@ const ValuationTable = ({ control, register, watch, setValue, section }) => {
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-4">
+
+      {/* Stock Value (display-only label, not an input) */}
+      {sectionKey === 'valuationTable' && businessProfile?.stockValueName ? (
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">
+            Stock Value:
+          </span>
+          <span className="text-sm font-medium text-ink-700 break-words">
+            {businessProfile.stockValueName}
+          </span>
+        </div>
+      ) : null}
 
       {/* Currency + Exchange Rate */}
       {sectionKey === 'valuationTable' && (

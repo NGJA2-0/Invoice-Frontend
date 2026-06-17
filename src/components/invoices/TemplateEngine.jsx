@@ -273,16 +273,6 @@ const TemplateEngine = ({
                       </div>
                     </div>
                   ) : null}
-                  {businessProfile?.stockValueName ? (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">
-                        Stock Value
-                      </label>
-                      <div className="flex h-10 w-full items-center rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-ink-700 cursor-not-allowed select-none">
-                        {businessProfile.stockValueName}
-                      </div>
-                    </div>
-                  ) : null}
                   {/* Hidden inputs so RHF form state includes these values on submit */}
                   <input type="hidden" {...register('invoiceData.companyHeader.companyName')} />
                   <input type="hidden" {...register('invoiceData.companyHeader.companyAddress')} />
@@ -298,6 +288,7 @@ const TemplateEngine = ({
                     watch={watch}
                     setValue={setValue}
                     section={section}
+                    businessProfile={businessProfile}
                   />
                 </div>
               ) : null}
