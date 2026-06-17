@@ -667,6 +667,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const companyFields = [
     ['Address',  companyHeader.companyAddress],
     ['Email',    companyHeader.companyEmail],
+    ['TIN',      companyHeader.tin],
     ['Phone',    companyHeader.companyPhone],
     ['Website',  companyHeader.companyWebsite],
   ].filter(([, v]) => v !== null && v !== undefined && v !== '')
@@ -812,7 +813,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
                     </div>
                   )}
                   {/* Email, Phone, Website — each on its own line */}
-                  {[['Email', companyHeader.companyEmail], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
+                  {[['Email', companyHeader.companyEmail],['TIN', companyHeader.tin], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
                     .filter(([, v]) => v !== null && v !== undefined && v !== '')
                     .map(([lbl, val]) => (
                       <div key={lbl} style={styles.companyMetaAddress}>

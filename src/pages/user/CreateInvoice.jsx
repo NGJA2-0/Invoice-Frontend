@@ -288,13 +288,19 @@ const CreateInvoice = () => {
     }
   }
 
-  const buildPayload = (status) => ({
-    category,
-    subCategory: subCategory || undefined,
-    invoiceData: getValues('invoiceData'),
-    status,
-    createdBy: user?.id || '',
-  })
+  const buildPayload = (status) => {
+    const invoiceData = getValues('invoiceData')
+    if (businessProfile?.tin) {
+      invoiceData.companyHeader.tin = businessProfile.tin
+    }
+    return {
+      category,
+      subCategory: subCategory || undefined,
+      invoiceData,
+      status,
+      createdBy: user?.id || '',
+    }
+  }
 
   const handlePreview = async () => {
     if (!formReady || !ensureTemplate3NiDetails()) return
