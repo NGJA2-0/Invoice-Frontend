@@ -195,8 +195,10 @@ const CreateInvoice = () => {
       }
       try {
         const data = await invoiceService.getSubCategories(category)
-        setSubCategories(normalizeOptions(data))
-        setSubCategory('')
+        const normalized = normalizeOptions(data)
+        setSubCategories(normalized)
+        const autoSelected = normalized.length === 1 ? normalized[0].value : ''
+        setSubCategory(autoSelected)
         setTemplateConfig(null)
         const defaults = buildDefaultInvoiceData()
         if (businessProfile) {
@@ -215,7 +217,7 @@ const CreateInvoice = () => {
   }, [category, reset, businessProfile])
 
   useEffect(() => {
-    const shouldLoad = category && (subCategories.length === 0 || subCategory)
+    const shouldLoad = category && (subCategory || subCategories.length === 0)
     if (!shouldLoad) {
       setTemplateConfig(null)
       return
@@ -252,7 +254,7 @@ const CreateInvoice = () => {
       }
     }
     loadTemplate()
-  }, [category, subCategory, subCategories.length, pushToast])
+  }, [category, subCategory, subCategories, pushToast])
 
   // Re-apply business profile values whenever template config becomes available
   useEffect(() => {
@@ -1102,7 +1104,9 @@ const CreateInvoice = () => {
                 <FileText size={20} />
               </div>
               <p className="ci-empty-text">
-                Select a sub-category above to load the invoice template
+                {subCategories.length > 0
+                  ? 'Select a sub-category above to load the invoice template'
+                  : 'Loading invoice template…'}
               </p>
             </div>
           )
