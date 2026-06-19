@@ -7,6 +7,39 @@ const CREATE_URL = '/auth/create-admin'
 
 const emptyForm = { username: '', fullName: '', email: '', password: '', role: 'admin' }
 
+function CapacitySlots({ total, occupied }) {
+  if (!total) {
+    return <span className="text-xs text-muted-foreground">—</span>
+  }
+
+  const filled = Math.min(occupied, total)
+  const available = total - filled
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap gap-1 max-w-[140px] sm:max-w-[180px]">
+        {Array.from({ length: filled }).map((_, i) => (
+          <span
+            key={`filled-${i}`}
+            title="Occupied"
+            className="h-2.5 w-2.5 rounded-[3px] bg-green-500 border border-green-600/40 shadow-sm"
+          />
+        ))}
+        {Array.from({ length: available }).map((_, i) => (
+          <span
+            key={`available-${i}`}
+            title="Available"
+            className="h-2.5 w-2.5 rounded-[3px] bg-white border border-border shadow-sm ring-1 ring-inset ring-black/5"
+          />
+        ))}
+      </div>
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+        {occupied}/{total} used
+      </span>
+    </div>
+  )
+}
+
 export default function Admins() {
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
@@ -135,7 +168,7 @@ export default function Admins() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-muted-foreground">
             <tr>
-              {['Full Name', 'Username', 'Email', 'Role', 'Status', 'Actions'].map(h => (
+              {['Full Name', 'Username', 'Email', 'Role', 'Capacity', 'Status', 'Actions'].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -154,6 +187,16 @@ export default function Admins() {
                   }`}>
                     {admin.role}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  {admin.role === 'admin' ? (
+                    <CapacitySlots
+                      total={admin.totalCapacity}
+                      occupied={admin.occupiedSlots}
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
