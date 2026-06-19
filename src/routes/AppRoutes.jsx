@@ -25,6 +25,7 @@ import Items from '../pages/admin/Items'
 import StockValues from '../pages/admin/StockValues'
 import LicenseRenewals from '../pages/admin/LicenseRenewals'
 import Admins from '../pages/admin/Admins'
+import AdminAssignedRegistrations from '../pages/admin/AdminAssignedRegistrations'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -127,6 +128,14 @@ const AppRoutes = () => {
             element={
               <SuperAdminRoute>
                 <Admins />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="admins/:adminId/registrations"
+            element={
+              <SuperAdminRoute>
+                <AdminAssignedRegistrations />
               </SuperAdminRoute>
             }
           />

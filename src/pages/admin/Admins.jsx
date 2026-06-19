@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Pencil, Trash2, Plus, ToggleLeft, ToggleRight, X, Eye, EyeOff, Settings2 } from 'lucide-react'
 import { api } from '../../services/api'
 
@@ -41,6 +42,7 @@ function CapacitySlots({ total, occupied }) {
 }
 
 export default function Admins() {
+  const navigate = useNavigate()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -204,7 +206,11 @@ export default function Admins() {
           </thead>
           <tbody className="divide-y divide-border">
             {admins.map(admin => (
-              <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
+              <tr
+                key={admin.id}
+                onClick={() => navigate(`/admin/admins/${admin.id}/registrations`, { state: { fullName: admin.fullName, username: admin.username } })}
+                className="hover:bg-muted/30 transition-colors cursor-pointer"
+              >
                 <td className="px-4 py-3 font-medium">{admin.fullName}</td>
                 <td className="px-4 py-3 text-muted-foreground">{admin.username}</td>
                 <td className="px-4 py-3 text-muted-foreground">{admin.email}</td>
@@ -225,7 +231,7 @@ export default function Admins() {
                         occupied={admin.occupiedSlots}
                       />
                       <button
-                        onClick={() => openCapacity(admin)}
+                        onClick={(e) => { e.stopPropagation(); openCapacity(admin) }}
                         title="Edit capacity"
                         className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                       >
@@ -245,7 +251,7 @@ export default function Admins() {
                     {admin.status}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     {/* Don't allow editing/deleting the superadmin row */}
                     {admin.role !== 'superadmin' && (
