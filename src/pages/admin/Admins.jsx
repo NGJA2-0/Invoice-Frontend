@@ -1,0 +1,308 @@
+import { useEffect, useState } from 'react'
+import { Pencil, Trash2, Plus, ToggleLeft, ToggleRight, X, Eye, EyeOff } from 'lucide-react'
+import { api } from '../../services/api'
+
+const BASE = '/admin/admins'
+const CREATE_URL = '/auth/create-admin'
+
+const emptyForm = { username: '', fullName: '', email: '', password: '', role: 'admin' }
+
+export default function Admins() {
+  const [admins, setAdmins] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Modal state
+  const [modal, setModal] = useState(null) // null | 'create' | 'edit' | 'delete'
+  const [selected, setSelected] = useState(null)
+  const [form, setForm] = useState(emptyForm)
+  const [showPassword, setShowPassword] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState(null)
+
+  const fetchAdmins = async () => {
+    try {
+      setLoading(true)
+      const res = await api.get(BASE)
+      setAdmins(res || [])
+    } catch {
+      setError('Failed to load admins.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchAdmins() }, [])
+
+  const openCreate = () => {
+    setForm(emptyForm)
+    setFormError(null)
+    setShowPassword(false)
+    setModal('create')
+  }
+
+  const openEdit = (admin) => {
+    setSelected(admin)
+    setForm({ username: admin.username, fullName: admin.fullName, email: admin.email, password: '', role: admin.role })
+    setFormError(null)
+    setModal('edit')
+  }
+
+  const openDelete = (admin) => {
+    setSelected(admin)
+    setModal('delete')
+  }
+
+  const closeModal = () => {
+    setModal(null)
+    setSelected(null)
+    setFormError(null)
+  }
+
+  const handleCreate = async () => {
+    setSubmitting(true)
+    setFormError(null)
+    try {
+      await api.post(CREATE_URL, form)
+      await fetchAdmins()
+      closeModal()
+    } catch (e) {
+      setFormError(e?.response?.data?.message || 'Failed to create admin.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleEdit = async () => {
+    setSubmitting(true)
+    setFormError(null)
+    const payload = { username: form.username, fullName: form.fullName, email: form.email }
+    try {
+      await api.put(`${BASE}/${selected.id}`, payload)
+      await fetchAdmins()
+      closeModal()
+    } catch (e) {
+      setFormError(e?.response?.data?.message || 'Failed to update admin.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    setSubmitting(true)
+    try {
+      await api.delete(`${BASE}/${selected.id}`)
+      await fetchAdmins()
+      closeModal()
+    } catch {
+      setFormError('Failed to delete admin.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const toggleStatus = async (admin) => {
+    const next = admin.status === 'active' ? 'inactive' : 'active'
+    try {
+      await api.patch(`${BASE}/${admin.id}/status`, { status: next })
+      await fetchAdmins()
+    } catch {
+      // silently ignore or add a toast if you have one
+    }
+  }
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading admins...</p>
+  if (error) return <p className="text-sm text-destructive">{error}</p>
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Administrators</h2>
+          <p className="text-sm text-muted-foreground">{admins.length} total</p>
+        </div>
+        <button
+          onClick={openCreate}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <Plus size={15} /> New Admin
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-muted-foreground">
+            <tr>
+              {['Full Name', 'Username', 'Email', 'Role', 'Status', 'Actions'].map(h => (
+                <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {admins.map(admin => (
+              <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
+                <td className="px-4 py-3 font-medium">{admin.fullName}</td>
+                <td className="px-4 py-3 text-muted-foreground">{admin.username}</td>
+                <td className="px-4 py-3 text-muted-foreground">{admin.email}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    admin.role === 'superadmin'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {admin.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    admin.status === 'active'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    {admin.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {/* Don't allow editing/deleting the superadmin row */}
+                    {admin.role !== 'superadmin' && (
+                      <>
+                        <button
+                          onClick={() => toggleStatus(admin)}
+                          title={admin.status === 'active' ? 'Deactivate' : 'Activate'}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {admin.status === 'active'
+                            ? <ToggleRight size={18} className="text-green-600" />
+                            : <ToggleLeft size={18} />}
+                        </button>
+                        <button
+                          onClick={() => openEdit(admin)}
+                          title="Edit"
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => openDelete(admin)}
+                          title="Delete"
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modals */}
+      {(modal === 'create' || modal === 'edit') && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-xl flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">
+                {modal === 'create' ? 'Create New Admin' : 'Edit Admin'}
+              </h3>
+              <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {[
+                { label: 'Full Name', key: 'fullName', type: 'text' },
+                { label: 'Username', key: 'username', type: 'text' },
+                { label: 'Email', key: 'email', type: 'email' },
+              ].map(({ label, key, type }) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">{label}</label>
+                  <input
+                    type={type}
+                    value={form[key]}
+                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              ))}
+
+              {modal === 'create' && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 pr-10 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {formError && <p className="text-xs text-destructive">{formError}</p>}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={closeModal}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={modal === 'create' ? handleCreate : handleEdit}
+                disabled={submitting}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? 'Saving...' : modal === 'create' ? 'Create' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === 'delete' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-xl flex flex-col gap-4">
+            <h3 className="text-base font-semibold">Delete Admin</h3>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to permanently delete{' '}
+              <span className="font-medium text-foreground">{selected?.fullName}</span>?
+              This cannot be undone.
+            </p>
+            {formError && <p className="text-xs text-destructive">{formError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeModal}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={submitting}
+                className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

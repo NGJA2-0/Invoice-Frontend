@@ -108,8 +108,6 @@ const CreateInvoice = () => {
   const [preview, setPreview] = useState(null)
   const [loadingConfig, setLoadingConfig] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
-  const [terms, setTerms] = useState([])
-  const [selectedTerm, setSelectedTerm] = useState('')
   const [businessProfile, setBusinessProfile] = useState(null)
   const previewRef = useRef(null)
 
@@ -161,18 +159,6 @@ const CreateInvoice = () => {
   }, [pushToast])
 
   useEffect(() => {
-    const loadTerms = async () => {
-      try {
-        const data = await invoiceService.getTerms()
-        setTerms(data?.terms?.filter((t) => t.is_active) || [])
-      } catch (error) {
-        setTerms([])
-      }
-    }
-    loadTerms()
-  }, [])
-
-  useEffect(() => {
     const loadBusinessProfile = async () => {
       if (!user?.id) return
       try {
@@ -209,8 +195,10 @@ const CreateInvoice = () => {
       }
       try {
         const data = await invoiceService.getSubCategories(category)
-        setSubCategories(normalizeOptions(data))
-        setSubCategory('')
+        const normalized = normalizeOptions(data)
+        setSubCategories(normalized)
+        const autoSelected = normalized.length === 1 ? normalized[0].value : ''
+        setSubCategory(autoSelected)
         setTemplateConfig(null)
         const defaults = buildDefaultInvoiceData()
         if (businessProfile) {
@@ -229,7 +217,7 @@ const CreateInvoice = () => {
   }, [category, reset, businessProfile])
 
   useEffect(() => {
-    const shouldLoad = category && (subCategories.length === 0 || subCategory)
+    const shouldLoad = category && (subCategory || subCategories.length === 0)
     if (!shouldLoad) {
       setTemplateConfig(null)
       return
@@ -266,7 +254,7 @@ const CreateInvoice = () => {
       }
     }
     loadTemplate()
-  }, [category, subCategory, subCategories.length, pushToast])
+  }, [category, subCategory, subCategories, pushToast])
 
   // Re-apply business profile values whenever template config becomes available
   useEffect(() => {
@@ -302,13 +290,19 @@ const CreateInvoice = () => {
     }
   }
 
-  const buildPayload = (status) => ({
-    category,
-    subCategory: subCategory || undefined,
-    invoiceData: getValues('invoiceData'),
-    status,
-    createdBy: user?.id || '',
-  })
+  const buildPayload = (status) => {
+    const invoiceData = getValues('invoiceData')
+    if (businessProfile?.tin) {
+      invoiceData.companyHeader.tin = businessProfile.tin
+    }
+    return {
+      category,
+      subCategory: subCategory || undefined,
+      invoiceData,
+      status,
+      createdBy: user?.id || '',
+    }
+  }
 
   const handlePreview = async () => {
     if (!formReady || !ensureTemplate3NiDetails()) return
@@ -1004,69 +998,18 @@ const CreateInvoice = () => {
             <span className="ci-card-title">Invoice Category</span>
             <div className="ci-card-accent" />
           </div>
-          {/* Terms dropdown — always on top */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '10px',
-                fontWeight: 700,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: '#b8922a',
-                marginBottom: '0.5rem',
-              }}
-            >
-              Select Terms
-            </label>
-            <select
-              value={selectedTerm}
-              onChange={(e) => setSelectedTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                borderRadius: '10px',
-                border: '1px solid #e8e8e8',
-                fontSize: '14px',
-                color: selectedTerm ? '#1a1a1a' : '#9a9a9a',
-                background: '#fff',
-                appearance: 'none',
-                backgroundImage:
-                  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23b8922a\' stroke-width=\'2\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'/%3E%3C/svg%3E")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 1rem center',
-                cursor: 'pointer',
-                outline: 'none',
-                opacity: terms.length === 0 ? 0.5 : 1,
-              }}
-              disabled={terms.length === 0}
-            >
-              <option value="">
-                {terms.length === 0 ? 'Loading terms…' : 'Select terms'}
-              </option>
-              {terms.map((term) => (
-                <option key={term.id} value={term.id}>
-                  {term.title}
-                </option>
-              ))}
-            </select>
+          <div className="ci-selector-grid">
+            <CategorySelector
+              categories={categories}
+              value={category}
+              onChange={setCategory}
+            />
+            <SubCategorySelector
+              subCategories={subCategories}
+              value={subCategory}
+              onChange={setSubCategory}
+            />
           </div>
-
-          {/* Category + SubCategory — only shown after a term is selected */}
-          {selectedTerm && (
-            <div className="ci-selector-grid">
-              <CategorySelector
-                categories={categories}
-                value={category}
-                onChange={setCategory}
-              />
-              <SubCategorySelector
-                subCategories={subCategories}
-                value={subCategory}
-                onChange={setSubCategory}
-              />
-            </div>
-          )}
 
           {loadingConfig && (
             <div className="ci-loading">
@@ -1094,6 +1037,7 @@ const CreateInvoice = () => {
               onLogoUpload={handleLogoUpload}
               uploadingLogo={uploadingLogo}
               businessProfile={businessProfile}
+              pushToast={pushToast}
             />
 
             {/* ── Action Bar ── */}
@@ -1160,7 +1104,9 @@ const CreateInvoice = () => {
                 <FileText size={20} />
               </div>
               <p className="ci-empty-text">
-                Select a sub-category above to load the invoice template
+                {subCategories.length > 0
+                  ? 'Select a sub-category above to load the invoice template'
+                  : 'Loading invoice template…'}
               </p>
             </div>
           )
@@ -1185,8 +1131,6 @@ const CreateInvoice = () => {
               <InvoicePreview
               ref={previewRef}
               preview={preview}
-              selectedTerm={selectedTerm}
-              terms={terms}
             />
             </div>
           </div>

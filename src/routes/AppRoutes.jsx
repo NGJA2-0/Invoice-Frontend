@@ -24,11 +24,12 @@ import { useApp } from '../context/AppContext'
 import Items from '../pages/admin/Items'
 import StockValues from '../pages/admin/StockValues'
 import LicenseRenewals from '../pages/admin/LicenseRenewals'
-import Terms from '../pages/admin/Terms'
+import Admins from '../pages/admin/Admins'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
   const { user } = useApp()
+  if (!user) return null
   if (user?.role !== 'superadmin') {
     return <Navigate to="/admin/dashboard" replace />
   }
@@ -121,11 +122,11 @@ const AppRoutes = () => {
               </SuperAdminRoute>
             }
           />
-           <Route
-            path="terms"
+          <Route
+            path="admins"
             element={
               <SuperAdminRoute>
-                <Terms />
+                <Admins />
               </SuperAdminRoute>
             }
           />
