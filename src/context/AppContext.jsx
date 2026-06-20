@@ -145,6 +145,15 @@ export const AppProvider = ({ children }) => {
     return data
   }, [user?.id])
 
+  const rejectPendingUser = useCallback(async (userId, rejectionNotes = '') => {
+    if (!user?.id) return
+    const data = await api.put(`/admin/registrations/${userId}/reject`, {
+      rejectedBy: user.id,
+      rejectionNotes,
+    })
+    return data
+  }, [user?.id])
+
   // Verify username
   const verifyUsername = async (username) => {
     const data = await api.post('/auth/verify-username', { username })
@@ -315,6 +324,7 @@ export const AppProvider = ({ children }) => {
       dismissToast,
       refreshPendingUsers,
       approvePendingUser,
+      rejectPendingUser,
     }),
     [
       role,
