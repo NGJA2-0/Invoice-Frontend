@@ -26,6 +26,7 @@ import StockValues from '../pages/admin/StockValues'
 import LicenseRenewals from '../pages/admin/LicenseRenewals'
 import Admins from '../pages/admin/Admins'
 import AdminAssignedRegistrations from '../pages/admin/AdminAssignedRegistrations'
+import CreateOfficer from '../pages/admin/CreateOfficer'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -61,6 +62,7 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="pending-registrations" element={<PendingRegistrations />} />
+          <Route path="create-officer" element={<CreateOfficer />} />
 
           {/* Super Admin only routes */}
           <Route
