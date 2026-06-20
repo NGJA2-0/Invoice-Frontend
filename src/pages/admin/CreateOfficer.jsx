@@ -78,7 +78,10 @@ function OfficerFormModal({
           createdBy: currentUser?.id,
         })
       } else {
-        await officerApi.update(officer.id, payload)
+        await officerApi.update(officer.id, {
+          ...payload,
+          createdBy: resolvedAdminId,
+        })
       }
       onSaved()
     } catch {
@@ -189,15 +192,15 @@ function OfficerFormModal({
             )}
           </div>
 
-          {/* Admin dropdown — super admin only */}
+          {/* Admin dropdown — super admin only, locked during edit */}
           {isSuperAdmin && (
             <div className="relative">
               <label className="mb-1.5 block text-xs font-semibold text-gray-600">Assign to Admin</label>
               <button
                 type="button"
-                onClick={() => setAdminOpen((o) => !o)}
-                disabled={loadingAdmins}
-                className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20 disabled:opacity-50"
+                onClick={() => mode === 'create' && setAdminOpen((o) => !o)}
+                disabled={loadingAdmins || mode === 'edit'}
+                className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className={selectedAdmin ? 'text-gray-900' : 'text-gray-400'}>
                   {loadingAdmins
@@ -208,7 +211,7 @@ function OfficerFormModal({
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
-              {adminOpen && (
+              {mode === 'create' && adminOpen && (
                 <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-auto rounded-xl border border-white/40 bg-white/95 shadow-lg backdrop-blur-sm">
                   {admins.length === 0 ? (
                     <li className="px-4 py-2.5 text-sm text-gray-400">No admins found</li>
