@@ -61,12 +61,40 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="pending-registrations" element={<PendingRegistrations />} />
-          <Route path="approved-dealers" element={<ApprovedDealers />} />
-          <Route path="rejected-dealers" element={<RejectedDealers />} />
-          <Route path="invoice-management" element={<InvoiceManagement />} />
-          <Route path="users" element={<Users />} />
 
           {/* Super Admin only routes */}
+          <Route
+            path="approved-dealers"
+            element={
+              <SuperAdminRoute>
+                <ApprovedDealers />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="rejected-dealers"
+            element={
+              <SuperAdminRoute>
+                <RejectedDealers />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="invoice-management"
+            element={
+              <SuperAdminRoute>
+                <InvoiceManagement />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="users"
+            element={
+              <SuperAdminRoute>
+                <Users />
+              </SuperAdminRoute>
+            }
+          />
           <Route
             path="currencies"
             element={

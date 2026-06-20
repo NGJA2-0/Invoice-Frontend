@@ -13,6 +13,10 @@ const adminNavItems = [
     path: '/admin/pending-registrations',
     icon: ListChecks,
   },
+]
+
+// Super admin exclusive nav items
+const superAdminNavItems = [
   { label: 'Approved Dealers', path: '/admin/approved-dealers', icon: ShieldCheck },
   { label: 'Rejected Dealers', path: '/admin/rejected-dealers', icon: ShieldX },
   {
@@ -21,10 +25,6 @@ const adminNavItems = [
     icon: FileCheck,
   },
   { label: 'Users', path: '/admin/users', icon: Users },
-]
-
-// Super admin exclusive nav items
-const superAdminNavItems = [
   { label: 'Currencies', path: '/admin/currencies', icon: Coins },
   { label: 'Bulk Rate Update', path: '/admin/currencies/bulk-update', icon: RefreshCw },
   { label: 'Items', path: '/admin/items', icon: Package },
