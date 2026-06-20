@@ -8,4 +8,16 @@ export const officerApi = {
 
   // POST /api/v1/admin/officers
   create: (payload) => api.post(`${BASE}/officers`, payload),
+
+  // GET /api/v1/admin/officers/by-admin/:adminId
+  getByAdmin: (adminId) => api.get(`${BASE}/officers/by-admin/${adminId}`),
+
+  // GET /api/v1/admin/officers/grouped
+  getGrouped: () => api.get(`${BASE}/officers/grouped`),
+
+  // PUT /api/v1/admin/officers/:id
+  update: (id, payload) => api.put(`${BASE}/officers/${id}`, payload),
+
+  // DELETE /api/v1/admin/officers/:id
+  remove: (id) => api.delete(`${BASE}/officers/${id}`),
 }
