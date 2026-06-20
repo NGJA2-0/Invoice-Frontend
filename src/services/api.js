@@ -1,7 +1,23 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
 
+const RENDER_FALLBACK_URL = 'https://invoice-backend-ibyr.onrender.com/api/v1'
+
 const buildUrl = (path) => `${API_BASE_URL}${path}`
+
+// Tries the primary URL first; if the server is unreachable (network error),
+// automatically retries with the Render-hosted backend.
+const fetchWithFallback = async (url, options) => {
+  try {
+    return await fetch(url, options)
+  } catch (err) {
+    if (err instanceof TypeError && API_BASE_URL !== RENDER_FALLBACK_URL) {
+      const fallbackUrl = url.replace(API_BASE_URL, RENDER_FALLBACK_URL)
+      return await fetch(fallbackUrl, options)
+    }
+    throw err
+  }
+}
 
 const parseResponse = async (response) => {
   const payload = await response.json().catch(() => null)
@@ -30,7 +46,7 @@ const getStoredUserId = () => {
 
 const request = async (path, options = {}) => {
   const userId = getStoredUserId()
-  const response = await fetch(buildUrl(path), {
+  const response = await fetchWithFallback(buildUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -42,7 +58,7 @@ const request = async (path, options = {}) => {
 }
 
 const requestForm = async (path, formData, options = {}) => {
-  const response = await fetch(buildUrl(path), {
+  const response = await fetchWithFallback(buildUrl(path), {
     method: 'POST',
     body: formData,
     ...options,
@@ -51,7 +67,7 @@ const requestForm = async (path, formData, options = {}) => {
 }
 
 const requestWithUserIdHeader = async (path, body, userId) => {
-  const response = await fetch(buildUrl(path), {
+  const response = await fetchWithFallback(buildUrl(path), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
