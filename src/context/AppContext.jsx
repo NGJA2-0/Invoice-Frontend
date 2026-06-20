@@ -121,15 +121,35 @@ export const AppProvider = ({ children }) => {
   }, [])
 
   const refreshPendingUsers = useCallback(async (page = 1, limit = 10) => {
-    const data = await api.get(`/admin/registrations/pending-users?page=${page}&limit=${limit}`)
-    return data
-  }, [])
+    if (role === 'superadmin') {
+      const data = await api.get(`/admin/registrations/pending-users?page=${page}&limit=${limit}`)
+      return data
+    } else {
+      const data = await api.get(`/admin/registrations/assigned?page=${page}&limit=${limit}`, {
+        headers: { 'X-User-Id': user?.id }
+      })
+      return {
+        registrations: data?.registrations || [],
+        totalPages: data?.pagination?.totalPages || 1,
+        total: data?.pagination?.totalItems || data?.registrations?.length || 0
+      }
+    }
+  }, [role, user?.id])
 
   const approvePendingUser = useCallback(async (userId, approvalNotes = '') => {
     if (!user?.id) return
     const data = await api.put(`/admin/registrations/${userId}/approve`, {
       approvedBy: user.id,
       approvalNotes,
+    })
+    return data
+  }, [user?.id])
+
+  const rejectPendingUser = useCallback(async (userId, rejectionNotes = '') => {
+    if (!user?.id) return
+    const data = await api.put(`/admin/registrations/${userId}/reject`, {
+      rejectedBy: user.id,
+      rejectionNotes,
     })
     return data
   }, [user?.id])
@@ -179,7 +199,7 @@ export const AppProvider = ({ children }) => {
     setRole(nextRole)
     localStorage.setItem(ROLE_KEY, nextRole)
     storeUser(data)
-    if (nextRole === 'admin') {
+    if (nextRole === 'admin' || nextRole === 'superadmin') {
       setUserStatus('verified')
       await refreshAdminData()
     } else {
@@ -304,6 +324,7 @@ export const AppProvider = ({ children }) => {
       dismissToast,
       refreshPendingUsers,
       approvePendingUser,
+      rejectPendingUser,
     }),
     [
       role,
@@ -319,7 +340,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?.id) {
-      if (role === 'admin') {
+      if (role === 'admin' || role === 'superadmin') {
         refreshAdminData()
       } else {
         refreshUserProfile(user.id)

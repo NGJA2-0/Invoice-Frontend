@@ -63,7 +63,7 @@ const requestWithUserIdHeader = async (path, body, userId) => {
 }
 
 export const api = {
-  get: (path) => request(path, { method: 'GET' }),
+  get: (path, options = {}) => request(path, { method: 'GET', ...options }),
   submitLicenseRenewal: (userId, body) => {
     if (!userId) throw new Error('User ID is required for license renewal')
     return requestWithUserIdHeader('/license-renewals/submit', body, userId)

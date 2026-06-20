@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Coins, FileCheck, FileCheck2, LayoutGrid, ListChecks, Layers, RefreshCw, ShieldCheck, ShieldX, Users, Package, UserCog } from 'lucide-react'
+import { Coins, FileCheck, FileCheck2, LayoutGrid, ListChecks, Layers, RefreshCw, ShieldCheck, ShieldX, Users, Package, UserCog, UsersRound } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Breadcrumbs from '../components/layout/Breadcrumbs'
 import Sidebar from '../components/layout/Sidebar'
@@ -13,6 +13,11 @@ const adminNavItems = [
     path: '/admin/pending-registrations',
     icon: ListChecks,
   },
+  { label: 'Officer Management', path: '/admin/create-officer', icon: UsersRound },
+]
+
+// Super admin exclusive nav items
+const superAdminNavItems = [
   { label: 'Approved Dealers', path: '/admin/approved-dealers', icon: ShieldCheck },
   { label: 'Rejected Dealers', path: '/admin/rejected-dealers', icon: ShieldX },
   {
@@ -21,10 +26,6 @@ const adminNavItems = [
     icon: FileCheck,
   },
   { label: 'Users', path: '/admin/users', icon: Users },
-]
-
-// Super admin exclusive nav items
-const superAdminNavItems = [
   { label: 'Currencies', path: '/admin/currencies', icon: Coins },
   { label: 'Bulk Rate Update', path: '/admin/currencies/bulk-update', icon: RefreshCw },
   { label: 'Items', path: '/admin/items', icon: Package },
@@ -36,6 +37,7 @@ const superAdminNavItems = [
 const pageLabels = {
   '/admin/dashboard': 'Dashboard',
   '/admin/pending-registrations': 'Pending Registrations',
+  '/admin/create-officer': 'Officer Management',
   '/admin/approved-dealers': 'Approved Dealers',
   '/admin/rejected-dealers': 'Rejected Dealers',
   '/admin/invoice-management': 'Invoice Management',

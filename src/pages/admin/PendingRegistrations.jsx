@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Loader2, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 
 const PendingRegistrations = () => {
-  const { refreshPendingUsers, approvePendingUser, pushToast, user } = useApp()
+  const { refreshPendingUsers, approvePendingUser, rejectPendingUser, pushToast, user } = useApp()
 
   const [registrations, setRegistrations] = useState([])
   const [page, setPage] = useState(1)
@@ -11,6 +11,7 @@ const PendingRegistrations = () => {
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [approvingId, setApprovingId] = useState(null)
+  const [rejectingId, setRejectingId] = useState(null)
   const LIMIT = 10
 
   const loadRegistrations = async (p = 1) => {
@@ -42,6 +43,19 @@ const PendingRegistrations = () => {
       pushToast({ title: 'Error', message: error.message || 'Failed to approve user.', tone: 'danger' })
     } finally {
       setApprovingId(null)
+    }
+  }
+
+  const handleReject = async (userId) => {
+    setRejectingId(userId)
+    try {
+      await rejectPendingUser(userId, 'Registration rejected')
+      pushToast({ title: 'Rejected', message: 'User registration rejected successfully.', tone: 'success' })
+      loadRegistrations(page)
+    } catch (error) {
+      pushToast({ title: 'Error', message: error.message || 'Failed to reject user.', tone: 'danger' })
+    } finally {
+      setRejectingId(null)
     }
   }
 
@@ -85,19 +99,38 @@ const PendingRegistrations = () => {
                 <div><span className="text-ink-400">Registered: </span><span className="text-ink-700">{new Date(reg.registeredAt).toISOString().slice(0, 10)}</span></div>
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleApprove(reg.id)}
-                  disabled={approvingId === reg.id}
-                  className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {approvingId === reg.id ? (
-                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
-                  ) : (
-                    <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
-                  )}
-                </button>
-              </div>
+              {reg.status === 'pending' ? (
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => handleReject(reg.id)}
+                    disabled={approvingId === reg.id || rejectingId === reg.id}
+                    className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {rejectingId === reg.id ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Rejecting...</>
+                    ) : (
+                      <><XCircle className="w-3.5 h-3.5" /> Reject</>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleApprove(reg.id)}
+                    disabled={approvingId === reg.id || rejectingId === reg.id}
+                    className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {approvingId === reg.id ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
+                    ) : (
+                      <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <span className="text-sm font-medium text-ink-500 bg-ink-50 px-4 py-2 rounded-lg border border-ink-100">
+                    Registration {reg.status}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>

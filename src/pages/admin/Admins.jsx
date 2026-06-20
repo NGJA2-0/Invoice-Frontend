@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Pencil, Trash2, Plus, ToggleLeft, ToggleRight, X, Eye, EyeOff } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Pencil, Trash2, Plus, ToggleLeft, ToggleRight, X, Eye, EyeOff, Settings2 } from 'lucide-react'
 import { api } from '../../services/api'
 
 const BASE = '/admin/admins'
@@ -7,18 +8,55 @@ const CREATE_URL = '/auth/create-admin'
 
 const emptyForm = { username: '', fullName: '', email: '', password: '', role: 'admin' }
 
+function CapacitySlots({ total, occupied }) {
+  if (!total) {
+    return <span className="text-xs text-muted-foreground">—</span>
+  }
+
+  const filled = Math.min(occupied, total)
+  const available = total - filled
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap gap-1 max-w-[140px] sm:max-w-[180px]">
+        {Array.from({ length: filled }).map((_, i) => (
+          <span
+            key={`filled-${i}`}
+            title="Occupied"
+            className="h-2.5 w-2.5 rounded-[3px] bg-green-500 border border-green-600/40 shadow-sm"
+          />
+        ))}
+        {Array.from({ length: available }).map((_, i) => (
+          <span
+            key={`available-${i}`}
+            title="Available"
+            className="h-2.5 w-2.5 rounded-[3px] bg-white border border-border shadow-sm ring-1 ring-inset ring-black/5"
+          />
+        ))}
+      </div>
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+        {occupied}/{total} used
+      </span>
+    </div>
+  )
+}
+
 export default function Admins() {
+  const navigate = useNavigate()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   // Modal state
-  const [modal, setModal] = useState(null) // null | 'create' | 'edit' | 'delete'
+  const [modal, setModal] = useState(null) // null | 'create' | 'edit' | 'delete' | 'capacity'
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
+
+  // Capacity modal state
+  const [capacityValue, setCapacityValue] = useState('')
 
   const fetchAdmins = async () => {
     try {
@@ -51,6 +89,13 @@ export default function Admins() {
   const openDelete = (admin) => {
     setSelected(admin)
     setModal('delete')
+  }
+
+  const openCapacity = (admin) => {
+    setSelected(admin)
+    setCapacityValue(String(admin.totalCapacity ?? 0))
+    setFormError(null)
+    setModal('capacity')
   }
 
   const closeModal = () => {
@@ -111,6 +156,25 @@ export default function Admins() {
     }
   }
 
+  const handleCapacity = async () => {
+    const parsed = Number(capacityValue)
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      setFormError('Enter a whole number of 0 or more.')
+      return
+    }
+    setSubmitting(true)
+    setFormError(null)
+    try {
+      await api.patch(`${BASE}/${selected.id}/capacity`, { totalCapacity: parsed })
+      await fetchAdmins()
+      closeModal()
+    } catch (e) {
+      setFormError(e?.response?.data?.message || 'Failed to update capacity.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   if (loading) return <p className="text-sm text-muted-foreground">Loading admins...</p>
   if (error) return <p className="text-sm text-destructive">{error}</p>
 
@@ -135,14 +199,18 @@ export default function Admins() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-muted-foreground">
             <tr>
-              {['Full Name', 'Username', 'Email', 'Role', 'Status', 'Actions'].map(h => (
+              {['Full Name', 'Username', 'Email', 'Role', 'Capacity', 'Status', 'Actions'].map(h => (
                 <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {admins.map(admin => (
-              <tr key={admin.id} className="hover:bg-muted/30 transition-colors">
+              <tr
+                key={admin.id}
+                onClick={() => navigate(`/admin/admins/${admin.id}/registrations`, { state: { fullName: admin.fullName, username: admin.username } })}
+                className="hover:bg-muted/30 transition-colors cursor-pointer"
+              >
                 <td className="px-4 py-3 font-medium">{admin.fullName}</td>
                 <td className="px-4 py-3 text-muted-foreground">{admin.username}</td>
                 <td className="px-4 py-3 text-muted-foreground">{admin.email}</td>
@@ -156,6 +224,25 @@ export default function Admins() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
+                  {admin.role === 'admin' ? (
+                    <div className="flex items-center gap-2">
+                      <CapacitySlots
+                        total={admin.totalCapacity}
+                        occupied={admin.occupiedSlots}
+                      />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openCapacity(admin) }}
+                        title="Edit capacity"
+                        className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      >
+                        <Settings2 size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                     admin.status === 'active'
                       ? 'bg-green-100 text-green-700'
@@ -164,7 +251,7 @@ export default function Admins() {
                     {admin.status}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     {/* Don't allow editing/deleting the superadmin row */}
                     {admin.role !== 'superadmin' && (
@@ -205,7 +292,7 @@ export default function Admins() {
       {/* Modals */}
       {(modal === 'create' || modal === 'edit') && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-xl flex flex-col gap-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold">
                 {modal === 'create' ? 'Create New Admin' : 'Edit Admin'}
@@ -277,15 +364,20 @@ export default function Admins() {
 
       {modal === 'delete' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-xl flex flex-col gap-4">
-            <h3 className="text-base font-semibold">Delete Admin</h3>
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+                <Trash2 size={18} className="text-red-600" />
+              </span>
+              <h3 className="text-base font-semibold">Delete Admin</h3>
+            </div>
             <p className="text-sm text-muted-foreground">
               Are you sure you want to permanently delete{' '}
               <span className="font-medium text-foreground">{selected?.fullName}</span>?
               This cannot be undone.
             </p>
-            {formError && <p className="text-xs text-destructive">{formError}</p>}
-            <div className="flex justify-end gap-2">
+            {formError && <p className="text-xs text-red-600">{formError}</p>}
+            <div className="flex justify-end gap-2 pt-1">
               <button
                 onClick={closeModal}
                 className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
@@ -295,9 +387,62 @@ export default function Admins() {
               <button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {submitting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === 'capacity' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">Edit Capacity</h3>
+              <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Set the total number of slots for{' '}
+              <span className="font-medium text-foreground">{selected?.fullName}</span>.
+            </p>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Total Capacity</label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={capacityValue}
+                onChange={e => setCapacityValue(e.target.value)}
+                className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {selected && (
+                <span className="text-[11px] text-muted-foreground">
+                  Currently {selected.occupiedSlots} of {selected.totalCapacity} slots occupied.
+                </span>
+              )}
+            </div>
+
+            {formError && <p className="text-xs text-destructive">{formError}</p>}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={closeModal}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCapacity}
+                disabled={submitting}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

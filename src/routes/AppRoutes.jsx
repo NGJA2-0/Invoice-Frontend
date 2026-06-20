@@ -25,6 +25,8 @@ import Items from '../pages/admin/Items'
 import StockValues from '../pages/admin/StockValues'
 import LicenseRenewals from '../pages/admin/LicenseRenewals'
 import Admins from '../pages/admin/Admins'
+import AdminAssignedRegistrations from '../pages/admin/AdminAssignedRegistrations'
+import CreateOfficer from '../pages/admin/CreateOfficer'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -60,12 +62,41 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="pending-registrations" element={<PendingRegistrations />} />
-          <Route path="approved-dealers" element={<ApprovedDealers />} />
-          <Route path="rejected-dealers" element={<RejectedDealers />} />
-          <Route path="invoice-management" element={<InvoiceManagement />} />
-          <Route path="users" element={<Users />} />
+          <Route path="create-officer" element={<CreateOfficer />} />
 
           {/* Super Admin only routes */}
+          <Route
+            path="approved-dealers"
+            element={
+              <SuperAdminRoute>
+                <ApprovedDealers />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="rejected-dealers"
+            element={
+              <SuperAdminRoute>
+                <RejectedDealers />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="invoice-management"
+            element={
+              <SuperAdminRoute>
+                <InvoiceManagement />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="users"
+            element={
+              <SuperAdminRoute>
+                <Users />
+              </SuperAdminRoute>
+            }
+          />
           <Route
             path="currencies"
             element={
@@ -127,6 +158,14 @@ const AppRoutes = () => {
             element={
               <SuperAdminRoute>
                 <Admins />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="admins/:adminId/registrations"
+            element={
+              <SuperAdminRoute>
+                <AdminAssignedRegistrations />
               </SuperAdminRoute>
             }
           />
