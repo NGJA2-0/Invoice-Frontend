@@ -5,6 +5,7 @@ import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
 import { useApp } from '../../context/AppContext'
 import { api } from '../../services/api'
+import signupBg from '../../assets/signup.jpg'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -295,7 +296,7 @@ const Login = () => {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '2rem 1rem',
-    backgroundImage: 'url(/src/assets/signup.jpg)',
+    backgroundImage: `url(${signupBg})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',

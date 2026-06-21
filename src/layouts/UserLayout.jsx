@@ -13,6 +13,7 @@ import Breadcrumbs from '../components/layout/Breadcrumbs'
 import Sidebar from '../components/layout/Sidebar'
 import TopNav from '../components/layout/TopNav'
 import { useApp } from '../context/AppContext'
+import signupBg from '../assets/signup.jpg'
 
 const navItems = [
   { label: 'Dashboard', path: '/user/dashboard', icon: LayoutGrid },
@@ -292,7 +293,7 @@ const UserLayout = () => {
           content: '';
           position: fixed;
           inset: 0;
-          background-image: url('/src/assets/signup.jpg');
+          background-image: url('${signupBg}');
           background-size: cover;
           background-position: center;
           filter: blur(8px);
