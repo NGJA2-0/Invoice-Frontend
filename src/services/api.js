@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+  import.meta.env.VITE_API_BASE_URL || 'https://invoice-backend-ibyr.onrender.com/api/v1'
 
 const RENDER_FALLBACK_URL = 'https://invoice-backend-ibyr.onrender.com/api/v1'
 
