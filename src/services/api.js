@@ -1,4 +1,4 @@
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
 
 const RENDER_FALLBACK_URL = 'https://invoice-backend-ibyr.onrender.com/api/v1'
@@ -7,7 +7,7 @@ const buildUrl = (path) => `${API_BASE_URL}${path}`
 
 // Tries the primary URL first; if the server is unreachable (network error),
 // automatically retries with the Render-hosted backend.
-const fetchWithFallback = async (url, options) => {
+export const fetchWithFallback = async (url, options) => {
   try {
     return await fetch(url, options)
   } catch (err) {

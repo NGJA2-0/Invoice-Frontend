@@ -1,13 +1,10 @@
-import { api } from './api'
+import { api, fetchWithFallback, API_BASE_URL } from './api'
 
 const BASE = '/admin/currencies'
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
-
-// Raw fetch for public currency endpoints (outside /admin)
+// Raw fetch for public currency endpoints (outside /admin) — with Render fallback
 const getRaw = async (path) => {
-  const res = await fetch(`${API_BASE_URL}${path}`)
+  const res = await fetchWithFallback(`${API_BASE_URL}${path}`)
   return res.json()
 }
 
