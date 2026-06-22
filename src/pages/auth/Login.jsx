@@ -9,7 +9,7 @@ import signupBg from '../../assets/signup.jpg'
 
 const Login = () => {
   const navigate = useNavigate()
-  const { pushToast, userLogin, adminLogin, signUp, verifyUsername } = useApp()
+  const { pushToast, userLogin, adminLogin, officerLogin, signUp, verifyUsername } = useApp()
 
   // Login states
   const [username, setUsername] = useState('')
@@ -113,6 +113,14 @@ const Login = () => {
           tone: 'success',
         })
         navigate('/admin/dashboard')
+      } else if (verifiedUserInfo.role === 'officer') {
+        loggedIn = await officerLogin(username, password)
+        pushToast({
+          title: 'Login Successful',
+          message: 'Welcome to the Officer Portal.',
+          tone: 'success',
+        })
+        navigate('/officer/dashboard')
       } else {
         loggedIn = await userLogin(username, password)
 
@@ -925,7 +933,7 @@ const Login = () => {
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
                   }}>
-                    {verifiedUserInfo.isAdmin ? 'Administrator' : 'User'}
+                    {verifiedUserInfo.isAdmin ? 'Administrator' : verifiedUserInfo.role === 'officer' ? 'Officer' : 'User'}
                   </span>
                 </div>
               </div>

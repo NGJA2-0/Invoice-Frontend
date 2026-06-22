@@ -192,6 +192,16 @@ export const AppProvider = ({ children }) => {
     return data
   }
 
+  // Officer login
+  const officerLogin = async (username, password) => {
+    const data = await api.post('/auth/officer-login', { username, password })
+    setRole('officer')
+    localStorage.setItem(ROLE_KEY, 'officer')
+    storeUser(data)
+    setUserStatus('verified')
+    return data
+  }
+
   // Legacy login method (kept for backward compatibility)
   const login = async ({ nic, password }) => {
     const data = await api.post('/auth/login', { nic, password })
@@ -307,6 +317,7 @@ export const AppProvider = ({ children }) => {
       login,
       userLogin,
       adminLogin,
+      officerLogin,
       verifyUsername,
       signUp,
       submitLicenseRenewal,

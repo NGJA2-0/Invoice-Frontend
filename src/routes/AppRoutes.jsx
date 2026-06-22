@@ -2,6 +2,7 @@ import { AnimatePresence } from 'framer-motion'
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
 import UserLayout from '../layouts/UserLayout'
+import OfficerLayout from '../layouts/OfficerLayout'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
@@ -56,6 +57,11 @@ const AppRoutes = () => {
           <Route path="procedure-flow" element={<ProcedureFlow />} />
           <Route path="edit-profile" element={<EditProfile />} />
           <Route path="dealer-registration" element={<DealerRegistration />} />
+        </Route>
+
+        <Route path="/officer" element={<OfficerLayout />}>
+          <Route index element={<Navigate to="/officer/dashboard" replace />} />
+          <Route path="dashboard" element={<div>Officer Dashboard (placeholder)</div>} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
