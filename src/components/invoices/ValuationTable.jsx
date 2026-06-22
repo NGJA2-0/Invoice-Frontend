@@ -46,7 +46,9 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   }, [selectedCurrency, isValuationTable, setValue])
 
   // ── Table config ───────────────────────────────────────────────────────
-  const tableConfig = section?.table || {
+  const tableConfig = useMemo(() => {
+  const currencyLabel = selectedCurrency || 'USD'
+  const base = section?.table || {
     key: 'valuationItems',
     allowAddRows: true,
     allowRemoveRows: true,
@@ -60,9 +62,20 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       { key: 'weightUnit', label: 'Weight Unit', dataType: 'dropdown' },
       { key: 'ratePer', label: 'Rate Per', dataType: 'number' },
       { key: 'rateUnit', label: 'Rate Unit', dataType: 'dropdown' },
-      { key: 'amount', label: 'Amount (USD)', dataType: 'number', readOnly: true },
+      { key: 'amount', label: `Amount (${currencyLabel})`, dataType: 'number', readOnly: true },
     ],
   }
+
+  return {
+    ...base,
+    columns: base.columns.map((col) => ({
+      ...col,
+      label: col.label
+        .replace(/\(USD\)/gi, `(${currencyLabel})`)
+        .replace(/\(\$\)/gi, `(${currencyLabel})`),
+    })),
+  }
+}, [selectedCurrency, section?.table])
 
   const sectionKey = section?.key || 'valuation'
   const fieldPath = `invoiceData.${sectionKey}`
@@ -539,7 +552,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       <div className="grid gap-3 md:grid-cols-3">
         <Input label="Total Pieces" type="number" value={totals.totalPieces.toFixed(2)} readOnly />
         <Input label="Total Weight" type="number" value={totals.totalWeight.toFixed(2)} readOnly />
-        <Input label="Total Amount (USD)" type="number" value={totals.totalAmount.toFixed(2)} readOnly />
+        <Input label={`Total Amount (${selectedCurrency || 'USD'})`} type="number" value={totals.totalAmount.toFixed(2)} readOnly />
       </div>
 
       {tableConfig.totals?.length ? (
@@ -550,7 +563,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
           {'totalCombinedWeight' in totals.totalsMap && <Input label="Total Combined Weight" type="number" value={(totals.totalsMap.totalCombinedWeight || 0).toFixed(2)} readOnly />}
           {'totalValueAddition' in totals.totalsMap && <Input label="Total Value Addition" type="number" value={(totals.totalsMap.totalValueAddition || 0).toFixed(2)} readOnly />}
           {'totalImportValue' in totals.totalsMap && <Input label="Total Import Value" type="number" value={(totals.totalsMap.totalImportValue || 0).toFixed(2)} readOnly />}
-          {'totalValue' in totals.totalsMap && <Input label="Total Value" type="number" value={(totals.totalsMap.totalValue || 0).toFixed(2)} readOnly />}
+          {'totalValue' in totals.totalsMap && <Input label={`Total Value (${selectedCurrency || 'USD'})`} type="number" value={(totals.totalsMap.totalValue || 0).toFixed(2)} readOnly />}
         </div>
       ) : null}
 
