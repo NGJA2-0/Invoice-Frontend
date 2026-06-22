@@ -7,6 +7,8 @@ import {
   Pencil,
   Trash2,
   Users2,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
@@ -37,6 +39,10 @@ function OfficerFormModal({
   const [stage, setStage] = useState(officer?.stage || null)
   const [stageOpen, setStageOpen] = useState(false)
 
+  const [username, setUsername] = useState(officer?.username || '')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+
   const initialAdmin = officer
     ? admins.find((a) => a.id === officer.adminId) || null
     : null
@@ -57,6 +63,8 @@ function OfficerFormModal({
     phone.trim() &&
     stage &&
     resolvedAdminId &&
+    username.trim() &&
+    password.trim() &&
     !submitting
 
   const handleSubmit = async () => {
@@ -71,6 +79,8 @@ function OfficerFormModal({
         phone,
         stage,
         adminId: resolvedAdminId,
+        username,
+        password,
       }
       if (mode === 'create') {
         await officerApi.create({
@@ -97,8 +107,8 @@ function OfficerFormModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-white/40 bg-white p-6 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl border border-white/40 bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex shrink-0 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
               <UserPlus className="h-5 w-5 text-gray-700" />
@@ -122,7 +132,7 @@ function OfficerFormModal({
           </button>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 overflow-y-auto pr-1">
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-gray-600">Full Name</label>
             <input
@@ -162,6 +172,37 @@ function OfficerFormModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600">Username</label>
+            <input
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20"
+              placeholder="john.silva"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 pr-11 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20"
+                placeholder="SecurePass123"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           {/* Stage dropdown */}
@@ -232,24 +273,24 @@ function OfficerFormModal({
           )}
 
           {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+        </div>
 
-          <div className="mt-2 flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="flex-1 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
-            >
-              {submitting
-                ? mode === 'create' ? 'Creating…' : 'Saving…'
-                : mode === 'create' ? 'Create Officer' : 'Save Changes'}
-            </button>
-          </div>
+        <div className="mt-4 flex shrink-0 gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className="flex-1 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
+          >
+            {submitting
+              ? mode === 'create' ? 'Creating…' : 'Saving…'
+              : mode === 'create' ? 'Create Officer' : 'Save Changes'}
+          </button>
         </div>
       </div>
     </div>
