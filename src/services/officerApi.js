@@ -20,4 +20,7 @@ export const officerApi = {
 
   // DELETE /api/v1/admin/officers/:id
   remove: (id) => api.delete(`${BASE}/officers/${id}`),
+
+  // GET /api/v1/stage1/officers/:officerId/invoices
+  getAssignedInvoices: (officerId) => api.get(`/stage1/officers/${officerId}/invoices`),
 }

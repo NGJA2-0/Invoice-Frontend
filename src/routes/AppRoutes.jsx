@@ -22,6 +22,7 @@ import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
 import { useApp } from '../context/AppContext'
+import OfficerDashboard from '../pages/officer/Dashboard'
 import Items from '../pages/admin/Items'
 import StockValues from '../pages/admin/StockValues'
 import LicenseRenewals from '../pages/admin/LicenseRenewals'
@@ -61,7 +62,7 @@ const AppRoutes = () => {
 
         <Route path="/officer" element={<OfficerLayout />}>
           <Route index element={<Navigate to="/officer/dashboard" replace />} />
-          <Route path="dashboard" element={<div>Officer Dashboard (placeholder)</div>} />
+          <Route path="dashboard" element={<OfficerDashboard />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

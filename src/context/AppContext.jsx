@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import { api } from '../services/api'
+import { officerApi } from '../services/officerApi'
 
 const AppContext = createContext(null)
 
@@ -56,6 +57,7 @@ export const AppProvider = ({ children }) => {
   const [registrations, setRegistrations] = useState([])
   const [invoices, setInvoices] = useState([])
   const [users, setUsers] = useState([])
+  const [officerInvoices, setOfficerInvoices] = useState([])
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
 
@@ -73,6 +75,14 @@ export const AppProvider = ({ children }) => {
     if (!userId) return
     const data = await api.get(`/users/${userId}/invoices`)
     setInvoices(mapInvoiceRows(data || []))
+  }, [])
+
+  const refreshOfficerInvoices = useCallback(async (officerId) => {
+    if (!officerId) return
+    const res = await officerApi.getAssignedInvoices(officerId)
+    const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+    setOfficerInvoices(list)
+    return list
   }, [])
 
   const refreshUserProfile = useCallback(async (userId) => {
@@ -311,6 +321,7 @@ export const AppProvider = ({ children }) => {
       registrations,
       invoices,
       users,
+      officerInvoices,
       notifications,
       toasts,
       selectRole,
@@ -324,6 +335,7 @@ export const AppProvider = ({ children }) => {
       logout,
       setUserStatus,
       refreshInvoices,
+      refreshOfficerInvoices,
       refreshUserProfile,
       refreshAdminData,
       submitRegistration,
@@ -344,6 +356,7 @@ export const AppProvider = ({ children }) => {
       registrations,
       invoices,
       users,
+      officerInvoices,
       notifications,
       toasts,
     ],
@@ -353,6 +366,8 @@ export const AppProvider = ({ children }) => {
     if (user?.id) {
       if (role === 'admin' || role === 'superadmin') {
         refreshAdminData()
+      } else if (role === 'officer') {
+        refreshOfficerInvoices(user.id)
       } else {
         refreshUserProfile(user.id)
         refreshInvoices(user.id)
