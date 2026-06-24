@@ -429,6 +429,20 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       )
     }
 
+    if (
+      String(templateKey || '').toUpperCase() === 'TEMPLATE_3' &&
+      (column.key === 'valueAddition' || column.key === 'totalValue')
+    ) {
+      return (
+        <Input
+          type="number"
+          value={Number(item?.[column.key] || 0).toFixed(2)}
+          readOnly
+          className={baseClassName}
+        />
+      )
+    }
+
     if (column.dataType === 'number') {
       return (
         <Input
@@ -437,6 +451,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
           step="any"
           placeholder={column.label}
           className={baseClassName}
+          readOnly={column.readOnly}
           {...register(fieldName, { valueAsNumber: true })}
         />
       )
@@ -645,8 +660,13 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                 {totals.totalsMap?.totalValueAddition !== undefined && (
                   <tr>
                     <td className="px-4 py-3 font-semibold text-ink-700">Value Addition</td>
-                    {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value="—" readOnly /></td>}
-                    <td className="px-4 py-3"><Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly /></td>
+                    {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly /></td>}
+                    <td className="px-4 py-3"><Input type="number" value={
+                      showOtherCurrency
+                        ? ((valueAdditionUsd * otherRateToLkr) / usdRateToLkr).toFixed(2)
+                        : valueAdditionUsd.toFixed(2)
+                    } readOnly />
+                    </td>
                     <td className="px-4 py-3"><Input type="number" value={valueAdditionLkr.toFixed(2)} readOnly /></td>
                   </tr>
                 )}
