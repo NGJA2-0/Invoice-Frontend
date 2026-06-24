@@ -192,6 +192,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   }
 
   useEffect(() => {
+    if (String(templateKey || '').toUpperCase() === 'TEMPLATE_3') return
     const computedColumns = tableConfig.columns.filter(
       (col) => col.formula || col.dataType === 'computed',
     )
@@ -304,8 +305,31 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
 
   // ── Row "Done" handler ─────────────────────────────────────────────────
   const handleRowDone = (index) => {
-    if (!hasAmountColumn) return
-    const item = items[index] || {}
+    if (!hasAmountColumn && String(templateKey || '').toUpperCase() !== 'TEMPLATE_3') return
+
+    const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
+    const fromCtMap = { ct: 1, gr: 1 / 5, g: 1 / 5, kg: 1 / 5000 }
+
+    const currentItems = watch(itemsPath) || []
+    const item = currentItems[index] || {}
+
+    if (String(templateKey || '').toUpperCase() === 'TEMPLATE_3') {
+      const weight = Number(item?.weight) || 0
+      const ratePer = Number(item?.ratePer) || 0
+      const importValue = Number(item?.importValue) || 0
+      const weightUnit = String(item?.weightUnit || '').toLowerCase().trim()
+      const rateUnit = String(item?.rateUnit || '').toLowerCase().trim()
+
+      const weightInCt = weight * (toCtMap[weightUnit] || 1)
+      const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+
+      const valueAddition = Number((weightInRateUnit * ratePer).toFixed(2))
+      const totalValue = Number((valueAddition + importValue).toFixed(2))
+
+      update(index, { ...item, valueAddition, totalValue, isDone: true })
+      return
+    }
+
     const computedUpdates = {}
     tableConfig.columns.forEach((col) => {
       if (col.formula || col.dataType === 'computed') {
@@ -313,11 +337,11 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
         computedUpdates[col.key] = Number(value.toFixed(2))
       }
     })
+
     const amountColHasFormula = tableConfig.columns.find(
       (col) => col.key === amountKey && col.formula
     )
-    // console.log('amountColHasFormula:', amountColHasFormula)
-    // console.log('tableConfig.columns:', tableConfig.columns)
+
     let finalAmount
     if (amountColHasFormula) {
       finalAmount = computedUpdates[amountKey] ?? 0
@@ -327,14 +351,8 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       const weightUnit = String(item?.weightUnit || '').toLowerCase().trim()
       const rateUnit = String(item?.rateUnit || '').toLowerCase().trim()
 
-      // Convert weight to carats
-      const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
       const weightInCt = weight * (toCtMap[weightUnit] || 1)
-
-      // Convert from ct to rateUnit
-      const fromCtMap = { ct: 1, gr: 1 / 5, g: 1 / 5, kg: 1 / 5000 }
       const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
-
       finalAmount = Number((weightInRateUnit * ratePer).toFixed(2))
     }
 
@@ -372,7 +390,8 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     }
 
     if (column.readOnly || column.dataType === 'computed') {
-      const displayValue = Number(item?.[column.key]) || 0
+      const liveItems = watch(itemsPath) || []
+      const displayValue = Number(liveItems[index]?.[column.key] ?? item?.[column.key]) || 0
       return (
         <Input
           type={column.dataType === 'number' ? 'number' : 'text'}
@@ -410,6 +429,20 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       )
     }
 
+    if (
+      String(templateKey || '').toUpperCase() === 'TEMPLATE_3' &&
+      (column.key === 'valueAddition' || column.key === 'totalValue')
+    ) {
+      return (
+        <Input
+          type="number"
+          value={Number(item?.[column.key] || 0).toFixed(2)}
+          readOnly
+          className={baseClassName}
+        />
+      )
+    }
+
     if (column.dataType === 'number') {
       return (
         <Input
@@ -418,6 +451,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
           step="any"
           placeholder={column.label}
           className={baseClassName}
+          readOnly={column.readOnly}
           {...register(fieldName, { valueAsNumber: true })}
         />
       )
@@ -626,8 +660,13 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                 {totals.totalsMap?.totalValueAddition !== undefined && (
                   <tr>
                     <td className="px-4 py-3 font-semibold text-ink-700">Value Addition</td>
-                    {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value="—" readOnly /></td>}
-                    <td className="px-4 py-3"><Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly /></td>
+                    {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly /></td>}
+                    <td className="px-4 py-3"><Input type="number" value={
+                      showOtherCurrency
+                        ? ((valueAdditionUsd * otherRateToLkr) / usdRateToLkr).toFixed(2)
+                        : valueAdditionUsd.toFixed(2)
+                    } readOnly />
+                    </td>
                     <td className="px-4 py-3"><Input type="number" value={valueAdditionLkr.toFixed(2)} readOnly /></td>
                   </tr>
                 )}
