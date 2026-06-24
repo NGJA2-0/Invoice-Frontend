@@ -47,35 +47,35 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
 
   // ── Table config ───────────────────────────────────────────────────────
   const tableConfig = useMemo(() => {
-  const currencyLabel = selectedCurrency || 'USD'
-  const base = section?.table || {
-    key: 'valuationItems',
-    allowAddRows: true,
-    allowRemoveRows: true,
-    columns: [
-      { key: 'itemNo', label: 'Item No', dataType: 'string', width: '80px' },
-      { key: 'itemType', label: 'Item Type', dataType: 'string' },
-      { key: 'description', label: 'Description of Goods', dataType: 'string' },
-      { key: 'noOfPcs', label: 'No of Pcs', dataType: 'number' },
-      { key: 'unitType', label: 'Unit Type', dataType: 'dropdown' },
-      { key: 'weight', label: 'Weight', dataType: 'number' },
-      { key: 'weightUnit', label: 'Weight Unit', dataType: 'dropdown' },
-      { key: 'ratePer', label: 'Rate Per', dataType: 'number' },
-      { key: 'rateUnit', label: 'Rate Unit', dataType: 'dropdown' },
-      { key: 'amount', label: `Amount (${currencyLabel})`, dataType: 'number', readOnly: true },
-    ],
-  }
+    const currencyLabel = selectedCurrency || 'USD'
+    const base = section?.table || {
+      key: 'valuationItems',
+      allowAddRows: true,
+      allowRemoveRows: true,
+      columns: [
+        { key: 'itemNo', label: 'Item No', dataType: 'string', width: '80px' },
+        { key: 'itemType', label: 'Item Type', dataType: 'string' },
+        { key: 'description', label: 'Description of Goods', dataType: 'string' },
+        { key: 'noOfPcs', label: 'No of Pcs', dataType: 'number' },
+        { key: 'unitType', label: 'Unit Type', dataType: 'dropdown' },
+        { key: 'weight', label: 'Weight', dataType: 'number' },
+        { key: 'weightUnit', label: 'Weight Unit', dataType: 'dropdown' },
+        { key: 'ratePer', label: 'Rate Per', dataType: 'number' },
+        { key: 'rateUnit', label: 'Rate Unit', dataType: 'dropdown' },
+        { key: 'amount', label: `Amount (${currencyLabel})`, dataType: 'number', readOnly: true },
+      ],
+    }
 
-  return {
-    ...base,
-    columns: base.columns.map((col) => ({
-      ...col,
-      label: col.label
-        .replace(/\(USD\)/gi, `(${currencyLabel})`)
-        .replace(/\(\$\)/gi, `(${currencyLabel})`),
-    })),
-  }
-}, [selectedCurrency, section?.table])
+    return {
+      ...base,
+      columns: base.columns.map((col) => ({
+        ...col,
+        label: col.label
+          .replace(/\(USD\)/gi, `(${currencyLabel})`)
+          .replace(/\(\$\)/gi, `(${currencyLabel})`),
+      })),
+    }
+  }, [selectedCurrency, section?.table])
 
   const sectionKey = section?.key || 'valuation'
   const fieldPath = `invoiceData.${sectionKey}`
@@ -155,6 +155,22 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     if (!formula) return 0
     const sanitized = formula.replace(/\s+/g, '')
     const getValue = (key) => Number(item?.[key]) || 0
+
+    // Special case: weight * ratePer needs unit conversion
+    if (sanitized === 'weight*ratePer') {
+      const weight = getValue('weight')
+      const ratePer = getValue('ratePer')
+      const weightUnit = String(item?.weightUnit || '').toLowerCase().trim()
+      const rateUnit = String(item?.rateUnit || '').toLowerCase().trim()
+
+      const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
+      const fromCtMap = { ct: 1, gr: 1 / 5, g: 1 / 5, kg: 1 / 5000 }
+
+      const weightInCt = weight * (toCtMap[weightUnit] || 1)
+      const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+
+      return weightInRateUnit * ratePer
+    }
 
     if (sanitized.includes('+') && !sanitized.includes('*') && !sanitized.includes('-') && !sanitized.includes('/')) {
       return sanitized.split('+').filter(Boolean).reduce((sum, key) => sum + getValue(key), 0)
@@ -290,18 +306,31 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     const amountColHasFormula = tableConfig.columns.find(
       (col) => col.key === amountKey && col.formula
     )
+    console.log('amountColHasFormula:', amountColHasFormula)
+    console.log('tableConfig.columns:', tableConfig.columns)
     let finalAmount
     if (amountColHasFormula) {
       finalAmount = computedUpdates[amountKey] ?? 0
     } else {
-      const valueAdditionKey = tableConfig.columns.find((col) => /valueAddition/i.test(col.key))?.key
-      const importValueKey = tableConfig.columns.find((col) => /importValue/i.test(col.key))?.key
-      if (valueAdditionKey && importValueKey) {
-        finalAmount = Number(((Number(item?.[valueAdditionKey]) || 0) + (Number(item?.[importValueKey]) || 0)).toFixed(2))
-      } else {
-        finalAmount = Number(((Number(item?.[weightKey]) || 0) * (Number(item?.[rateKey]) || 0)).toFixed(2))
-      }
+      console.log("abc")
+      const weight = Number(item?.[weightKey]) || 0
+      const ratePer = Number(item?.[rateKey]) || 0
+      const weightUnit = String(item?.weightUnit || '').toLowerCase().trim()
+      const rateUnit = String(item?.rateUnit || '').toLowerCase().trim()
+
+      console.log('weightUnit:', weightUnit, 'rateUnit:', rateUnit)
+
+      // Convert weight to carats
+      const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
+      const weightInCt = weight * (toCtMap[weightUnit] || 1)
+
+      // Convert from ct to rateUnit
+      const fromCtMap = { ct: 1, gr: 1 / 5, g: 1 / 5, kg: 1 / 5000 }
+      const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+
+      finalAmount = Number((weightInRateUnit * ratePer).toFixed(2))
     }
+
     update(index, { ...item, ...computedUpdates, isDone: true, [amountKey]: finalAmount })
   }
 
@@ -410,7 +439,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
               Stock Value:
             </span>
             <span className="text-sm font-semibold break-words">
-              {stockValueNumber.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+              LKR {stockValueNumber.toLocaleString('en-US', { maximumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
@@ -418,7 +447,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
               Remaining:
             </span>
             <span className="text-sm font-semibold break-words">
-              {remainingStockValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+              LKR {remainingStockValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
             </span>
           </div>
           {isStockExhausted ? (
@@ -485,7 +514,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
               </tr>
             ) : (
               fields.map((field, index) => {
-                const item = items[index] || {}
+                const item = watch(itemsPath)?.[index] || items[index] || {}
                 return (
                   <tr key={field.id}>
                     {tableConfig.columns.map((column) => (
