@@ -26,4 +26,8 @@ export const officerApi = {
 
   // GET /api/v1/stage1/documents/:id
   getDocumentById: (id) => api.get(`/stage1/documents/${id}`),
+
+  // PATCH /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/status
+  updateInvoiceStatus: (originalInvoiceId, officerId, payload) =>
+    api.patch(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/status`, payload),
 }
