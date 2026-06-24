@@ -27,6 +27,15 @@ export const authService = {
     return response
   },
 
+  // Officer login
+  officerLogin: async (username, password) => {
+    const response = await api.post('/auth/officer-login', {
+      username,
+      password,
+    })
+    return response
+  },
+
   // Sign up
   signup: async (payload) => {
     const response = await api.post('/auth/signup', payload)

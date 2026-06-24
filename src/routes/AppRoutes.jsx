@@ -2,6 +2,7 @@ import { AnimatePresence } from 'framer-motion'
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
 import UserLayout from '../layouts/UserLayout'
+import OfficerLayout from '../layouts/OfficerLayout'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
@@ -21,6 +22,8 @@ import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
 import { useApp } from '../context/AppContext'
+import OfficerDashboard from '../pages/officer/Dashboard'
+import OfficerInvoiceDetail from '../pages/officer/InvoiceDetail'
 import Items from '../pages/admin/Items'
 import StockValues from '../pages/admin/StockValues'
 import LicenseRenewals from '../pages/admin/LicenseRenewals'
@@ -56,6 +59,12 @@ const AppRoutes = () => {
           <Route path="procedure-flow" element={<ProcedureFlow />} />
           <Route path="edit-profile" element={<EditProfile />} />
           <Route path="dealer-registration" element={<DealerRegistration />} />
+        </Route>
+
+        <Route path="/officer" element={<OfficerLayout />}>
+          <Route index element={<Navigate to="/officer/dashboard" replace />} />
+          <Route path="dashboard" element={<OfficerDashboard />} />
+          <Route path="invoices/:invoiceId" element={<OfficerInvoiceDetail />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
