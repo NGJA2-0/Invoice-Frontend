@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 
 const STATUS_STYLES = {
@@ -48,6 +49,7 @@ const OfficerDashboard = () => {
   const { user, officerInvoices, refreshOfficerInvoices } = useApp()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!user?.id) return
@@ -123,7 +125,13 @@ const OfficerDashboard = () => {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                <tr
+                  key={row.id}
+                  onClick={() => navigate(`/officer/invoices/${row.id}`)}
+                  style={{ borderTop: '1px solid rgba(0,0,0,0.06)', cursor: 'pointer' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.03)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                >
                   <td style={{ padding: '10px 14px', fontWeight: 600 }}>
                     {row.invoiceNumber}
                   </td>
