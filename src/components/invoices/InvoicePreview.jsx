@@ -59,7 +59,18 @@ const SimpleTable = ({ rows }) => {
 
 const ValuationSection = ({ data, templateKey }) => {
   const valuation = data?.valuationTable || data?.valuation || {}
-  const items = valuation?.valuationItems || valuation?.items || []
+  const items = (valuation?.valuationItems || valuation?.items || []).filter((item) => {
+    if (!item) return false
+    const hasDescription = item.description || item.descriptionOfGoods
+    const hasItemType = item.itemType || item.type || item.stoneType
+    const hasAmount = Number(item.amount || item.totalValue || item.totalUsd || item.total || 0) > 0
+    const hasWeight = Number(item.weight || item.totalWeight || 0) > 0
+    const hasPieces = Number(
+      item.noOfPcs || item.numberOfPieces || item.numberOfItems || item.quantity || item.qty || item.pcs || 0
+    ) > 0
+    return hasDescription || hasItemType || hasAmount || hasWeight || hasPieces
+  })
+
   if (!items.length) return null
 
   const isJewellery = items.some(
@@ -84,9 +95,9 @@ const ValuationSection = ({ data, templateKey }) => {
 
   const totals = items.reduce(
     (acc, item) => {
-      acc.pieces += Number(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','noOfPieces','quantity','qty','pcs'])) || 0
-      acc.weight += Number(pickValue(item, ['weight','totalWeight'])) || 0
-      acc.amount += Number(pickValue(item, ['amount','totalUsd','total'])) || 0
+      acc.pieces += Number(pickValue(item, ['numberOfItems', 'numberOfPieces', 'noOfPcs', 'noOfPieces', 'quantity', 'qty', 'pcs'])) || 0
+      acc.weight += Number(pickValue(item, ['weight', 'totalWeight'])) || 0
+      acc.amount += Number(pickValue(item, ['amount', 'totalUsd', 'total'])) || 0
       acc.metalWeight += Number(pickValue(item, ['metalWeight'])) || 0
       acc.mainStoneWeight += Number(pickValue(item, ['mainStoneWeight'])) || 0
       acc.otherStoneWeight += Number(pickValue(item, ['otherStoneWeight'])) || 0
@@ -99,9 +110,9 @@ const ValuationSection = ({ data, templateKey }) => {
     { pieces: 0, weight: 0, amount: 0, metalWeight: 0, mainStoneWeight: 0, otherStoneWeight: 0, combinedWeight: 0, valueAddition: 0, importValue: 0, totalValue: 0 },
   )
 
-  const totalPcs = Number(pickValue(valuation, ['totalPieces','totalPcs'])) || totals.pieces
-  const totalWt = Number(pickValue(valuation, ['totalWeight','totalCombinedWeight'])) || totals.weight || totals.combinedWeight
-  const totalAmt = Number(pickValue(valuation, ['totalAmount','totalAmountUsd','totalUsd'])) || totals.amount
+  const totalPcs = Number(pickValue(valuation, ['totalPieces', 'totalPcs'])) || totals.pieces
+  const totalWt = Number(pickValue(valuation, ['totalWeight', 'totalCombinedWeight'])) || totals.weight || totals.combinedWeight
+  const totalAmt = Number(pickValue(valuation, ['totalAmount', 'totalAmountUsd', 'totalUsd'])) || totals.amount
   const totalMetal = Number(pickValue(valuation, ['totalMetalWeight'])) || totals.metalWeight
   const totalMainStone = Number(pickValue(valuation, ['totalMainStoneWeight'])) || totals.mainStoneWeight
   const totalOtherStone = Number(pickValue(valuation, ['totalOtherStoneWeight'])) || totals.otherStoneWeight
@@ -116,8 +127,8 @@ const ValuationSection = ({ data, templateKey }) => {
           <thead>
             <tr>
               {(isTemplate4
-                ? ['Item No','Item Type','Description','No Of (Unit)','Metal Weight','Main Stone Weight','Other Stone Weight','Total Weight','Rate Per Unit ($)','Value Addition ($)','Import Value ($)','Amount ($)']
-                : ['Item No','Item Type','Description','No Of','Unit','Metal Weight','Metal Unit','Main Stone Weight','Main Stone Unit','Other Stone Weight','Other Stone Unit','Total Weight','Total Weight Unit','Rate Per Unit ($)','Value Addition ($)','Import Value ($)','Amount ($)']
+                ? ['Item No', 'Item Type', 'Description', 'No Of (Unit)', 'Metal Weight', 'Main Stone Weight', 'Other Stone Weight', 'Total Weight', 'Rate Per Unit ($)', 'Value Addition ($)', 'Import Value ($)', 'Amount ($)']
+                : ['Item No', 'Item Type', 'Description', 'No Of', 'Unit', 'Metal Weight', 'Metal Unit', 'Main Stone Weight', 'Main Stone Unit', 'Other Stone Weight', 'Other Stone Unit', 'Total Weight', 'Total Weight Unit', 'Rate Per Unit ($)', 'Value Addition ($)', 'Import Value ($)', 'Amount ($)']
               ).map((h) => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
@@ -126,15 +137,15 @@ const ValuationSection = ({ data, templateKey }) => {
           <tbody>
             {items.map((item, i) => (
               <tr key={i}>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no'])) !== '—' ? formatValue(pickValue(item, ['itemNo','itemNumber','no'])) : i + 1}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo', 'itemNumber', 'no'])) !== '—' ? formatValue(pickValue(item, ['itemNo', 'itemNumber', 'no'])) : i + 1}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType', 'type', 'stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description', 'descriptionOfGoods']))}</td>
                 {isTemplate4 ? (
-                  <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))} {formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
+                  <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems', 'numberOfPieces', 'noOfPcs', 'quantity', 'qty', 'pcs']))} {formatValue(pickValue(item, ['numberOfUnit', 'piecesUnit', 'unitType', 'unit', 'pcsUnit']))}</td>
                 ) : (
                   <>
-                    <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
-                    <td style={styles.td}>{formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
+                    <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems', 'numberOfPieces', 'noOfPcs', 'quantity', 'qty', 'pcs']))}</td>
+                    <td style={styles.td}>{formatValue(pickValue(item, ['numberOfUnit', 'piecesUnit', 'unitType', 'unit', 'pcsUnit']))}</td>
                   </>
                 )}
                 {isTemplate4 ? (
@@ -156,7 +167,7 @@ const ValuationSection = ({ data, templateKey }) => {
                     <td style={styles.td}>{formatValue(pickValue(item, ['totalWeightUnit']))}</td>
                   </>
                 )}
-                <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit','ratePer','rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit', 'ratePer', 'rate']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['valueAddition']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['importValue']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['amount']))}</td>
@@ -168,7 +179,7 @@ const ValuationSection = ({ data, templateKey }) => {
         <table style={styles.table}>
           <thead>
             <tr>
-              {['Item No','Item Type','Description','No of Pcs','Unit','Weight','Weight Unit','Rate Per','Rate Unit','Value Addition','Import Value ($)','Total Value ($)'].map((h) => (
+              {['Item No', 'Item Type', 'Description', 'No of Pcs', 'Unit', 'Weight', 'Weight Unit', 'Rate Per', 'Rate Unit', 'Value Addition', 'Import Value ($)', 'Total Value ($)'].map((h) => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
             </tr>
@@ -176,15 +187,15 @@ const ValuationSection = ({ data, templateKey }) => {
           <tbody>
             {items.map((item, i) => (
               <tr key={i}>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo', 'itemNumber', 'no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType', 'type', 'stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description', 'descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces', 'noOfPcs', 'quantity', 'qty', 'pcs']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit', 'unitType', 'unit', 'pcsUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['weight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit','unitWeight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['ratePer','rate']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit','unitRate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit', 'unitWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePer', 'rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit', 'unitRate']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['valueAddition']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['importValue']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['totalValue']))}</td>
@@ -196,7 +207,7 @@ const ValuationSection = ({ data, templateKey }) => {
         <table style={styles.table}>
           <thead>
             <tr>
-              {['Item No','Item Type','Description','No of (Unit)','Metal Weight','Main Stone Weight','Other Stone Weight','Total Weight','Rate Per Unit ($)','Amount ($)'].map((h) => (
+              {['Item No', 'Item Type', 'Description', 'No of (Unit)', 'Metal Weight', 'Main Stone Weight', 'Other Stone Weight', 'Total Weight', 'Rate Per Unit ($)', 'Amount ($)'].map((h) => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
             </tr>
@@ -204,16 +215,16 @@ const ValuationSection = ({ data, templateKey }) => {
           <tbody>
             {items.map((item, i) => (
               <tr key={i}>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems','numberOfPieces','noOfPcs','quantity','qty','pcs']))} {formatValue(pickValue(item, ['numberOfUnit','piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo', 'itemNumber', 'no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType', 'type', 'stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description', 'descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfItems', 'numberOfPieces', 'noOfPcs', 'quantity', 'qty', 'pcs']))} {formatValue(pickValue(item, ['numberOfUnit', 'piecesUnit', 'unitType', 'unit', 'pcsUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['metalWeight']))} {formatValue(pickValue(item, ['metalUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['mainStoneWeight']))} {formatValue(pickValue(item, ['mainStoneUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['otherStoneWeight']))} {formatValue(pickValue(item, ['otherStoneUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['totalWeight']))} {formatValue(pickValue(item, ['totalWeightUnit']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit','ratePer','rate']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePerUnit', 'ratePer', 'rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['amount', 'totalUsd', 'total']))}</td>
               </tr>
             ))}
           </tbody>
@@ -222,7 +233,7 @@ const ValuationSection = ({ data, templateKey }) => {
         <table style={styles.table}>
           <thead>
             <tr>
-              {['Item No','Item Type','Description','No of Pcs','Unit','Weight','Wt Unit','Rate Per','Rate Unit','Amt (USD)'].map((h) => (
+              {['Item No', 'Item Type', 'Description', 'No of Pcs', 'Unit', 'Weight', 'Wt Unit', 'Rate Per', 'Rate Unit', 'Amt (USD)'].map((h) => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
             </tr>
@@ -230,16 +241,16 @@ const ValuationSection = ({ data, templateKey }) => {
           <tbody>
             {items.map((item, i) => (
               <tr key={i}>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo','itemNumber','no']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['itemType','type','stoneType']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['description','descriptionOfGoods']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces','noOfPcs','quantity','qty','pcs']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit','unitType','unit','pcsUnit']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemNo', 'itemNumber', 'no']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['itemType', 'type', 'stoneType']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['description', 'descriptionOfGoods']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['numberOfPieces', 'noOfPcs', 'quantity', 'qty', 'pcs']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['piecesUnit', 'unitType', 'unit', 'pcsUnit']))}</td>
                 <td style={styles.td}>{formatValue(pickValue(item, ['weight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit','unitWeight']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['ratePer','rate']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit','unitRate']))}</td>
-                <td style={styles.td}>{formatValue(pickValue(item, ['amount','totalUsd','total']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['weightUnit', 'unitWeight']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['ratePer', 'rate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['rateUnit', 'unitRate']))}</td>
+                <td style={styles.td}>{formatValue(pickValue(item, ['amount', 'totalUsd', 'total']))}</td>
               </tr>
             ))}
 
@@ -252,17 +263,17 @@ const ValuationSection = ({ data, templateKey }) => {
           isJewellery ? ['Total Metal Weight', totalMetal.toFixed(2)] : ['Total Weight', totalWt.toFixed(2)],
           ...(isJewellery
             ? [
-                ['Total Main Stone Weight', totalMainStone.toFixed(2)],
-                ['Total Other Stone Weight', totalOtherStone.toFixed(2)],
-                ['Total Combined Weight', totalWt.toFixed(2)],
-              ]
+              ['Total Main Stone Weight', totalMainStone.toFixed(2)],
+              ['Total Other Stone Weight', totalOtherStone.toFixed(2)],
+              ['Total Combined Weight', totalWt.toFixed(2)],
+            ]
             : []),
           ...(isReImportClassic || isReImportJewellery
             ? [
-                ['Total Value Addition', totalValueAddition.toFixed(2)],
-                ['Total Import Value', totalImportValue.toFixed(2)],
-                ['Total Value', (isReImportJewellery ? totalAmt : totalValue).toFixed(2)],
-              ]
+              ['Total Value Addition', totalValueAddition.toFixed(2)],
+              ['Total Import Value', totalImportValue.toFixed(2)],
+              ['Total Value', (isReImportJewellery ? totalAmt : totalValue).toFixed(2)],
+            ]
             : []),
           ['Total Amount (USD)', (isReImportClassic ? totalValue : totalAmt).toFixed(2)],
         ].map(([lbl, val]) => (
@@ -290,19 +301,19 @@ const ExchangeSection = ({ data }) => {
 
   const otherCode = ex.otherCurrencyCode
   const otherRate = Number(ex.otherCurrencyRate) || 0
-  const usdRate    = Number(ex.usdToLkrRate) || 0
-  const showOther  = !!otherCode && otherRate > 0 && usdRate > 0
+  const usdRate = Number(ex.usdToLkrRate) || 0
+  const showOther = !!otherCode && otherRate > 0 && usdRate > 0
 
-  const fobLkr   = ex.exchangeRate ? Number(ex.fob||0)*Number(ex.exchangeRate||0) : null
-  const freight  = Number(ex.freight) || 0
+  const fobLkr = ex.exchangeRate ? Number(ex.fob || 0) * Number(ex.exchangeRate || 0) : null
+  const freight = Number(ex.freight) || 0
   const insurance = Number(ex.insurance) || 0
 
   let rows
   if (showOther) {
-    const fobOther       = Number(ex.fob) || 0
-    const freightOther   = Number(ex.freightOther) || 0
+    const fobOther = Number(ex.fob) || 0
+    const freightOther = Number(ex.freightOther) || 0
     const insuranceOther = Number(ex.insuranceOther) || 0
-    const cifOther       = fobOther + freightOther + insuranceOther
+    const cifOther = fobOther + freightOther + insuranceOther
 
     const toUsd = (val) => (val * otherRate) / usdRate
     const toLkr = (val) => val * otherRate
@@ -311,10 +322,10 @@ const ExchangeSection = ({ data }) => {
       ...(hasValueAddition
         ? [['Value Addition', null, totalValueAddition, ex.exchangeRate ? (Number(totalValueAddition || 0) * Number(ex.exchangeRate || 0)).toString() : '—']]
         : []),
-      ['FOB',       fobOther,       toUsd(fobOther).toFixed(2),       toLkr(fobOther).toFixed(2)],
-      ['Freight',   freightOther,   toUsd(freightOther).toFixed(2),   toLkr(freightOther).toFixed(2)],
+      ['FOB', fobOther, toUsd(fobOther).toFixed(2), toLkr(fobOther).toFixed(2)],
+      ['Freight', freightOther, toUsd(freightOther).toFixed(2), toLkr(freightOther).toFixed(2)],
       ['Insurance', insuranceOther, toUsd(insuranceOther).toFixed(2), toLkr(insuranceOther).toFixed(2)],
-      ['CIF',       cifOther,       toUsd(cifOther).toFixed(2),       toLkr(cifOther).toFixed(2)],
+      ['CIF', cifOther, toUsd(cifOther).toFixed(2), toLkr(cifOther).toFixed(2)],
       ['Exchange Rate (1 USD)', null, '—', ex.exchangeRate],
     ]
   } else {
@@ -323,8 +334,8 @@ const ExchangeSection = ({ data }) => {
         ? [['Value Addition', totalValueAddition, ex.exchangeRate ? (Number(totalValueAddition || 0) * Number(ex.exchangeRate || 0)).toString() : '—']]
         : []),
       ['FOB', ex.fob, fobLkr !== null ? fobLkr : '—'],
-      ['Freight', ex.freight, ex.exchangeRate ? (freight*Number(ex.exchangeRate||0)).toString() : '—'],
-      ['Insurance', ex.insurance, ex.exchangeRate ? (insurance*Number(ex.exchangeRate||0)).toString() : '—'],
+      ['Freight', ex.freight, ex.exchangeRate ? (freight * Number(ex.exchangeRate || 0)).toString() : '—'],
+      ['Insurance', ex.insurance, ex.exchangeRate ? (insurance * Number(ex.exchangeRate || 0)).toString() : '—'],
       ['CIF', ex.cif, ex.cifLkr],
       ['Exchange Rate (1 USD)', '—', ex.exchangeRate],
     ]
@@ -385,10 +396,10 @@ const renderSectionData = (sectionKey, data, templateKey) => {
 }
 
 /* ─── colour tokens ────────────────────────────────────────── */
-const GOLD       = '#9a7b3c'
+const GOLD = '#9a7b3c'
 const LIGHT_GOLD = '#c9a96e'
-const BG         = '#fffdf8'
-const RULE       = '#e8dfc8'
+const BG = '#fffdf8'
+const RULE = '#e8dfc8'
 
 /* ─── styles ───────────────────────────────────────────────── */
 const styles = {
@@ -428,7 +439,7 @@ const styles = {
   },
   docLabel: { fontSize: 8.5, letterSpacing: 2.5, color: GOLD, textTransform: 'uppercase' },
   docTitle: { fontSize: 18, fontWeight: 700, letterSpacing: 0.3, color: '#111', margin: '2px 0' },
-  docSub:   { fontSize: 9.5, color: '#666', letterSpacing: 0.8, marginBottom: 4 },
+  docSub: { fontSize: 9.5, color: '#666', letterSpacing: 0.8, marginBottom: 4 },
 
   /* company details stacked under name */
   companyMeta: {
@@ -566,7 +577,7 @@ const styles = {
 
   /* ── KV grid inside narrow sections (TO / FROM) ── */
   kvGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 10px' },
-  kvRow:  { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 },
+  kvRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 },
   kvLabel: { fontSize: 9.5, textTransform: 'uppercase', letterSpacing: 0.8, color: '#888', flexShrink: 0 },
   kvValue: { fontSize: 11, fontWeight: 600, color: '#1a1a1a', textAlign: 'right' },
 
@@ -658,28 +669,28 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
 
   if (!preview) return null
 
-  const meta          = preview.meta || {}
-  const data          = preview.data?.invoiceData || preview.data || {}
-  const invoiceMeta   = data?.invoiceMeta || {}
+  const meta = preview.meta || {}
+  const data = preview.data?.invoiceData || preview.data || {}
+  const invoiceMeta = data?.invoiceMeta || {}
   const companyHeader = data?.companyHeader || {}
 
   // Company fields for header display (exclude logoUrl)
   const companyFields = [
-    ['Address',  companyHeader.companyAddress],
-    ['Email',    companyHeader.companyEmail],
-    ['TIN',      companyHeader.tin],
-    ['Phone',    companyHeader.companyPhone],
-    ['Website',  companyHeader.companyWebsite],
+    ['Address', companyHeader.companyAddress],
+    ['Email', companyHeader.companyEmail],
+    ['TIN', companyHeader.tin],
+    ['Phone', companyHeader.companyPhone],
+    ['Website', companyHeader.companyWebsite],
   ].filter(([, v]) => v !== null && v !== undefined && v !== '')
 
   const sectionOverrides = {
-    buyerInfo:        { label: 'TO',            dataKey: 'receiverInfo' },
-    receiverInfo:     { label: 'TO',            dataKey: 'receiverInfo' },
+    buyerInfo: { label: 'TO', dataKey: 'receiverInfo' },
+    receiverInfo: { label: 'TO', dataKey: 'receiverInfo' },
     transportDetails: { label: 'Delivery Type', dataKey: 'deliveryInfo' },
   }
 
   const shouldHide = (s) => {
-    const k = String(s?.key   || '').toLowerCase()
+    const k = String(s?.key || '').toLowerCase()
     const l = String(s?.label || '').toLowerCase()
     return (
       k.includes('cert') || k.includes('signature') ||
@@ -694,24 +705,24 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
     return resolvedDataKey !== 'senderinfo'
   })
 
-  const WIDE_KEYS     = ['valuationTable','valuation','exchangeRateSection','exchangeRates']
-  const DELIVERY_KEYS = ['deliveryInfo','transportDetails']
-  const CARRIER_KEYS  = ['carrierDetails']
+  const WIDE_KEYS = ['valuationTable', 'valuation', 'exchangeRateSection', 'exchangeRates']
+  const DELIVERY_KEYS = ['deliveryInfo', 'transportDetails']
+  const CARRIER_KEYS = ['carrierDetails']
 
-  const wideSections     = sections.filter((s) => WIDE_KEYS.includes(sectionOverrides[s.key]?.dataKey || s.key))
+  const wideSections = sections.filter((s) => WIDE_KEYS.includes(sectionOverrides[s.key]?.dataKey || s.key))
   const deliverySections = sections.filter((s) => {
     const resolved = sectionOverrides[s.key]?.dataKey || s.key
-    const label    = String(s.label || '').toLowerCase()
+    const label = String(s.label || '').toLowerCase()
     return (
       DELIVERY_KEYS.includes(resolved) ||
       label.includes('delivery type') ||
       label.includes('transport')
     )
   })
-  const narrowSections   = sections.filter((s) => {
+  const narrowSections = sections.filter((s) => {
     if (wideSections.includes(s) || deliverySections.includes(s)) return false
     const resolved = sectionOverrides[s.key]?.dataKey || s.key
-    const label    = String(s.label || '').toLowerCase()
+    const label = String(s.label || '').toLowerCase()
     if (resolved === 'senderInfo' || resolved === 'senderinfo') return false
     if (label === 'from' || label.includes('sender')) return false
     return !CARRIER_KEYS.includes(resolved) && !label.includes('carrier')
@@ -721,16 +732,16 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const resolveSection = (section) => {
     const labelKey = String(section.label || '').toLowerCase()
     const fallback = labelKey.includes('buyer')
-      ? { label: 'TO',            dataKey: 'receiverInfo' }
+      ? { label: 'TO', dataKey: 'receiverInfo' }
       : labelKey.includes('delivery type') || labelKey.includes('transport')
-      ? { label: 'Delivery Type', dataKey: 'deliveryInfo' }
-      : labelKey.includes('delivery')
-      ? { label: 'FROM',          dataKey: 'senderInfo'   }
-      : {}
-    const override     = sectionOverrides[section.key] || fallback
+        ? { label: 'Delivery Type', dataKey: 'deliveryInfo' }
+        : labelKey.includes('delivery')
+          ? { label: 'FROM', dataKey: 'senderInfo' }
+          : {}
+    const override = sectionOverrides[section.key] || fallback
     return {
-      sectionLabel: override.label   || section.label,
-      sectionKey:   override.dataKey || section.key,
+      sectionLabel: override.label || section.label,
+      sectionKey: override.dataKey || section.key,
     }
   }
 
@@ -760,8 +771,8 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const deliveryValue = (() => {
     const di = data?.deliveryInfo || {}
     return (
-      pickValue(di, ['deliveryType','courier','method','type','carrier']) ||
-      pickValue(data?.transportDetails || {}, ['deliveryType','courier','method','type','carrier']) ||
+      pickValue(di, ['deliveryType', 'courier', 'method', 'type', 'carrier']) ||
+      pickValue(data?.transportDetails || {}, ['deliveryType', 'courier', 'method', 'type', 'carrier']) ||
       ''
     )
   })()
@@ -813,7 +824,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
                     </div>
                   )}
                   {/* Email, Phone, Website — each on its own line */}
-                  {[['Email', companyHeader.companyEmail],['TIN', companyHeader.tin], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
+                  {[['Email', companyHeader.companyEmail], ['TIN', companyHeader.tin], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
                     .filter(([, v]) => v !== null && v !== undefined && v !== '')
                     .map(([lbl, val]) => (
                       <div key={lbl} style={styles.companyMetaAddress}>
@@ -829,9 +840,9 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
           <div style={styles.headerRight}>
             {[
               ['Invoice Date', invoiceMeta.invoiceDate],
-              ['Invoice No',   invoiceMeta.invoiceNumber || meta.invoiceNumber],
-              ['Export Type',  meta.templateKey || invoiceMeta.exportType],
-              ['Country',      invoiceMeta.countryOfOrigin],
+              ['Invoice No', invoiceMeta.invoiceNumber || meta.invoiceNumber],
+              ['Export Type', meta.templateKey || invoiceMeta.exportType],
+              ['Country', invoiceMeta.countryOfOrigin],
             ].map(([lbl, val]) => (
               <div key={lbl} style={styles.metaChip}>
                 <span style={styles.metaLabel}>{lbl}</span>

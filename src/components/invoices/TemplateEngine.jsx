@@ -4,26 +4,26 @@ import DynamicFieldRenderer from './DynamicFieldRenderer'
 import ValuationTable from './ValuationTable'
 
 const COUNTRY_LIST = [
-  "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria",
-  "Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia",
-  "Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia",
-  "Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (Brazzaville)",
-  "Congo (Kinshasa)","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica",
-  "Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia",
-  "Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea",
-  "Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel",
-  "Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Korea (North)","Korea (South)","Kosovo","Kuwait",
-  "Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar",
-  "Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova",
-  "Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand",
-  "Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea",
-  "Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis",
-  "Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal",
-  "Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa",
-  "South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania",
-  "Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda",
-  "Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City",
-  "Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
+  "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia",
+  "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Brazzaville)",
+  "Congo (Kinshasa)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica",
+  "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
+  "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea",
+  "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+  "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea (North)", "Korea (South)", "Kosovo", "Kuwait",
+  "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar",
+  "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand",
+  "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea",
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis",
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
+  "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa",
+  "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania",
+  "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda",
+  "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City",
+  "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
 ]
 
 const CountryDropdown = ({ value, onChange, label, required }) => {
@@ -291,102 +291,103 @@ const TemplateEngine = ({
                     section={section}
                     businessProfile={businessProfile}
                     pushToast={pushToast}
+                    templateKey={templateConfig?.templateKey}
                   />
                 </div>
               ) : null}
 
               {section.sectionType !== 'table'
                 ? section.fields
-                    .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
-                    .filter((field) => field.key !== 'remarks')
-                    .map((field) => {
-                      const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
-                      const requiresNi = templateKey === 'TEMPLATE_3' || templateKey === 'TEMPLATE_4'
-                      const adjustedField =
-                        requiresNi && section.key === 'niDetails'
-                          ? { ...field, required: true }
-                          : field
+                  .filter((field) => !(section.key === 'companyHeader' && field.key === 'logoUrl'))
+                  .filter((field) => field.key !== 'remarks')
+                  .map((field) => {
+                    const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
+                    const requiresNi = templateKey === 'TEMPLATE_3' || templateKey === 'TEMPLATE_4'
+                    const adjustedField =
+                      requiresNi && section.key === 'niDetails'
+                        ? { ...field, required: true }
+                        : field
 
-                      const BUSINESS_PROFILE_LOCKED_KEYS = ['companyName', 'companyAddress', 'companyPhone', 'tin', 'stockValueName']
-                      const isLockedByProfile =
-                        section.key === 'companyHeader' &&
-                        BUSINESS_PROFILE_LOCKED_KEYS.includes(field.key) &&
-                        !!businessProfile
+                    const BUSINESS_PROFILE_LOCKED_KEYS = ['companyName', 'companyAddress', 'companyPhone', 'tin', 'stockValueName']
+                    const isLockedByProfile =
+                      section.key === 'companyHeader' &&
+                      BUSINESS_PROFILE_LOCKED_KEYS.includes(field.key) &&
+                      !!businessProfile
 
-                      if (isLockedByProfile) {
-                        const profileValueMap = {
-                          companyName:    businessProfile.businessName || '',
-                          companyAddress: businessProfile.businessAddress || '',
-                          companyPhone:   (businessProfile.mobileNumbers || [])[0] || '',
-                        }
-                        const displayValue = profileValueMap[field.key] || ''
-                        const isMultiline = field.key === 'companyAddress'
-                        return (
-                          <div key={`${section.key}-${field.key}`} className="flex flex-col gap-1">
-                            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">
-                              {field.label}{field.required ? ' *' : ''}
-                            </label>
-                            {isMultiline ? (
-                              <textarea
-                                readOnly
-                                rows={3}
-                                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-ink-700 cursor-not-allowed resize-none"
-                                {...register(`invoiceData.companyHeader.${field.key}`)}
-                              />
-                            ) : (
-                              <input
-                                type="text"
-                                readOnly
-                                className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-ink-700 cursor-not-allowed"
-                                {...register(`invoiceData.companyHeader.${field.key}`)}
-                              />
-                            )}
-                          </div>
-                        )
+                    if (isLockedByProfile) {
+                      const profileValueMap = {
+                        companyName: businessProfile.businessName || '',
+                        companyAddress: businessProfile.businessAddress || '',
+                        companyPhone: (businessProfile.mobileNumbers || [])[0] || '',
                       }
-
-                      // Intercept receiverCountry to show a searchable dropdown
-                      if (section.key === 'receiverInfo' && field.key === 'receiverCountry') {
-                        const fieldPath = 'invoiceData.receiverInfo.receiverCountry'
-                        const currentValue = watch(fieldPath) || ''
-                        return (
-                          <CountryDropdown
-                            key={`${section.key}-${field.key}`}
-                            label={field.label || 'Receiver Country'}
-                            required={adjustedField.required}
-                            value={currentValue}
-                            onChange={(val) => setValue(fieldPath, val, { shouldValidate: true, shouldDirty: true })}
-                          />
-                        )
-                      }
-
-                      // Intercept countryOfOrigin to show a searchable dropdown
-                      if (section.key === 'invoiceMeta' && field.key === 'countryOfOrigin') {
-                        const fieldPath = 'invoiceData.invoiceMeta.countryOfOrigin'
-                        const currentValue = watch(fieldPath) || ''
-                        return (
-                          <CountryDropdown
-                            key={`${section.key}-${field.key}`}
-                            label={field.label || 'Country of Origin'}
-                            required={adjustedField.required}
-                            value={currentValue}
-                            onChange={(val) => setValue(fieldPath, val, { shouldValidate: true, shouldDirty: true })}
-                          />
-                        )
-                      }
-
+                      const displayValue = profileValueMap[field.key] || ''
+                      const isMultiline = field.key === 'companyAddress'
                       return (
-                        <DynamicFieldRenderer
+                        <div key={`${section.key}-${field.key}`} className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-500">
+                            {field.label}{field.required ? ' *' : ''}
+                          </label>
+                          {isMultiline ? (
+                            <textarea
+                              readOnly
+                              rows={3}
+                              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-ink-700 cursor-not-allowed resize-none"
+                              {...register(`invoiceData.companyHeader.${field.key}`)}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              readOnly
+                              className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-ink-700 cursor-not-allowed"
+                              {...register(`invoiceData.companyHeader.${field.key}`)}
+                            />
+                          )}
+                        </div>
+                      )
+                    }
+
+                    // Intercept receiverCountry to show a searchable dropdown
+                    if (section.key === 'receiverInfo' && field.key === 'receiverCountry') {
+                      const fieldPath = 'invoiceData.receiverInfo.receiverCountry'
+                      const currentValue = watch(fieldPath) || ''
+                      return (
+                        <CountryDropdown
                           key={`${section.key}-${field.key}`}
-                          sectionKey={section.key}
-                          field={adjustedField}
-                          register={register}
-                          watch={watch}
-                          control={control}
-                          setValue={setValue}
+                          label={field.label || 'Receiver Country'}
+                          required={adjustedField.required}
+                          value={currentValue}
+                          onChange={(val) => setValue(fieldPath, val, { shouldValidate: true, shouldDirty: true })}
                         />
                       )
-                    })
+                    }
+
+                    // Intercept countryOfOrigin to show a searchable dropdown
+                    if (section.key === 'invoiceMeta' && field.key === 'countryOfOrigin') {
+                      const fieldPath = 'invoiceData.invoiceMeta.countryOfOrigin'
+                      const currentValue = watch(fieldPath) || ''
+                      return (
+                        <CountryDropdown
+                          key={`${section.key}-${field.key}`}
+                          label={field.label || 'Country of Origin'}
+                          required={adjustedField.required}
+                          value={currentValue}
+                          onChange={(val) => setValue(fieldPath, val, { shouldValidate: true, shouldDirty: true })}
+                        />
+                      )
+                    }
+
+                    return (
+                      <DynamicFieldRenderer
+                        key={`${section.key}-${field.key}`}
+                        sectionKey={section.key}
+                        field={adjustedField}
+                        register={register}
+                        watch={watch}
+                        control={control}
+                        setValue={setValue}
+                      />
+                    )
+                  })
                 : null}
             </div>
           </div>
