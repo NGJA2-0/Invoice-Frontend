@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
-import InvoiceDetailView from '../../components/InvoiceDetailView'
+import InvoicePreview from '../../components/invoices/InvoicePreview'
+import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
 
 const OfficerInvoiceDetail = () => {
   const { invoiceId } = useParams()
@@ -23,29 +24,63 @@ const OfficerInvoiceDetail = () => {
   }, [user?.id, officerInvoices.length, refreshOfficerInvoices])
 
   const invoice = officerInvoices.find((inv) => inv.id === invoiceId)
+  const preview = useMemo(() => buildInvoicePreviewData(invoice), [invoice])
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => navigate('/officer/dashboard')}
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
-          background: 'none',
-          border: 'none',
-          color: '#374151',
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: 'pointer',
+          justifyContent: 'space-between',
           marginBottom: '1rem',
-          padding: 0,
+          flexWrap: 'wrap',
+          gap: 10,
         }}
       >
-        <ArrowLeft size={15} />
-        Back to dashboard
-      </button>
+        <button
+          type="button"
+          onClick={() => navigate('/officer/dashboard')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'none',
+            border: 'none',
+            color: '#374151',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <ArrowLeft size={15} />
+          Back to dashboard
+        </button>
+
+        {!loading && !error && invoice && (
+          <button
+            type="button"
+            onClick={() => {}}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '0.5rem 1rem',
+              borderRadius: 999,
+              border: '1px solid rgba(0,0,0,0.12)',
+              background: '#003A6B',
+              color: '#ffde1a',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <Pencil size={14} />
+            Edit Invoice
+          </button>
+        )}
+      </div>
 
       {loading && <div>Loading invoice…</div>}
 
@@ -58,31 +93,9 @@ const OfficerInvoiceDetail = () => {
       )}
 
       {!loading && !error && invoice && (
-        <InvoiceDetailView
-          invoice={invoice}
-          actions={
-            <button
-              type="button"
-              onClick={() => {}}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0.5rem 1rem',
-                borderRadius: 999,
-                border: '1px solid rgba(0,0,0,0.12)',
-                background: '#003A6B',
-                color: '#ffde1a',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <Pencil size={14} />
-              Edit Invoice
-            </button>
-          }
-        />
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <InvoicePreview preview={preview} />
+        </div>
       )}
     </div>
   )
