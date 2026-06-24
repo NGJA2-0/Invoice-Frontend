@@ -7,7 +7,7 @@ import ItemTypeSearch from '../common/ItemTypeSearch'
 import { Check, Trash2 } from 'lucide-react'
 import { currencyApi } from '../../services/currencyApi'
 
-const ValuationTable = ({ control, register, watch, setValue, section, businessProfile, pushToast }) => {
+const ValuationTable = ({ control, register, watch, setValue, section, businessProfile, pushToast, templateKey }) => {
   // ── Currency dropdown state ────────────────────────────────────────────
   const [currencyCodes, setCurrencyCodes] = useState([])
   const [currencyList, setCurrencyList] = useState([])
@@ -155,6 +155,16 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     if (!formula) return 0
     const sanitized = formula.replace(/\s+/g, '')
     const getValue = (key) => Number(item?.[key]) || 0
+
+    // Template 2: amount = numberOfItems * ratePerUnit
+    if (String(templateKey || '').toUpperCase() === 'TEMPLATE_2') {
+      // console.log('template2 item keys:', Object.keys(item), item)
+      if (sanitized.toLowerCase().includes('amount') || sanitized === 'weight*ratePer' || sanitized.includes('ratePer')) {
+        const numberOfItems = getValue('numberOfItems') || getValue('noOfPcs') || getValue('quantity') || getValue('numberOfPieces') || 0
+        const ratePerUnit = getValue('ratePerUnit') || getValue('ratePer') || 0
+        return numberOfItems * ratePerUnit
+      }
+    }
 
     // Special case: weight * ratePer needs unit conversion
     if (sanitized === 'weight*ratePer') {
@@ -306,19 +316,16 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     const amountColHasFormula = tableConfig.columns.find(
       (col) => col.key === amountKey && col.formula
     )
-    console.log('amountColHasFormula:', amountColHasFormula)
-    console.log('tableConfig.columns:', tableConfig.columns)
+    // console.log('amountColHasFormula:', amountColHasFormula)
+    // console.log('tableConfig.columns:', tableConfig.columns)
     let finalAmount
     if (amountColHasFormula) {
       finalAmount = computedUpdates[amountKey] ?? 0
     } else {
-      console.log("abc")
       const weight = Number(item?.[weightKey]) || 0
       const ratePer = Number(item?.[rateKey]) || 0
       const weightUnit = String(item?.weightUnit || '').toLowerCase().trim()
       const rateUnit = String(item?.rateUnit || '').toLowerCase().trim()
-
-      console.log('weightUnit:', weightUnit, 'rateUnit:', rateUnit)
 
       // Convert weight to carats
       const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
