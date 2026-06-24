@@ -1,29 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
-import { useApp } from '../../context/AppContext'
+import { officerApi } from '../../services/officerApi'
 import InvoicePreview from '../../components/invoices/InvoicePreview'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
 
 const OfficerInvoiceDetail = () => {
   const { invoiceId } = useParams()
   const navigate = useNavigate()
-  const { user, officerInvoices, refreshOfficerInvoices } = useApp()
-  const [loading, setLoading] = useState(officerInvoices.length === 0)
+  const [invoice, setInvoice] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // If invoices aren't loaded yet (e.g. direct page refresh on this URL),
-  // fetch them so we have data to find the invoice from.
   useEffect(() => {
-    if (officerInvoices.length > 0 || !user?.id) return
+    if (!invoiceId) return
     setLoading(true)
     setError(null)
-    refreshOfficerInvoices(user.id)
+    officerApi
+      .getDocumentById(invoiceId)
+      .then((res) => {
+        setInvoice(res)
+      })
       .catch((err) => setError(err?.message || 'Failed to load invoice'))
       .finally(() => setLoading(false))
-  }, [user?.id, officerInvoices.length, refreshOfficerInvoices])
+  }, [invoiceId])
 
-  const invoice = officerInvoices.find((inv) => inv.id === invoiceId)
   const preview = useMemo(() => buildInvoicePreviewData(invoice), [invoice])
 
   return (
