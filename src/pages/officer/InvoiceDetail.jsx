@@ -145,7 +145,7 @@ const OfficerInvoiceDetail = () => {
 
             <button
               type="button"
-              onClick={() => navigate('/officer/edit-invoice/' + invoiceId, { state: { invoice } })}
+              onClick={() => {}}
               style={{
                 display: 'flex',
                 alignItems: 'center',
