@@ -45,6 +45,9 @@ const getStoredUserId = () => {
 }
 
 const request = async (path, options = {}) => {
+  if (path.includes('categories')) {
+    console.trace(`🔴 API CALL: ${path}`) // prints full call stack
+  }
   const userId = getStoredUserId()
   const response = await fetchWithFallback(buildUrl(path), {
     ...options,

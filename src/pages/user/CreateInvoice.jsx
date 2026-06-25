@@ -143,20 +143,18 @@ const CreateInvoice = () => {
   }, [userStatus, navigate])
 
   useEffect(() => {
+    let cancelled = false
     const loadCategories = async () => {
       try {
         const data = await invoiceService.getCategories()
-        setCategories(normalizeOptions(data))
+        if (!cancelled) setCategories(normalizeOptions(data))
       } catch (error) {
-        pushToast({
-          title: 'Unable to load categories',
-          message: error.message || 'Please try again.',
-          tone: 'danger',
-        })
+        if (!cancelled) pushToast({ title: 'Unable to load categories', message: error.message || 'Please try again.', tone: 'danger' })
       }
     }
     loadCategories()
-  }, [pushToast])
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     const loadBusinessProfile = async () => {
@@ -185,39 +183,44 @@ const CreateInvoice = () => {
     loadNumber()
   }, [])
 
+  const [subCategoriesLoaded, setSubCategoriesLoaded] = useState(false)
+
   useEffect(() => {
     const loadSubCategories = async () => {
       if (!category) {
         setSubCategories([])
         setSubCategory('')
         setTemplateConfig(null)
+        setSubCategoriesLoaded(false)
         return
       }
       try {
         const data = await invoiceService.getSubCategories(category)
         const normalized = normalizeOptions(data)
         setSubCategories(normalized)
+        setSubCategoriesLoaded(true)
         const autoSelected = normalized.length === 1 ? normalized[0].value : ''
         setSubCategory(autoSelected)
         setTemplateConfig(null)
         const defaults = buildDefaultInvoiceData()
         if (businessProfile) {
-          defaults.companyHeader.companyName    = businessProfile.businessName || ''
+          defaults.companyHeader.companyName = businessProfile.businessName || ''
           defaults.companyHeader.companyAddress = businessProfile.businessAddress || ''
-          defaults.companyHeader.companyPhone   = (businessProfile.mobileNumbers || [])[0] || ''
-          defaults.companyHeader.tin            = businessProfile.tin || ''
+          defaults.companyHeader.companyPhone = (businessProfile.mobileNumbers || [])[0] || ''
+          defaults.companyHeader.tin = businessProfile.tin || ''
           defaults.companyHeader.stockValueName = businessProfile.stockValueName || ''
         }
         reset({ invoiceData: defaults })
       } catch (error) {
         setSubCategories([])
+        setSubCategoriesLoaded(true)
       }
     }
     loadSubCategories()
   }, [category, reset, businessProfile])
 
   useEffect(() => {
-    const shouldLoad = category && (subCategory || subCategories.length === 0)
+    const shouldLoad = category && subCategoriesLoaded && (subCategory || subCategories.length === 0)
     if (!shouldLoad) {
       setTemplateConfig(null)
       return
@@ -254,16 +257,16 @@ const CreateInvoice = () => {
       }
     }
     loadTemplate()
-  }, [category, subCategory, subCategories, pushToast])
+  }, [category, subCategory, subCategories.length, subCategoriesLoaded])
 
   // Re-apply business profile values whenever template config becomes available
   useEffect(() => {
     if (!templateConfig || !businessProfile) return
-    setValue('invoiceData.companyHeader.companyName',    businessProfile.businessName || '',                        { shouldValidate: false })
-    setValue('invoiceData.companyHeader.companyAddress', businessProfile.businessAddress || '',                     { shouldValidate: false })
-    setValue('invoiceData.companyHeader.companyPhone',   (businessProfile.mobileNumbers || [])[0] || '',           { shouldValidate: false })
-    setValue('invoiceData.companyHeader.tin',            businessProfile.tin || '',                                 { shouldValidate: false })
-    setValue('invoiceData.companyHeader.stockValueName', businessProfile.stockValueName || '',                      { shouldValidate: false })
+    setValue('invoiceData.companyHeader.companyName', businessProfile.businessName || '', { shouldValidate: false })
+    setValue('invoiceData.companyHeader.companyAddress', businessProfile.businessAddress || '', { shouldValidate: false })
+    setValue('invoiceData.companyHeader.companyPhone', (businessProfile.mobileNumbers || [])[0] || '', { shouldValidate: false })
+    setValue('invoiceData.companyHeader.tin', businessProfile.tin || '', { shouldValidate: false })
+    setValue('invoiceData.companyHeader.stockValueName', businessProfile.stockValueName || '', { shouldValidate: false })
   }, [templateConfig, businessProfile, setValue])
 
   const formReady = useMemo(() => Boolean(category && templateConfig), [category, templateConfig])
@@ -1129,9 +1132,9 @@ const CreateInvoice = () => {
             </div>
             <div className="ci-preview-body">
               <InvoicePreview
-              ref={previewRef}
-              preview={preview}
-            />
+                ref={previewRef}
+                preview={preview}
+              />
             </div>
           </div>
         ) : null}
