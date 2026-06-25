@@ -27,6 +27,9 @@ export const officerApi = {
   // GET /api/v1/stage1/invoices/:originalInvoiceId/latest
   getDocumentById: (originalInvoiceId) => api.get(`/stage1/invoices/${originalInvoiceId}/latest`),
 
+  // GET /api/v1/stage1/invoices/:originalInvoiceId/history
+  getHistory: (originalInvoiceId) => api.get(`/stage1/invoices/${originalInvoiceId}/history`),
+
   // PATCH /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/status
   updateInvoiceStatus: (originalInvoiceId, officerId, payload) =>
     api.patch(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/status`, payload),
