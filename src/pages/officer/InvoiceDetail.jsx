@@ -7,7 +7,7 @@ import InvoicePreview from '../../components/invoices/InvoicePreview'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
 
 const OfficerInvoiceDetail = () => {
-  const { invoiceId } = useParams()
+  const { invoiceId: originalInvoiceId } = useParams()
   const navigate = useNavigate()
   const { user, pushToast } = useApp()
   const [invoice, setInvoice] = useState(null)
@@ -16,17 +16,17 @@ const OfficerInvoiceDetail = () => {
   const [actionLoading, setActionLoading] = useState(null) // 'approve' | 'reject' | null
 
   useEffect(() => {
-    if (!invoiceId) return
+    if (!originalInvoiceId) return
     setLoading(true)
     setError(null)
     officerApi
-      .getDocumentById(invoiceId)
+      .getDocumentById(originalInvoiceId)
       .then((res) => {
         setInvoice(res)
       })
       .catch((err) => setError(err?.message || 'Failed to load invoice'))
       .finally(() => setLoading(false))
-  }, [invoiceId])
+  }, [originalInvoiceId])
 
   const preview = useMemo(() => buildInvoicePreviewData(invoice), [invoice])
 
