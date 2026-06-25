@@ -67,7 +67,7 @@ const OfficerDashboard = () => {
   const rows = useMemo(
     () =>
       (officerInvoices || []).map((inv) => ({
-        id: inv.id,
+        id: inv.originalInvoiceId,
         invoiceNumber: inv.invoiceNumber,
         category: inv.category || 'N/A',
         subCategory: inv.subCategory || 'N/A',

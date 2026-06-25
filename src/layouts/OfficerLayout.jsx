@@ -1,7 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import signupBg from '../assets/signup.jpg'
 
 const OfficerLayout = () => {
   const navigate = useNavigate()
@@ -17,30 +16,8 @@ const OfficerLayout = () => {
       <style>{`
         .ol-root {
           min-height: 100vh;
-          background-color: #000;
+          background: linear-gradient(180deg, #f8fafc 0%, #eef1f5 100%);
           position: relative;
-        }
-        .ol-root::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background-image: url('${signupBg}');
-          background-size: cover;
-          background-position: center;
-          filter: blur(8px);
-          transform: scale(1.05);
-          z-index: 0;
-        }
-        .ol-root::after {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background: rgba(255, 255, 255, 0.45);
-          z-index: 0;
-        }
-        .ol-root > * {
-          position: relative;
-          z-index: 1;
         }
 
         .ol-topbar {

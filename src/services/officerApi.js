@@ -24,10 +24,17 @@ export const officerApi = {
   // GET /api/v1/stage1/officers/:officerId/invoices
   getAssignedInvoices: (officerId) => api.get(`/stage1/officers/${officerId}/invoices`),
 
-  // GET /api/v1/stage1/documents/:id
-  getDocumentById: (id) => api.get(`/stage1/documents/${id}`),
+  // GET /api/v1/stage1/invoices/:originalInvoiceId/latest
+  getDocumentById: (originalInvoiceId) => api.get(`/stage1/invoices/${originalInvoiceId}/latest`),
+
+  // GET /api/v1/stage1/invoices/:originalInvoiceId/history
+  getHistory: (originalInvoiceId) => api.get(`/stage1/invoices/${originalInvoiceId}/history`),
 
   // PATCH /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/status
   updateInvoiceStatus: (originalInvoiceId, officerId, payload) =>
     api.patch(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/status`, payload),
+
+  // POST /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/edit
+  editInvoice: (originalInvoiceId, officerId, payload) =>
+    api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/edit`, payload),
 }
