@@ -65,6 +65,7 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/officer/dashboard" replace />} />
           <Route path="dashboard" element={<OfficerDashboard />} />
           <Route path="invoices/:invoiceId" element={<OfficerInvoiceDetail />} />
+          <Route path="edit-invoice/:invoiceId" element={<CreateInvoice />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

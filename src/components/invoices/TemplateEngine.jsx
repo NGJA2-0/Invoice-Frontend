@@ -184,9 +184,10 @@ const TemplateEngine = ({
   uploadingLogo,
   businessProfile,
   pushToast,
+  isOfficerEdit,
 }) => {
   useEffect(() => {
-    if (!businessProfile || !templateConfig) return
+    if (!businessProfile || !templateConfig || isOfficerEdit) return
     // setTimeout ensures RHF has finished registering fields before we set values
     const timer = setTimeout(() => {
       setValue('invoiceData.companyHeader.companyName', businessProfile.businessName || '', { shouldValidate: false, shouldDirty: false })
@@ -311,7 +312,7 @@ const TemplateEngine = ({
                       const isLockedByProfile =
                         section.key === 'companyHeader' &&
                         BUSINESS_PROFILE_LOCKED_KEYS.includes(field.key) &&
-                        !!businessProfile
+                        !!businessProfile && !isOfficerEdit
 
                       if (isLockedByProfile) {
                         const profileValueMap = {

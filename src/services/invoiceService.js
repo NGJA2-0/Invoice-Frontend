@@ -1,28 +1,29 @@
 import { api } from './api'
 
 export const invoiceService = {
-  getCategories: async () => {
-    const response = await api.get('/invoices/categories')
+  getCategories: async (options = {}) => {
+    const response = await api.get('/invoices/categories', options)
     return response
   },
 
-  getSubCategories: async (category) => {
+  getSubCategories: async (category, options = {}) => {
     const response = await api.get(
       `/invoices/categories/${encodeURIComponent(category)}/subcategories`,
+      options
     )
     return response
   },
 
-  resolveTemplate: async ({ category, subCategory }) => {
+  resolveTemplate: async ({ category, subCategory }, options = {}) => {
     const response = await api.post('/invoices/resolve-template', {
       category,
       subCategory,
-    })
+    }, options)
     return response
   },
 
-  getTemplate: async (templateKey) => {
-    const response = await api.get(`/templates/${templateKey}`)
+  getTemplate: async (templateKey, options = {}) => {
+    const response = await api.get(`/templates/${templateKey}`, options)
     return response
   },
 
@@ -40,19 +41,19 @@ export const invoiceService = {
     return response
   },
 
-  preview: async ({ category, subCategory, invoiceData }) => {
+  preview: async ({ category, subCategory, invoiceData }, options = {}) => {
     const response = await api.post('/invoices/preview', {
       category,
       subCategory,
       invoiceData,
-    })
+    }, options)
     return response
   },
 
-  uploadLogo: async (file) => {
+  uploadLogo: async (file, options = {}) => {
     const formData = new FormData()
     formData.append('logo', file)
-    const response = await api.postForm('/invoices/upload-logo', formData)
+    const response = await api.postForm('/invoices/upload-logo', formData, options)
     return response
   },
 
@@ -71,8 +72,8 @@ export const invoiceService = {
     return response
   },
 
-  generateNumber: async () => {
-    const response = await api.get('/invoices/generate-number')
+  generateNumber: async (options = {}) => {
+    const response = await api.get('/invoices/generate-number', options)
     return response
   },
 

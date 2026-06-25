@@ -84,12 +84,12 @@ export const api = {
     if (!userId) throw new Error('User ID is required for license renewal')
     return requestWithUserIdHeader('/license-renewals/submit', body, userId)
   },
-  post: (path, body) =>
-    request(path, { method: 'POST', body: JSON.stringify(body) }),
-  put: (path, body) =>
-    request(path, { method: 'PUT', body: JSON.stringify(body) }),
-  patch: (path, body) =>
-    request(path, { method: 'PATCH', body: JSON.stringify(body) }),
+  post: (path, body, options = {}) =>
+    request(path, { method: 'POST', body: JSON.stringify(body), ...options }),
+  put: (path, body, options = {}) =>
+    request(path, { method: 'PUT', body: JSON.stringify(body), ...options }),
+  patch: (path, body, options = {}) =>
+    request(path, { method: 'PATCH', body: JSON.stringify(body), ...options }),
   delete: (path) => request(path, { method: 'DELETE' }),
-  postForm: (path, formData) => requestForm(path, formData),
+  postForm: (path, formData, options = {}) => requestForm(path, formData, options),
 }

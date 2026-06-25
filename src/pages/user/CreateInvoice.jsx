@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Download, Eye, Save, FileText, ChevronRight } from 'lucide-react'
 import Button from '../../components/common/Button'
@@ -10,6 +10,7 @@ import InvoicePreview from '../../components/invoices/InvoicePreview'
 import { useApp } from '../../context/AppContext'
 import { invoiceService } from '../../services/invoiceService'
 import { jsPDF } from 'jspdf'
+import { officerApi } from '../../services/officerApi'
 
 const buildDefaultInvoiceData = () => ({
   companyHeader: {
@@ -99,10 +100,15 @@ const normalizeOptions = (items) => {
 const CreateInvoice = () => {
   const { userStatus, user, createInvoice, pushToast } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
+  const editInvoiceData = location.state?.invoice
+  const isOfficerEdit = !!editInvoiceData
+  const [officerNotes, setOfficerNotes] = useState('')
+
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
-  const [category, setCategory] = useState('')
-  const [subCategory, setSubCategory] = useState('')
+  const [category, setCategory] = useState(editInvoiceData?.category || '')
+  const [subCategory, setSubCategory] = useState(editInvoiceData?.subCategory || '')
   const [templateConfig, setTemplateConfig] = useState(null)
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [preview, setPreview] = useState(null)
@@ -113,7 +119,9 @@ const CreateInvoice = () => {
 
   const form = useForm({
     defaultValues: {
-      invoiceData: buildDefaultInvoiceData(),
+      invoiceData: editInvoiceData?.data 
+        ? { ...buildDefaultInvoiceData(), ...editInvoiceData.data }
+        : buildDefaultInvoiceData(),
     },
   })
 
@@ -137,15 +145,23 @@ const CreateInvoice = () => {
   }
 
   useEffect(() => {
-    if (userStatus !== 'approved') {
+    if (!isOfficerEdit && userStatus !== 'approved') {
       navigate('/user/dealer-registration')
     }
-  }, [userStatus, navigate])
+  }, [userStatus, navigate, isOfficerEdit])
+
+  const apiOptions = useMemo(() => {
+    const originalUserId = editInvoiceData?.createdBy || editInvoiceData?.userId
+    if (isOfficerEdit && originalUserId) {
+      return { headers: { 'X-User-Id': originalUserId } }
+    }
+    return {}
+  }, [isOfficerEdit, editInvoiceData])
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const data = await invoiceService.getCategories()
+        const data = await invoiceService.getCategories(apiOptions)
         setCategories(normalizeOptions(data))
       } catch (error) {
         pushToast({
@@ -176,14 +192,14 @@ const CreateInvoice = () => {
   useEffect(() => {
     const loadNumber = async () => {
       try {
-        const nextNumber = await invoiceService.generateNumber()
+        const nextNumber = await invoiceService.generateNumber(apiOptions)
         setInvoiceNumber(nextNumber?.invoiceNumber || '')
       } catch (error) {
         setInvoiceNumber('')
       }
     }
     loadNumber()
-  }, [])
+  }, [apiOptions])
 
   useEffect(() => {
     const loadSubCategories = async () => {
@@ -194,21 +210,25 @@ const CreateInvoice = () => {
         return
       }
       try {
-        const data = await invoiceService.getSubCategories(category)
+        const data = await invoiceService.getSubCategories(category, apiOptions)
         const normalized = normalizeOptions(data)
         setSubCategories(normalized)
         const autoSelected = normalized.length === 1 ? normalized[0].value : ''
-        setSubCategory(autoSelected)
-        setTemplateConfig(null)
-        const defaults = buildDefaultInvoiceData()
-        if (businessProfile) {
-          defaults.companyHeader.companyName    = businessProfile.businessName || ''
-          defaults.companyHeader.companyAddress = businessProfile.businessAddress || ''
-          defaults.companyHeader.companyPhone   = (businessProfile.mobileNumbers || [])[0] || ''
-          defaults.companyHeader.tin            = businessProfile.tin || ''
-          defaults.companyHeader.stockValueName = businessProfile.stockValueName || ''
+        if (!isOfficerEdit || !subCategory) {
+          setSubCategory(autoSelected)
         }
-        reset({ invoiceData: defaults })
+        setTemplateConfig(null)
+        if (!isOfficerEdit) {
+          const defaults = buildDefaultInvoiceData()
+          if (businessProfile) {
+            defaults.companyHeader.companyName    = businessProfile.businessName || ''
+            defaults.companyHeader.companyAddress = businessProfile.businessAddress || ''
+            defaults.companyHeader.companyPhone   = (businessProfile.mobileNumbers || [])[0] || ''
+            defaults.companyHeader.tin            = businessProfile.tin || ''
+            defaults.companyHeader.stockValueName = businessProfile.stockValueName || ''
+          }
+          reset({ invoiceData: defaults })
+        }
       } catch (error) {
         setSubCategories([])
       }
@@ -229,7 +249,7 @@ const CreateInvoice = () => {
         const templateResolution = await invoiceService.resolveTemplate({
           category,
           subCategory,
-        })
+        }, apiOptions)
 
         const templateKey =
           templateResolution?.key ||
@@ -240,7 +260,7 @@ const CreateInvoice = () => {
           throw new Error('Unable to determine template for this category')
         }
 
-        const templateStructure = await invoiceService.getTemplate(templateKey)
+        const templateStructure = await invoiceService.getTemplate(templateKey, apiOptions)
         setTemplateConfig(templateStructure)
       } catch (error) {
         pushToast({
@@ -258,13 +278,13 @@ const CreateInvoice = () => {
 
   // Re-apply business profile values whenever template config becomes available
   useEffect(() => {
-    if (!templateConfig || !businessProfile) return
+    if (!templateConfig || !businessProfile || isOfficerEdit) return
     setValue('invoiceData.companyHeader.companyName',    businessProfile.businessName || '',                        { shouldValidate: false })
     setValue('invoiceData.companyHeader.companyAddress', businessProfile.businessAddress || '',                     { shouldValidate: false })
     setValue('invoiceData.companyHeader.companyPhone',   (businessProfile.mobileNumbers || [])[0] || '',           { shouldValidate: false })
     setValue('invoiceData.companyHeader.tin',            businessProfile.tin || '',                                 { shouldValidate: false })
     setValue('invoiceData.companyHeader.stockValueName', businessProfile.stockValueName || '',                      { shouldValidate: false })
-  }, [templateConfig, businessProfile, setValue])
+  }, [templateConfig, businessProfile, setValue, isOfficerEdit])
 
   const formReady = useMemo(() => Boolean(category && templateConfig), [category, templateConfig])
 
@@ -272,7 +292,7 @@ const CreateInvoice = () => {
     if (!file) return
     setUploadingLogo(true)
     try {
-      const response = await invoiceService.uploadLogo(file)
+      const response = await invoiceService.uploadLogo(file, apiOptions)
       setValue('invoiceData.companyHeader.logoUrl', response?.path || '')
       pushToast({
         title: 'Logo uploaded',
@@ -307,7 +327,7 @@ const CreateInvoice = () => {
   const handlePreview = async () => {
     if (!formReady || !ensureTemplate3NiDetails()) return
     try {
-      const data = await invoiceService.preview(buildPayload('draft'))
+      const data = await invoiceService.preview(buildPayload('draft'), apiOptions)
       setPreview(data)
       pushToast({
         title: 'Preview ready',
@@ -335,15 +355,31 @@ const CreateInvoice = () => {
     }
 
     try {
-      await createInvoice(buildPayload(status))
-      pushToast({
-        title: status === 'draft' ? 'Draft saved' : 'Invoice submitted',
-        message:
-          status === 'draft'
-            ? 'Invoice saved as draft.'
-            : 'Invoice submitted for review.',
-        tone: 'success',
-      })
+      if (isOfficerEdit) {
+        if (!officerNotes.trim()) {
+          pushToast({ title: 'Missing notes', message: 'Please add notes for your edits.', tone: 'danger' })
+          return
+        }
+        await officerApi.editInvoice(editInvoiceData.originalInvoiceId, user.id, {
+          invoiceData: getValues('invoiceData'),
+          notes: officerNotes
+        })
+        pushToast({ title: 'Invoice updated', message: 'Your edits have been saved.', tone: 'success' })
+        navigate('/officer/dashboard')
+      } else {
+        await createInvoice(buildPayload(status))
+        pushToast({
+          title: status === 'draft' ? 'Draft saved' : 'Invoice submitted',
+          message:
+            status === 'draft'
+              ? 'Invoice saved as draft.'
+              : 'Invoice submitted for review.',
+          tone: 'success',
+        })
+        if (status === 'submitted') {
+          navigate('/user/my-invoices')
+        }
+      }
     } catch (error) {
       pushToast({
         title: 'Submission failed',
@@ -358,7 +394,7 @@ const CreateInvoice = () => {
       throw new Error('Missing required NI details.')
     }
     if (preview) return preview
-    const data = await invoiceService.preview(buildPayload('draft'))
+    const data = await invoiceService.preview(buildPayload('draft'), apiOptions)
     setPreview(data)
     return data
   }
@@ -1038,26 +1074,56 @@ const CreateInvoice = () => {
               uploadingLogo={uploadingLogo}
               businessProfile={businessProfile}
               pushToast={pushToast}
+              isOfficerEdit={isOfficerEdit}
             />
+
+            {/* ── Officer Notes Field ── */}
+            {isOfficerEdit && (
+              <div className="ci-card no-print" style={{ marginTop: '1.5rem', marginBottom: 0 }}>
+                <div className="ci-card-header">
+                  <h3 className="ci-card-title">Officer Edit Notes</h3>
+                  <div className="ci-card-accent" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: '#4b5563' }}>Notes about your edits (Required)</label>
+                  <textarea
+                    value={officerNotes}
+                    onChange={(e) => setOfficerNotes(e.target.value)}
+                    placeholder="E.g., Corrected carrier details and updated valuation."
+                    rows={4}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: 8,
+                      border: '1px solid #d1d5db',
+                      fontSize: 14,
+                      resize: 'vertical',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* ── Action Bar ── */}
             <div className="ci-action-bar no-print" style={{ marginTop: '1.5rem' }}>
               <div className="ci-action-group">
-                <button
-                  type="button"
-                  className="ci-btn ci-btn-ghost"
-                  onClick={() => handleSave('draft')}
-                >
-                  <Save />
-                  Save Draft
-                </button>
+                {!isOfficerEdit && (
+                  <button
+                    type="button"
+                    className="ci-btn ci-btn-ghost"
+                    onClick={() => handleSave('draft')}
+                  >
+                    <Save />
+                    Save Draft
+                  </button>
+                )}
                 <button
                   type="button"
                   className="ci-btn ci-btn-primary"
                   onClick={() => handleSave('submitted')}
                 >
                   <Save />
-                  Submit Invoice
+                  {isOfficerEdit ? 'Submit Edits' : 'Submit Invoice'}
                 </button>
               </div>
 
