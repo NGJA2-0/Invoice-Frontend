@@ -330,6 +330,16 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       return
     }
 
+    if (String(templateKey || '').toUpperCase() === 'TEMPLATE_4') {
+      const numberOfItems = Number(item?.numberOfItems) || 0
+      const ratePerUnit = Number(item?.ratePerUnit) || 0
+      const importValue = Number(item?.importValue) || 0
+      const valueAddition = Number((numberOfItems * ratePerUnit).toFixed(2))
+      const amount = Number((valueAddition + importValue).toFixed(2))
+      update(index, { ...item, valueAddition, amount, isDone: true })
+      return
+    }
+
     const computedUpdates = {}
     tableConfig.columns.forEach((col) => {
       if (col.formula || col.dataType === 'computed') {
@@ -430,8 +440,10 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     }
 
     if (
-      String(templateKey || '').toUpperCase() === 'TEMPLATE_3' &&
-      (column.key === 'valueAddition' || column.key === 'totalValue')
+      (String(templateKey || '').toUpperCase() === 'TEMPLATE_3' &&
+        (column.key === 'valueAddition' || column.key === 'totalValue')) ||
+      (String(templateKey || '').toUpperCase() === 'TEMPLATE_4' &&
+        column.key === 'valueAddition')
     ) {
       return (
         <Input

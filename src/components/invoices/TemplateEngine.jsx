@@ -376,6 +376,21 @@ const TemplateEngine = ({
                       )
                     }
 
+                    // Intercept destinationCountry in carrierDetails to show a searchable dropdown
+                    if (section.key === 'carrierDetails' && field.key === 'destinationCountry') {
+                      const fieldPath = 'invoiceData.carrierDetails.destinationCountry'
+                      const currentValue = watch(fieldPath) || ''
+                      return (
+                        <CountryDropdown
+                          key={`${section.key}-${field.key}`}
+                          label={field.label || 'Destination Country'}
+                          required={adjustedField.required}
+                          value={currentValue}
+                          onChange={(val) => setValue(fieldPath, val, { shouldValidate: true, shouldDirty: true })}
+                        />
+                      )
+                    }
+
                     return (
                       <DynamicFieldRenderer
                         key={`${section.key}-${field.key}`}
