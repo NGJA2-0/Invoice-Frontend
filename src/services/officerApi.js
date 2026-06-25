@@ -30,4 +30,8 @@ export const officerApi = {
   // PATCH /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/status
   updateInvoiceStatus: (originalInvoiceId, officerId, payload) =>
     api.patch(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/status`, payload),
+
+  // POST /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/edit
+  editInvoice: (originalInvoiceId, officerId, payload) =>
+    api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/edit`, payload),
 }
