@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
 import InvoicePreview from '../../components/invoices/InvoicePreview'
@@ -29,26 +29,63 @@ const Stage2InvoiceDetail = () => {
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => navigate('/officer2/dashboard')}
+     <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#374151',
-          fontSize: 13,
-          fontWeight: 600,
-          padding: 0,
+          justifyContent: 'space-between',
           marginBottom: '1.25rem',
+          flexWrap: 'wrap',
+          gap: 10,
         }}
       >
-        <ArrowLeft size={15} />
-        Back to Assigned Invoices
-      </button>
+        <button
+          type="button"
+          onClick={() => navigate('/officer2/dashboard')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#374151',
+            fontSize: 13,
+            fontWeight: 600,
+            padding: 0,
+          }}
+        >
+          <ArrowLeft size={15} />
+          Back to Assigned Invoices
+        </button>
+
+        {!loading && !error && invoice && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/officer2/invoices/${invoiceId}/edit`, {
+                state: { invoice },
+              })
+            }
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '0.5rem 1rem',
+              borderRadius: 999,
+              border: '1px solid rgba(0,0,0,0.12)',
+              background: '#003A6B',
+              color: '#ffde1a',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <Pencil size={14} />
+            Edit Invoice
+          </button>
+        )}
+      </div>
 
       {loading && <div>Loading invoice…</div>}
 
