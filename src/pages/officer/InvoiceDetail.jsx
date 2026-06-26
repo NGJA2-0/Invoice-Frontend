@@ -37,33 +37,59 @@ const OfficerInvoiceDetail = () => {
   const previewedInvoice = viewingHistoryRecord || invoice
   const preview = useMemo(() => buildInvoicePreviewData(previewedInvoice), [previewedInvoice])
   const isViewingPastEdition = Boolean(viewingHistoryRecord)
+  const isCompleted = invoice?.status === 'stage1_completed'
 
-  const handleStatusUpdate = async (status) => {
+  const handleReject = async () => {
     if (!invoice || !user?.id) return
-    const isApprove = status === 'stage1_approved'
-    const notes = window.prompt(
-      isApprove ? 'Approval notes:' : 'Rejection notes:',
-      isApprove ? 'All details verified. Approved.' : 'Carrier details are incorrect.'
-    )
+    const notes = window.prompt('Rejection notes:', 'Carrier details are incorrect.')
     if (notes === null) return // user cancelled the prompt
 
-    setActionLoading(isApprove ? 'approve' : 'reject')
+    setActionLoading('reject')
     try {
       await officerApi.updateInvoiceStatus(
         invoice.originalInvoiceId,
         user.id,
-        { status, notes }
+        { status: 'stage1_rejected', notes }
       )
       pushToast({
-        title: isApprove ? 'Invoice approved' : 'Invoice rejected',
+        title: 'Invoice rejected',
         message: notes,
-        tone: isApprove ? 'success' : 'error',
+        tone: 'error',
       })
       navigate('/officer/dashboard')
     } catch (err) {
       pushToast({
         title: 'Update failed',
         message: err?.message || 'Could not update invoice status',
+        tone: 'error',
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleApprove = async () => {
+    if (!invoice || !user?.id) return
+    const notes = window.prompt('Approval notes:', 'All details verified. Approved.')
+    if (notes === null) return // user cancelled the prompt
+
+    setActionLoading('approve')
+    try {
+      await officerApi.completeInvoice(
+        invoice.originalInvoiceId,
+        user.id,
+        { notes }
+      )
+      pushToast({
+        title: 'Invoice approved',
+        message: notes,
+        tone: 'success',
+      })
+      navigate('/officer/dashboard')
+    } catch (err) {
+      pushToast({
+        title: 'Update failed',
+        message: err?.message || 'Could not complete invoice',
         tone: 'error',
       })
     } finally {
@@ -111,76 +137,80 @@ const OfficerInvoiceDetail = () => {
               onSelect={(record) => setViewingHistoryRecord(record)}
             />
 
-            <button
-              type="button"
-              onClick={() => handleStatusUpdate('stage1_rejected')}
-              disabled={actionLoading !== null}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0.5rem 1rem',
-                borderRadius: 999,
-                border: '1px solid rgba(185,28,28,0.3)',
-                background: '#fff',
-                color: '#b91c1c',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
-                opacity: actionLoading !== null ? 0.6 : 1,
-              }}
-            >
-              <X size={14} />
-              {actionLoading === 'reject' ? 'Rejecting…' : 'Reject Invoice'}
-            </button>
+            {!isCompleted && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleReject}
+                  disabled={actionLoading !== null}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.5rem 1rem',
+                    borderRadius: 999,
+                    border: '1px solid rgba(185,28,28,0.3)',
+                    background: '#fff',
+                    color: '#b91c1c',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
+                    opacity: actionLoading !== null ? 0.6 : 1,
+                  }}
+                >
+                  <X size={14} />
+                  {actionLoading === 'reject' ? 'Rejecting…' : 'Reject Invoice'}
+                </button>
 
-            <button
-              type="button"
-              onClick={() => handleStatusUpdate('stage1_approved')}
-              disabled={actionLoading !== null}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0.5rem 1rem',
-                borderRadius: 999,
-                border: '1px solid rgba(0,0,0,0.12)',
-                background: '#15803d',
-                color: '#fff',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
-                opacity: actionLoading !== null ? 0.6 : 1,
-              }}
-            >
-              <Check size={14} />
-              {actionLoading === 'approve' ? 'Approving…' : 'Approve Invoice'}
-            </button>
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={actionLoading !== null}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.5rem 1rem',
+                    borderRadius: 999,
+                    border: '1px solid rgba(0,0,0,0.12)',
+                    background: '#15803d',
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
+                    opacity: actionLoading !== null ? 0.6 : 1,
+                  }}
+                >
+                  <Check size={14} />
+                  {actionLoading === 'approve' ? 'Approving…' : 'Approve Invoice'}
+                </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate(`/officer/invoices/${originalInvoiceId}/edit`, {
-                  state: { invoice },
-                })
-              }
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0.5rem 1rem',
-                borderRadius: 999,
-                border: '1px solid rgba(0,0,0,0.12)',
-                background: '#003A6B',
-                color: '#ffde1a',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <Pencil size={14} />
-              Edit Invoice
-            </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/officer/invoices/${originalInvoiceId}/edit`, {
+                      state: { invoice },
+                    })
+                  }
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.5rem 1rem',
+                    borderRadius: 999,
+                    border: '1px solid rgba(0,0,0,0.12)',
+                    background: '#003A6B',
+                    color: '#ffde1a',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Pencil size={14} />
+                  Edit Invoice
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
