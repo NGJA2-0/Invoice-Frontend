@@ -3,6 +3,7 @@ import { Route, Routes, useLocation, Navigate } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
 import UserLayout from '../layouts/UserLayout'
 import OfficerLayout from '../layouts/OfficerLayout'
+import Stage2Dashboard from '../pages/officer2/Dashboard'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
@@ -67,6 +68,11 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<OfficerDashboard />} />
           <Route path="invoices/:invoiceId" element={<OfficerInvoiceDetail />} />
           <Route path="invoices/:invoiceId/edit" element={<OfficerEditInvoice />} />
+        </Route>
+
+        <Route path="/officer2" element={<OfficerLayout />}>
+          <Route index element={<Navigate to="/officer2/dashboard" replace />} />
+          <Route path="dashboard" element={<Stage2Dashboard />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

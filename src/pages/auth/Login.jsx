@@ -120,7 +120,7 @@ const Login = () => {
           message: 'Welcome to the Officer Portal.',
           tone: 'success',
         })
-        navigate('/officer/dashboard')
+        navigate(loggedIn?.stage === 2 ? '/officer2/dashboard' : '/officer/dashboard')
       } else {
         loggedIn = await userLogin(username, password)
 
