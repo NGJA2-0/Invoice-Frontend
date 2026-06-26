@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, X } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
+import { useApp } from '../../context/AppContext'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
 import InvoicePreview from '../../components/invoices/InvoicePreview'
 
 const Stage2InvoiceDetail = () => {
   const { invoiceId } = useParams()
   const navigate = useNavigate()
+  const { user } = useApp()
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [rejectNotes, setRejectNotes] = useState('Missing supporting documents.')
 
  useEffect(() => {
     if (!invoiceId) return
@@ -26,6 +31,23 @@ const Stage2InvoiceDetail = () => {
   }, [invoiceId])
 
   const preview = useMemo(() => buildInvoicePreviewData(invoice), [invoice])
+
+  const handleRejectConfirm = async () => {
+    if (!invoice || !user?.id) return
+    setActionLoading(true)
+    try {
+      await officerApi.updateStage2InvoiceStatus(invoiceId, user.id, {
+        status: 'stage2_rejected',
+        notes: rejectNotes,
+      })
+      setShowRejectDialog(false)
+      navigate('/officer2/dashboard')
+    } catch (err) {
+      setError(err?.message || 'Could not reject invoice')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   return (
     <div>
@@ -60,30 +82,55 @@ const Stage2InvoiceDetail = () => {
         </button>
 
         {!loading && !error && invoice && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/officer2/invoices/${invoiceId}/edit`, {
-                state: { invoice },
-              })
-            }
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '0.5rem 1rem',
-              borderRadius: 999,
-              border: '1px solid rgba(0,0,0,0.12)',
-              background: '#003A6B',
-              color: '#ffde1a',
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            <Pencil size={14} />
-            Edit Invoice
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setShowRejectDialog(true)}
+              disabled={actionLoading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0.5rem 1rem',
+                borderRadius: 999,
+                border: '1px solid rgba(185,28,28,0.3)',
+                background: '#fff',
+                color: '#b91c1c',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: actionLoading ? 'not-allowed' : 'pointer',
+                opacity: actionLoading ? 0.6 : 1,
+              }}
+            >
+              <X size={14} />
+              Reject Invoice
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate(`/officer2/invoices/${invoiceId}/edit`, {
+                  state: { invoice },
+                })
+              }
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0.5rem 1rem',
+                borderRadius: 999,
+                border: '1px solid rgba(0,0,0,0.12)',
+                background: '#003A6B',
+                color: '#ffde1a',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <Pencil size={14} />
+              Edit Invoice
+            </button>
+          </div>
         )}
       </div>
 
@@ -100,6 +147,90 @@ const Stage2InvoiceDetail = () => {
       {!loading && !error && preview && (
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <InvoicePreview preview={preview} />
+        </div>
+      )}
+
+      {showRejectDialog && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 12,
+              padding: '1.25rem',
+              width: '90%',
+              maxWidth: 380,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 0.75rem', fontSize: 15, fontWeight: 700, color: '#111827' }}>
+              Reject Invoice
+            </h3>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>
+              Rejection notes
+            </label>
+            <textarea
+              value={rejectNotes}
+              onChange={(e) => setRejectNotes(e.target.value)}
+              rows={3}
+              style={{
+                width: '100%',
+                marginTop: 6,
+                marginBottom: 14,
+                padding: '0.5rem',
+                borderRadius: 8,
+                border: '1px solid #d1d5db',
+                fontSize: 13,
+                resize: 'vertical',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setShowRejectDialog(false)}
+                disabled={actionLoading}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: 999,
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  background: '#fff',
+                  color: '#374151',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectConfirm}
+                disabled={actionLoading || !rejectNotes.trim()}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: 999,
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  background: '#b91c1c',
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: actionLoading ? 'not-allowed' : 'pointer',
+                  opacity: actionLoading ? 0.6 : 1,
+                }}
+              >
+                {actionLoading ? 'Rejecting…' : 'Confirm Reject'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
