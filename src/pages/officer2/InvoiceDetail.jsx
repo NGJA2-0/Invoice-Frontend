@@ -60,7 +60,11 @@ const Stage2InvoiceDetail = () => {
         <div style={{ color: '#6b7280', fontSize: 14 }}>Invoice not found.</div>
       )}
 
-      {!loading && !error && preview && <InvoicePreview preview={preview} />}
+      {!loading && !error && preview && (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <InvoicePreview preview={preview} />
+        </div>
+      )}
     </div>
   )
 }
