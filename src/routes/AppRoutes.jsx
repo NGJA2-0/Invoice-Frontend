@@ -4,6 +4,7 @@ import AdminLayout from '../layouts/AdminLayout'
 import UserLayout from '../layouts/UserLayout'
 import OfficerLayout from '../layouts/OfficerLayout'
 import Stage2Dashboard from '../pages/officer2/Dashboard'
+import Stage2InvoiceDetail from '../pages/officer2/InvoiceDetail'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
@@ -73,6 +74,7 @@ const AppRoutes = () => {
         <Route path="/officer2" element={<OfficerLayout />}>
           <Route index element={<Navigate to="/officer2/dashboard" replace />} />
           <Route path="dashboard" element={<Stage2Dashboard />} />
+          <Route path="invoices/:invoiceId" element={<Stage2InvoiceDetail />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>

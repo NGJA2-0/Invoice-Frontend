@@ -24,8 +24,11 @@ export const officerApi = {
   // GET /api/v1/stage1/officers/:officerId/invoices
   getAssignedInvoices: (officerId) => api.get(`/stage1/officers/${officerId}/invoices`),
 
-  // GET /api/v1/stage2/officers/:stage2OfficerId/invoices
+ // GET /api/v1/stage2/officers/:stage2OfficerId/invoices
   getStage2AssignedInvoices: (stage2OfficerId) => api.get(`/stage2/officers/${stage2OfficerId}/invoices`),
+
+  // GET /api/v1/stage2/invoices/:originalInvoiceId/latest
+  getStage2DocumentById: (originalInvoiceId) => api.get(`/stage2/invoices/${originalInvoiceId}/latest`),
 
   // GET /api/v1/stage1/invoices/:originalInvoiceId/latest
   getDocumentById: (originalInvoiceId) => api.get(`/stage1/invoices/${originalInvoiceId}/latest`),
