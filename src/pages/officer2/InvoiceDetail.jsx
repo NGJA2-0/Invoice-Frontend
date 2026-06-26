@@ -5,6 +5,7 @@ import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
 import InvoicePreview from '../../components/invoices/InvoicePreview'
+import Stage2InvoiceHistoryDropdown from '../../pages/officer/Stage2InvoiceHistoryDropdown'
 
 const Stage2InvoiceDetail = () => {
   const { invoiceId } = useParams()
@@ -16,6 +17,7 @@ const Stage2InvoiceDetail = () => {
   const [actionLoading, setActionLoading] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
   const [rejectNotes, setRejectNotes] = useState('Missing supporting documents.')
+  const [viewingHistoryRecord, setViewingHistoryRecord] = useState(null) // non-null when previewing a past edition
 
  useEffect(() => {
     if (!invoiceId) return
@@ -25,12 +27,15 @@ const Stage2InvoiceDetail = () => {
       .getStage2DocumentById(invoiceId)
       .then((res) => {
         setInvoice(res)
+        setViewingHistoryRecord(null)
       })
       .catch((err) => setError(err?.message || 'Failed to load invoice'))
       .finally(() => setLoading(false))
   }, [invoiceId])
 
-  const preview = useMemo(() => buildInvoicePreviewData(invoice), [invoice])
+  const previewedInvoice = viewingHistoryRecord || invoice
+  const preview = useMemo(() => buildInvoicePreviewData(previewedInvoice), [previewedInvoice])
+  const isViewingPastEdition = Boolean(viewingHistoryRecord)
 
   const handleRejectConfirm = async () => {
     if (!invoice || !user?.id) return
@@ -83,6 +88,12 @@ const Stage2InvoiceDetail = () => {
 
         {!loading && !error && invoice && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Stage2InvoiceHistoryDropdown
+              originalInvoiceId={invoiceId}
+              activeRecordId={viewingHistoryRecord?.id}
+              onSelect={(record) => setViewingHistoryRecord(record)}
+            />
+
             <button
               type="button"
               onClick={() => setShowRejectDialog(true)}
@@ -145,8 +156,48 @@ const Stage2InvoiceDetail = () => {
       )}
 
       {!loading && !error && preview && (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <InvoicePreview preview={preview} />
+        <div>
+          {isViewingPastEdition && (
+            <div
+              style={{
+                maxWidth: 900,
+                margin: '0 auto 0.75rem',
+                padding: '0.5rem 0.9rem',
+                borderRadius: 8,
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                color: '#92400e',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+              }}
+            >
+              <span>
+                Viewing past edition: {viewingHistoryRecord.editionLabel || 'Original'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewingHistoryRecord(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#92400e',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                }}
+              >
+                Back to latest
+              </button>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <InvoicePreview preview={preview} />
+          </div>
         </div>
       )}
 
