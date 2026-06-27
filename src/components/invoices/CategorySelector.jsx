@@ -5,7 +5,7 @@ const CategorySelector = ({ categories, value, onChange }) => {
     <Select label="Invoice Category" value={value} onChange={(event) => onChange(event.target.value)}>
       <option value="">Select category</option>
       {categories.map((category) => (
-        <option key={category.value || category.name} value={category.value || category.name}>
+        <option key={category.value || category.name} value={category.value || category.name} title={category.name}>
           {category.name}
         </option>
       ))}

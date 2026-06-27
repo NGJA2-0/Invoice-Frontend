@@ -943,6 +943,61 @@ const CreateInvoice = () => {
           .invoice-table { font-size: 10px; }
           .no-print { display: none !important; }
         }
+          /* ── Mobile overrides — add at the bottom of the existing <style> string ── */
+        @media (max-width: 640px) {
+          .ci-page {
+            padding: 1rem;       /* was 2rem 2.5rem — too wide for mobile */
+          }
+          .ci-hero {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1.25rem 1rem;
+          }
+            .ci-title {
+            font-size: 1.5rem;   /* was 2rem */
+          }
+          .ci-invoice-badge {
+            align-items: flex-start;
+          }
+          .ci-steps {
+            padding: 0.875rem 1rem;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+          }
+          .ci-step-label {
+            font-size: 11px;
+          }
+          .ci-step-divider {
+            width: 20px;
+            flex-shrink: 0;
+          }
+          .ci-card {
+            padding: 1.25rem 1rem;
+          }
+            .ci-action-bar {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 1rem;
+          }
+          .ci-action-group {
+            justify-content: stretch;
+          }
+          .ci-action-group .ci-btn {
+            flex: 1;
+            justify-content: center;
+          }
+          .ci-btn-divider {
+            display: none;
+          }
+          .ci-preview-header {
+            padding: 1rem;
+          }
+          .ci-preview-body {
+            padding: 1rem 0.5rem;
+            overflow-x: auto;   /* invoice preview is A4-width, let it scroll */
+          }
+            }
       `}</style>
 
       <div className="ci-page">
