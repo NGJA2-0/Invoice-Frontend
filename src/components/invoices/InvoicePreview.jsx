@@ -790,128 +790,154 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
   const isTemplate4 = templateKey === 'TEMPLATE_4'
 
   return (
-    <div>
+    <div style={{ width: '100%' }}>
       <DownloadButton targetRef={pageRef} />
 
-      <div ref={pageRef} style={styles.page}>
-        {/* right-edge gold bar */}
-        <div style={styles.goldAccent} />
+      <style>{`
+        @media (max-width: 640px) {
+          .invoice-scale-wrapper {
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+          }
+          .invoice-scale-inner {
+            transform-origin: top left;
+            flex-shrink: 0;
+          }
+        }
+      `}</style>
 
-        {/* ── HEADER ── */}
-        <div style={styles.header}>
-          <div style={styles.headerLeft}>
-            {companyHeader?.logoUrl
-              ? <img src={companyHeader.logoUrl} alt="logo" style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0, borderRadius: 6, boxShadow: '0 2px 8px rgba(154,123,60,0.12)' }} />
-              : <div style={styles.logoPlaceholder}>LOGO</div>
-            }
-            <div style={styles.headerLeftText}>
-              {/* <div style={styles.docLabel}>NGJA Export Invoice</div> */}
-              {/* Company name replaces invoice number */}
-              <div style={styles.docTitle}>
-                {companyHeader.companyName || meta.companyName || 'Company Name'}
-              </div>
-              <div style={styles.docSub}>
-                {meta.category || 'Category'}{meta.subCategory ? ` · ${meta.subCategory}` : ''}
-              </div>
-              {/* Company details: address first, then email / phone / website each on own line */}
-              {companyFields.length > 0 && (
-                <div style={styles.companyMeta}>
-                  {/* Address row */}
-                  {companyHeader.companyAddress && (
-                    <div style={styles.companyMetaAddress}>
-                      <span style={styles.companyMetaLabel}>Address</span>
-                      <span style={styles.companyMetaValue}>{formatValue(companyHeader.companyAddress)}</span>
+      <div
+        className="invoice-scale-wrapper"
+        ref={(el) => {
+          if (!el || window.innerWidth > 640) return
+          const containerWidth = el.offsetWidth
+          const a4WidthPx = 794
+          const scale = (containerWidth - 8) / a4WidthPx
+          const inner = el.querySelector('.invoice-scale-inner')
+          if (inner) {
+            inner.style.transform = `scale(${scale})`
+            inner.style.width = `${a4WidthPx}px`
+            el.style.height = `${1123 * scale}px`
+          }
+        }}
+      >
+        <div className="invoice-scale-inner">
+          <div ref={pageRef} style={styles.page}>
+
+            {/* right-edge gold bar */}
+            <div style={styles.goldAccent} />
+
+            {/* ── HEADER ── */}
+            <div style={styles.header}>
+              <div style={styles.headerLeft}>
+                {companyHeader?.logoUrl
+                  ? <img src={companyHeader.logoUrl} alt="logo" style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0, borderRadius: 6, boxShadow: '0 2px 8px rgba(154,123,60,0.12)' }} />
+                  : <div style={styles.logoPlaceholder}>LOGO</div>
+                }
+                <div style={styles.headerLeftText}>
+                  <div style={styles.docTitle}>
+                    {companyHeader.companyName || meta.companyName || 'Company Name'}
+                  </div>
+                  <div style={styles.docSub}>
+                    {meta.category || 'Category'}{meta.subCategory ? ` · ${meta.subCategory}` : ''}
+                  </div>
+                  {companyFields.length > 0 && (
+                    <div style={styles.companyMeta}>
+                      {companyHeader.companyAddress && (
+                        <div style={styles.companyMetaAddress}>
+                          <span style={styles.companyMetaLabel}>Address</span>
+                          <span style={styles.companyMetaValue}>{formatValue(companyHeader.companyAddress)}</span>
+                        </div>
+                      )}
+                      {[['Email', companyHeader.companyEmail], ['TIN', companyHeader.tin], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
+                        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+                        .map(([lbl, val]) => (
+                          <div key={lbl} style={styles.companyMetaAddress}>
+                            <span style={styles.companyMetaLabel}>{lbl}</span>
+                            <span style={styles.companyMetaValue}>{formatValue(val)}</span>
+                          </div>
+                        ))}
                     </div>
                   )}
-                  {/* Email, Phone, Website — each on its own line */}
-                  {[['Email', companyHeader.companyEmail], ['TIN', companyHeader.tin], ['Phone', companyHeader.companyPhone], ['Website', companyHeader.companyWebsite]]
-                    .filter(([, v]) => v !== null && v !== undefined && v !== '')
-                    .map(([lbl, val]) => (
-                      <div key={lbl} style={styles.companyMetaAddress}>
-                        <span style={styles.companyMetaLabel}>{lbl}</span>
-                        <span style={styles.companyMetaValue}>{formatValue(val)}</span>
-                      </div>
-                    ))}
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div style={styles.headerRight}>
-            {[
-              ['Invoice Date', invoiceMeta.invoiceDate],
-              ['Invoice No', invoiceMeta.invoiceNumber || meta.invoiceNumber],
-              ['Export Type', meta.templateKey || invoiceMeta.exportType],
-              ['Country', invoiceMeta.countryOfOrigin],
-            ].map(([lbl, val]) => (
-              <div key={lbl} style={styles.metaChip}>
-                <span style={styles.metaLabel}>{lbl}</span>
-                <span style={styles.metaValue}>{formatValue(val)}</span>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* ── BODY (flex column, fills remaining height) ── */}
-        <div style={styles.body}>
-
-          {/* TO, FROM stacked, then Delivery below */}
-          <div style={styles.topRow}>
-            <div style={styles.toFromStack}>
-              {narrowSections.map((s) => renderNarrowSec(s))}
-            </div>
-
-            {(isTemplate3 || isTemplate4) && (
-              <div style={styles.section}>
-                <div style={styles.sectionHead}>NI Details</div>
-                <div style={styles.sectionBody}>{renderSectionData('niDetails', data)}</div>
-              </div>
-            )}
-
-            {/* Delivery Type: full-width horizontal bar below FROM */}
-            {deliverySections.length > 0 && (
-              <div style={styles.deliveryCard}>
-                <div style={styles.deliveryCardHead}>Delivery</div>
-                <div style={styles.deliveryCardBody}>
-                  <div style={styles.deliveryBadge}>
-                    {deliveryValue || formatValue(
-                      (() => {
-                        const di = data?.deliveryInfo || data?.transportDetails || {}
-                        const vals = Object.values(di).filter(v => v && typeof v === 'string')
-                        return vals[0] || ''
-                      })()
-                    )}
+              <div style={styles.headerRight}>
+                {[
+                  ['Invoice Date', invoiceMeta.invoiceDate],
+                  ['Invoice No', invoiceMeta.invoiceNumber || meta.invoiceNumber],
+                  ['Export Type', meta.templateKey || invoiceMeta.exportType],
+                  ['Country', invoiceMeta.countryOfOrigin],
+                ].map(([lbl, val]) => (
+                  <div key={lbl} style={styles.metaChip}>
+                    <span style={styles.metaLabel}>{lbl}</span>
+                    <span style={styles.metaValue}>{formatValue(val)}</span>
                   </div>
-                  <div style={styles.deliveryLabel}>Courier Method</div>
-                </div>
+                ))}
               </div>
-            )}
+            </div>
 
-            {showCarrier && hasCarrierData && (
-              <div style={styles.section}>
-                <div style={styles.sectionHead}>Carrier Details</div>
-                <div style={styles.sectionBody}>
-                  <KVGrid data={carrierData} />
+            {/* ── BODY ── */}
+            <div style={styles.body}>
+
+              <div style={styles.topRow}>
+                <div style={styles.toFromStack}>
+                  {narrowSections.map((s) => renderNarrowSec(s))}
                 </div>
+
+                {(isTemplate3 || isTemplate4) && (
+                  <div style={styles.section}>
+                    <div style={styles.sectionHead}>NI Details</div>
+                    <div style={styles.sectionBody}>{renderSectionData('niDetails', data)}</div>
+                  </div>
+                )}
+
+                {deliverySections.length > 0 && (
+                  <div style={styles.deliveryCard}>
+                    <div style={styles.deliveryCardHead}>Delivery</div>
+                    <div style={styles.deliveryCardBody}>
+                      <div style={styles.deliveryBadge}>
+                        {deliveryValue || formatValue(
+                          (() => {
+                            const di = data?.deliveryInfo || data?.transportDetails || {}
+                            const vals = Object.values(di).filter(v => v && typeof v === 'string')
+                            return vals[0] || ''
+                          })()
+                        )}
+                      </div>
+                      <div style={styles.deliveryLabel}>Courier Method</div>
+                    </div>
+                  </div>
+                )}
+
+                {showCarrier && hasCarrierData && (
+                  <div style={styles.section}>
+                    <div style={styles.sectionHead}>Carrier Details</div>
+                    <div style={styles.sectionBody}>
+                      <KVGrid data={carrierData} />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+
+              {wideSections.map((s) => renderWideSec(s))}
+
+              <div style={{ flex: 1 }} />
+
+              {/* ── FOOTER ── */}
+              <div style={styles.footer}>
+                <span style={styles.footerText}>NGJA — National Gem &amp; Jewellery Authority, Sri Lanka</span>
+                <span style={styles.footerText}>
+                  Generated&nbsp;
+                  {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+
+            </div>
           </div>
-
-          {/* wide sections grow to fill space */}
-          {wideSections.map((s) => renderWideSec(s))}
-
-          {/* spacer pushes footer to bottom */}
-          <div style={{ flex: 1 }} />
-
-          {/* ── FOOTER ── */}
-          <div style={styles.footer}>
-            <span style={styles.footerText}>NGJA — National Gem &amp; Jewellery Authority, Sri Lanka</span>
-            <span style={styles.footerText}>
-              Generated&nbsp;
-              {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </span>
-          </div>
-
         </div>
       </div>
     </div>

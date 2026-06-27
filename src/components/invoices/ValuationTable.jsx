@@ -7,6 +7,361 @@ import ItemTypeSearch from '../common/ItemTypeSearch'
 import { Check, Trash2 } from 'lucide-react'
 import { currencyApi } from '../../services/currencyApi'
 
+const MobileItemModal = ({ columns, item, index, onSave, onDelete, onClose, isNew, getColumnOptions, templateKey }) => {
+  const [localItem, setLocalItem] = useState({ ...item })
+  const [openDropdown, setOpenDropdown] = useState(null)
+
+  const handleChange = (key, value) => {
+    setLocalItem((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSave = () => {
+    onSave(localItem, index)
+    onClose()
+  }
+
+  const handleDelete = () => {
+    onDelete(index)
+    onClose()
+  }
+
+  const inputStyle = {
+    height: 44, borderRadius: 10, border: '1.5px solid #e5e7eb',
+    background: '#fff', padding: '0 12px',
+    fontSize: 14, color: '#111', outline: 'none', width: '100%',
+    boxSizing: 'border-box', transition: 'border-color 0.2s',
+  }
+
+  const readOnlyStyle = {
+    ...inputStyle,
+    background: '#fafaf9',
+    color: '#9ca3af',
+    border: '1.5px solid #f0e9d8',
+    cursor: 'not-allowed',
+  }
+
+  const labelStyle = {
+    fontSize: 10, fontWeight: 700, letterSpacing: '0.14em',
+    textTransform: 'uppercase', color: '#1a1a1a',  // black like table headers
+
+  }
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 99999,
+        background: 'rgba(15, 10, 5, 0.55)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'flex-end',
+        justifyContent: 'center',
+      }}
+      onClick={onClose}
+    >
+      <style>{`
+        @keyframes modalSlideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .vt-modal-input:focus {
+          border-color: #b8922a !important;
+          box-shadow: 0 0 0 3px rgba(184,146,42,0.12);
+        }
+        .vt-modal-select:focus {
+          border-color: #b8922a !important;
+          outline: none;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+      `}</style>
+
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxHeight: '90vh',
+          background: '#fff',
+          borderRadius: '24px 24px 0 0',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          animation: 'modalSlideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+        }}
+      >
+        {/* Drag handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e5e7eb' }} />
+        </div>
+
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0.75rem 1.25rem 1rem',
+          flexShrink: 0,
+        }}>
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#b8922a', margin: 0 }}>
+              {isNew ? 'New Item' : `Edit Item ${index + 1}`}
+            </p>
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f0f0f', margin: '3px 0 0', letterSpacing: '-0.02em' }}>
+              {isNew ? 'Add to Valuation Table' : 'Edit Valuation Row'}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              border: '1.5px solid #e5e7eb', background: '#f9fafb',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#6b7280', flexShrink: 0,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: '#f3f4f6', flexShrink: 0, marginBottom: 4 }} />
+
+        {/* Fields */}
+        <div style={{
+          overflowY: 'auto', padding: '1rem 1.25rem 0.5rem',
+          display: 'flex', flexDirection: 'column', gap: 16, flex: 1,
+        }}>
+          {columns.map((col) => {
+            if (col.key === 'itemNo') return null
+
+            const value = localItem[col.key] ?? ''
+            const isReadOnly = col.readOnly || col.dataType === 'computed'
+
+            if (isReadOnly) {
+              return (
+                <div key={col.key} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={labelStyle}>{col.label}</label>
+                  <div style={{ ...readOnlyStyle, display: 'flex', alignItems: 'center', fontSize: 13 }}>
+                    {Number(value || 0).toFixed(2)}
+                  </div>
+                </div>
+              )
+            }
+
+            if (col.key === 'itemType' || col.dataType === 'searchable-dropdown') {
+              return (
+                <div key={col.key} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={labelStyle}>{col.label}</label>
+                  <ItemTypeSearch
+                    value={value}
+                    onChange={(itemName) => handleChange(col.key, itemName)}
+                    placeholder={col.label}
+                  />
+                </div>
+              )
+            }
+
+            if (col.dataType === 'dropdown') {
+              const options = getColumnOptions(col)
+              const isOpen = openDropdown === col.key
+              return (
+                <div key={col.key} style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'relative' }}>
+                  <label style={labelStyle}>{col.label}</label>
+                  <button
+                    type="button"
+                    onClick={() => setOpenDropdown(isOpen ? null : col.key)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      height: 44, width: '100%', padding: '0 12px',
+                      borderRadius: 12, border: '1px solid #e5e7eb',
+                      background: '#fff', fontSize: 14,
+                      color: value ? '#1a1a1a' : '#9ca3af',
+                      cursor: 'pointer', textAlign: 'left', boxSizing: 'border-box',
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {options.find(o => o.value === value)?.label || col.label}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="#b8922a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ flexShrink: 0, marginLeft: 8, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                  {isOpen && (
+                    <div style={{
+                      position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
+                      zIndex: 99999, background: '#fff', border: '1px solid #e5e7eb',
+                      borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                      overflow: 'hidden',
+                    }}>
+                      <ul style={{ maxHeight: 200, overflowY: 'auto', margin: 0, padding: '4px 6px 8px', listStyle: 'none' }}>
+                        {options.map((opt) => (
+                          <li
+                            key={opt.value}
+                            onClick={() => { handleChange(col.key, opt.value); setOpenDropdown(null) }}
+                            style={{
+                              padding: '10px 12px', borderRadius: 8, fontSize: 14, cursor: 'pointer',
+                              color: opt.value === value ? '#b8922a' : '#1a1a1a',
+                              background: opt.value === value ? '#fdf6e8' : 'transparent',
+                              fontWeight: opt.value === value ? 600 : 400,
+                            }}
+                            onMouseEnter={(e) => { if (opt.value !== value) e.currentTarget.style.background = '#fafafa' }}
+                            onMouseLeave={(e) => { if (opt.value !== value) e.currentTarget.style.background = 'transparent' }}
+                          >
+                            {opt.label}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            if (col.dataType === 'number') {
+              const numVal = Number(value || 0)
+              return (
+                <div key={col.key} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={labelStyle}>{col.label}</label>
+                  <div style={{
+                    display: 'flex', alignItems: 'center',
+                    height: 44, borderRadius: 12, border: '1.5px solid #e5e7eb',
+                    background: '#fff', overflow: 'hidden',
+                    transition: 'border-color 0.2s',
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => handleChange(col.key, Math.max(0, numVal - 1))}
+                      style={{
+                        width: 44, height: '100%', flexShrink: 0,
+                        border: 'none', borderRight: '1px solid #f0f0f0',
+                        background: '#fafafa', color: '#666',
+                        fontSize: 18, cursor: 'pointer', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0e9d8'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fafafa'}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={value}
+                      onChange={(e) => handleChange(col.key, e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="0"
+                      style={{
+                        flex: 1, height: '100%', border: 'none', outline: 'none',
+                        textAlign: 'center', fontSize: 14, color: '#111',
+                        background: 'transparent',
+                        MozAppearance: 'textfield',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleChange(col.key, numVal + 1)}
+                      style={{
+                        width: 44, height: '100%', flexShrink: 0,
+                        border: 'none', borderLeft: '1px solid #f0f0f0',
+                        background: '#fafafa', color: '#b8922a',
+                        fontSize: 18, cursor: 'pointer', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0e9d8'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#fafafa'}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+
+            return (
+              <div key={col.key} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={labelStyle}>{col.label}</label>
+                <input
+                  className="vt-modal-input"
+                  type="text"
+                  value={value}
+                  onChange={(e) => handleChange(col.key, e.target.value)}
+                  placeholder={col.label}
+                  style={inputStyle}
+                />
+              </div>
+            )
+          })}
+
+          {/* bottom breathing room */}
+          <div style={{ height: 8 }} />
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: '0.875rem 1.25rem',
+          borderTop: '1px solid #f3f4f6',
+          display: 'flex', gap: 10, flexShrink: 0,
+          background: '#fff',
+        }}>
+          {!isNew && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              style={{
+                height: 48, borderRadius: 12,
+                border: '1.5px solid #fca5a5',
+                background: '#fff1f2', color: '#dc2626',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 6, padding: '0 18px', flexShrink: 0,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#fff1f2'}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" />
+                <path d="M9 6V4h6v2" />
+              </svg>
+              Delete
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            style={{
+              height: 48, borderRadius: 12, border: 'none',
+              background: 'linear-gradient(135deg, #b8922a, #d4a832)',
+              color: '#fff', fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 8, letterSpacing: '0.02em',
+              boxShadow: '0 4px 16px rgba(184,146,42,0.35)',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 16 4 11" />
+            </svg>
+            {isNew ? 'Add to Table' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 const ValuationTable = ({ control, register, watch, setValue, section, businessProfile, pushToast, templateKey }) => {
   // ── Currency dropdown state ────────────────────────────────────────────
   const [currencyCodes, setCurrencyCodes] = useState([])
@@ -15,6 +370,19 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   const [currencyLoading, setCurrencyLoading] = useState(false)
 
   const isValuationTable = (section?.key || 'valuation') === 'valuationTable'
+
+  const [mobileModal, setMobileModal] = useState(null)
+  // mobileModal = null | { mode: 'add' } | { mode: 'edit', index: number, item: object }
+
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 640
+  )
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 640)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   useEffect(() => {
     if (!isValuationTable) return
@@ -541,6 +909,27 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
           white-space: nowrap;
         }
       }
+        @media (max-width: 640px) {
+        .valuation-table th {
+          white-space: normal !important;
+          word-break: break-word;
+          font-size: 9px !important;
+          padding: 4px 4px !important;
+          line-height: 1.3;
+          min-width: 40px;
+        }
+        .valuation-table td {
+          padding: 4px 4px !important;
+          font-size: 11px !important;
+        }
+        .valuation-table input,
+        .valuation-table select {
+          min-width: 40px !important;
+          max-width: 80px !important;
+          font-size: 11px !important;
+          padding: 2px 4px !important;
+        }
+      }
     `}</style>
 
       {/* Stock Value (display-only, live remaining balance, color-coded by status) */}
@@ -616,7 +1005,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                   {column.label}
                 </th>
               ))}
-              {tableConfig.allowRemoveRows && <th className="px-4 py-3">Actions</th>}
+              {tableConfig.allowRemoveRows && <th className="px-4 py-3" style={isMobile ? { display: 'none' } : {}}>Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-cloud-100">
@@ -633,14 +1022,22 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
               fields.map((field, index) => {
                 const item = watch(itemsPath)?.[index] || items[index] || {}
                 return (
-                  <tr key={field.id}>
+                  <tr
+                    key={field.id}
+                    onClick={() => {
+                      if (isMobile) {
+                        setMobileModal({ mode: 'edit', index, item: { ...item } })
+                      }
+                    }}
+                    style={isMobile ? { cursor: 'pointer' } : {}}
+                  >
                     {tableConfig.columns.map((column) => (
                       <td key={`${field.id}-${column.key}`} className="px-4 py-3">
                         {renderFieldInput(column, index, item[column.key], item)}
                       </td>
                     ))}
                     {tableConfig.allowRemoveRows && (
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" style={isMobile ? { display: 'none' } : {}}>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
@@ -694,37 +1091,37 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       {tableConfig.allowAddRows && (
         <button
           type="button"
-          onClick={addItem}
+          onClick={() => {
+            if (isMobile) {
+              // build empty item for modal
+              const defaultItem = {}
+              tableConfig.columns.forEach((col) => {
+                if (col.dataType === 'number' || col.dataType === 'computed' || col.readOnly) {
+                  defaultItem[col.key] = 0
+                } else if (col.dataType === 'dropdown' && col.options) {
+                  defaultItem[col.key] = col.options[0]?.value || ''
+                } else {
+                  defaultItem[col.key] = ''
+                }
+              })
+              defaultItem.isDone = false
+              setMobileModal({ mode: 'add', item: defaultItem })
+            } else {
+              addItem()
+            }
+          }}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            width: '100%',
-            padding: '0.75rem',
-            borderRadius: 12,
-            border: '1.5px dashed #b8922a',
-            background: '#fffaf1',
-            color: '#b8922a',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            letterSpacing: '0.02em',
-            transition: 'all 0.18s ease',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 8, width: '100%', padding: '0.75rem', borderRadius: 12,
+            border: '1.5px dashed #b8922a', background: '#fffaf1',
+            color: '#b8922a', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', letterSpacing: '0.02em', transition: 'all 0.18s ease',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#fdf0d8'
-            e.currentTarget.style.borderStyle = 'solid'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#fffaf1'
-            e.currentTarget.style.borderStyle = 'dashed'
-          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#fdf0d8'; e.currentTarget.style.borderStyle = 'solid' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#fffaf1'; e.currentTarget.style.borderStyle = 'dashed' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="#b8922a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b8922a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           Add Item
         </button>
@@ -852,6 +1249,86 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
             </table>
           </div>
         </div>
+      )}
+
+      {mobileModal && (
+        <MobileItemModal
+          columns={tableConfig.columns}
+          item={mobileModal.item}
+          index={mobileModal.mode === 'edit' ? mobileModal.index : fields.length}
+          isNew={mobileModal.mode === 'add'}
+          getColumnOptions={getColumnOptions}
+          templateKey={templateKey}
+          onClose={() => setMobileModal(null)}
+          onSave={(localItem, index) => {
+            if (mobileModal.mode === 'add') {
+              // set itemNo then append
+              localItem.itemNo = fields.length + 1
+              localItem.isDone = true
+              // compute amount same as handleRowDone
+              const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
+              const fromCtMap = { ct: 1, gr: 1 / 5, g: 1 / 5, kg: 1 / 5000 }
+              if (String(templateKey || '').toUpperCase() === 'TEMPLATE_3') {
+                const weight = Number(localItem.weight) || 0
+                const ratePer = Number(localItem.ratePer) || 0
+                const importValue = Number(localItem.importValue) || 0
+                const weightUnit = String(localItem.weightUnit || '').toLowerCase().trim()
+                const rateUnit = String(localItem.rateUnit || '').toLowerCase().trim()
+                const weightInCt = weight * (toCtMap[weightUnit] || 1)
+                const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+                localItem.valueAddition = Number((weightInRateUnit * ratePer).toFixed(2))
+                localItem.totalValue = Number((localItem.valueAddition + importValue).toFixed(2))
+              } else if (String(templateKey || '').toUpperCase() === 'TEMPLATE_4') {
+                const numberOfItems = Number(localItem.numberOfItems) || 0
+                const ratePerUnit = Number(localItem.ratePerUnit) || 0
+                const importValue = Number(localItem.importValue) || 0
+                localItem.valueAddition = Number((numberOfItems * ratePerUnit).toFixed(2))
+                localItem.amount = Number((localItem.valueAddition + importValue).toFixed(2))
+              } else {
+                const weight = Number(localItem[weightKey]) || 0
+                const ratePer = Number(localItem[rateKey]) || 0
+                const weightUnit = String(localItem.weightUnit || '').toLowerCase().trim()
+                const rateUnit = String(localItem.rateUnit || '').toLowerCase().trim()
+                const weightInCt = weight * (toCtMap[weightUnit] || 1)
+                const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+                localItem[amountKey] = Number((weightInRateUnit * ratePer).toFixed(2))
+              }
+              append(localItem)
+            } else {
+              // edit — run same computation then update
+              const toCtMap = { ct: 1, gr: 5, g: 5, kg: 5000 }
+              const fromCtMap = { ct: 1, gr: 1 / 5, g: 1 / 5, kg: 1 / 5000 }
+              localItem.isDone = true
+              if (String(templateKey || '').toUpperCase() === 'TEMPLATE_3') {
+                const weight = Number(localItem.weight) || 0
+                const ratePer = Number(localItem.ratePer) || 0
+                const importValue = Number(localItem.importValue) || 0
+                const weightUnit = String(localItem.weightUnit || '').toLowerCase().trim()
+                const rateUnit = String(localItem.rateUnit || '').toLowerCase().trim()
+                const weightInCt = weight * (toCtMap[weightUnit] || 1)
+                const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+                localItem.valueAddition = Number((weightInRateUnit * ratePer).toFixed(2))
+                localItem.totalValue = Number((localItem.valueAddition + importValue).toFixed(2))
+              } else if (String(templateKey || '').toUpperCase() === 'TEMPLATE_4') {
+                const numberOfItems = Number(localItem.numberOfItems) || 0
+                const ratePerUnit = Number(localItem.ratePerUnit) || 0
+                const importValue = Number(localItem.importValue) || 0
+                localItem.valueAddition = Number((numberOfItems * ratePerUnit).toFixed(2))
+                localItem.amount = Number((localItem.valueAddition + importValue).toFixed(2))
+              } else {
+                const weight = Number(localItem[weightKey]) || 0
+                const ratePer = Number(localItem[rateKey]) || 0
+                const weightUnit = String(localItem.weightUnit || '').toLowerCase().trim()
+                const rateUnit = String(localItem.rateUnit || '').toLowerCase().trim()
+                const weightInCt = weight * (toCtMap[weightUnit] || 1)
+                const weightInRateUnit = weightInCt * (fromCtMap[rateUnit] || 1)
+                localItem[amountKey] = Number((weightInRateUnit * ratePer).toFixed(2))
+              }
+              update(mobileModal.index, localItem)
+            }
+          }}
+          onDelete={(index) => remove(index)}
+        />
       )}
     </div>
   )
