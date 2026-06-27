@@ -41,6 +41,10 @@ export const officerApi = {
   updateStage2InvoiceStatus: (originalInvoiceId, stage2OfficerId, payload) =>
     api.patch(`/stage2/invoices/${originalInvoiceId}/officers/${stage2OfficerId}/status`, payload),
 
+  // POST /api/v1/stage2/invoices/:originalInvoiceId/officers/:stage2OfficerId/complete
+  completeStage2Invoice: (originalInvoiceId, stage2OfficerId, payload) =>
+    api.post(`/stage2/invoices/${originalInvoiceId}/officers/${stage2OfficerId}/complete`, payload),
+
   // GET /api/v1/stage1/invoices/:originalInvoiceId/latest
   getDocumentById: (originalInvoiceId) => api.get(`/stage1/invoices/${originalInvoiceId}/latest`),
 

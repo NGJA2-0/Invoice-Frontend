@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, X } from 'lucide-react'
+import { ArrowLeft, Check, Pencil, X } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
@@ -15,6 +15,7 @@ const Stage2InvoiceDetail = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [approveLoading, setApproveLoading] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
   const [rejectNotes, setRejectNotes] = useState('Missing supporting documents.')
   const [viewingHistoryRecord, setViewingHistoryRecord] = useState(null) // non-null when previewing a past edition
@@ -36,6 +37,7 @@ const Stage2InvoiceDetail = () => {
   const previewedInvoice = viewingHistoryRecord || invoice
   const preview = useMemo(() => buildInvoicePreviewData(previewedInvoice), [previewedInvoice])
   const isViewingPastEdition = Boolean(viewingHistoryRecord)
+  const isApproved = invoice?.status === 'stage2_completed'
 
   const handleRejectConfirm = async () => {
     if (!invoice || !user?.id) return
@@ -51,6 +53,19 @@ const Stage2InvoiceDetail = () => {
       setError(err?.message || 'Could not reject invoice')
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const handleApprove = async () => {
+    if (!invoice || !user?.id) return
+    setApproveLoading(true)
+    try {
+      await officerApi.completeStage2Invoice(invoiceId, user.id)
+      navigate('/officer2/dashboard')
+    } catch (err) {
+      setError(err?.message || 'Could not approve invoice')
+    } finally {
+      setApproveLoading(false)
     }
   }
 
@@ -94,53 +109,80 @@ const Stage2InvoiceDetail = () => {
               onSelect={(record) => setViewingHistoryRecord(record)}
             />
 
-            <button
-              type="button"
-              onClick={() => setShowRejectDialog(true)}
-              disabled={actionLoading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0.5rem 1rem',
-                borderRadius: 999,
-                border: '1px solid rgba(185,28,28,0.3)',
-                background: '#fff',
-                color: '#b91c1c',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: actionLoading ? 'not-allowed' : 'pointer',
-                opacity: actionLoading ? 0.6 : 1,
-              }}
-            >
-              <X size={14} />
-              Reject Invoice
-            </button>
+            {!isApproved && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowRejectDialog(true)}
+                  disabled={actionLoading}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.5rem 1rem',
+                    borderRadius: 999,
+                    border: '1px solid rgba(185,28,28,0.3)',
+                    background: '#fff',
+                    color: '#b91c1c',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                    opacity: actionLoading ? 0.6 : 1,
+                  }}
+                >
+                  <X size={14} />
+                  Reject Invoice
+                </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate(`/officer2/invoices/${invoiceId}/edit`, {
-                  state: { invoice },
-                })
-              }
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0.5rem 1rem',
-                borderRadius: 999,
-                border: '1px solid rgba(0,0,0,0.12)',
-                background: '#003A6B',
-                color: '#ffde1a',
-                fontSize: 13,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <Pencil size={14} />
-              Edit Invoice
-            </button>
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={approveLoading}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.5rem 1rem',
+                    borderRadius: 999,
+                    border: '1px solid rgba(22,163,74,0.3)',
+                    background: '#fff',
+                    color: '#15803d',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: approveLoading ? 'not-allowed' : 'pointer',
+                    opacity: approveLoading ? 0.6 : 1,
+                  }}
+                >
+                  <Check size={14} />
+                  {approveLoading ? 'Approving…' : 'Approve Invoice'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/officer2/invoices/${invoiceId}/edit`, {
+                      state: { invoice },
+                    })
+                  }
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '0.5rem 1rem',
+                    borderRadius: 999,
+                    border: '1px solid rgba(0,0,0,0.12)',
+                    background: '#003A6B',
+                    color: '#ffde1a',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Pencil size={14} />
+                  Edit Invoice
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
