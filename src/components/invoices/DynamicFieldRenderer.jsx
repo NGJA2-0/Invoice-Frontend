@@ -88,7 +88,8 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
       <Select
         label={label}
         disabled={field.readOnly}
-        {...register(name, registerOptions)}
+        value={value}
+        onChange={(event) => setValue(name, event.target.value, { shouldValidate: true, shouldDirty: true })}
       >
         <option value="">{field.placeholder || 'Select...'}</option>
         {options.map((opt) => (
