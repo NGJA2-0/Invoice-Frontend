@@ -33,6 +33,9 @@ export const officerApi = {
 // GET /api/v1/stage2/invoices/:originalInvoiceId/latest
   getStage2DocumentById: (originalInvoiceId) => api.get(`/stage2/invoices/${originalInvoiceId}/latest`),
 
+  // GET /api/v1/stage3/invoices/:originalInvoiceId/latest
+  getStage3DocumentById: (originalInvoiceId) => api.get(`/stage3/invoices/${originalInvoiceId}/latest`),
+
   // GET /api/v1/stage2/invoices/:originalInvoiceId/history
   getStage2History: (originalInvoiceId) => api.get(`/stage2/invoices/${originalInvoiceId}/history`),
 
