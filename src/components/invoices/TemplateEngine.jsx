@@ -243,11 +243,11 @@ const TemplateEngine = ({
         if (section.key === 'senderInfo') return null
 
         return (
-          <div key={section.key} className="surface-card rounded-2xl border px-6 py-6">
+          <div key={section.key} className="surface-card rounded-2xl border px-6 py-6" style={{ minWidth: 0, maxWidth: '100%' }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h4 className="section-title">{section.label}</h4>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-4 md:grid-cols-2" style={{ minWidth: 0 }}>
               {section.key === 'companyHeader' ? (
                 <>
                   <div className="md:col-span-2">
@@ -282,7 +282,7 @@ const TemplateEngine = ({
               ) : null}
 
               {(section.key === 'valuationTable' || section.sectionType === 'table') ? (
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" style={{ minWidth: 0, maxWidth: '100%' }}>
                   <ValuationTable
                     control={control}
                     register={register}

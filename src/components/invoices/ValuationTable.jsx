@@ -430,12 +430,16 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     if (column.dataType === 'dropdown') {
       const options = getColumnOptions(column)
       return (
-        <Select className={baseClassName} {...register(fieldName)}>
+        <select
+          className={baseClassName}
+          style={{ height: '28px', fontSize: '11px', border: 'none', background: 'transparent', outline: 'none', cursor: 'pointer', width: '100%' }}
+          {...register(fieldName)}
+        >
           <option value="">{column.label}</option>
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
-        </Select>
+        </select>
       )
     }
 
@@ -480,34 +484,94 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" style={{ minWidth: 0, maxWidth: '100%' }}>
+
+      <style>{`
+      @media (max-width: 640px) {
+        /* FOB summary — card layout on mobile */
+        .vt-fob-table { width: 100%; }
+        .vt-fob-table thead { display: none; }
+        .vt-fob-table tbody { display: flex; flex-direction: column; gap: 0; }
+        .vt-fob-table tbody tr {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 10px 12px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        .vt-fob-table tbody tr td:first-child {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #6b7280;
+          padding: 0 !important;
+          margin-bottom: 4px;
+        }
+        .vt-fob-table tbody tr td {
+          padding: 0 !important;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .vt-fob-table tbody tr td::before {
+          content: attr(data-label);
+          font-size: 10px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #b8922a;
+          min-width: 40px;
+          flex-shrink: 0;
+        }
+        .vt-fob-table tbody tr td:first-child::before {
+          display: none;
+        }
+        .vt-fob-table tbody tr td input {
+          flex: 1;
+          min-width: 0;
+          font-size: 12px !important;
+        }
+
+        /* Valuation table cells — tighter */
+        .valuation-table th,
+        .valuation-table td {
+          padding: 4px 6px !important;
+          font-size: 11px !important;
+          white-space: nowrap;
+        }
+      }
+    `}</style>
 
       {/* Stock Value (display-only, live remaining balance, color-coded by status) */}
       {sectionKey === 'valuationTable' && businessProfile?.stockValueName ? (
         <div
-          className={`flex flex-col gap-2 rounded-2xl border px-4 py-3 transition-colors duration-300 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${stockValueStyles[stockValueStatus]}`}
+          className={`rounded-2xl border px-4 py-3 transition-colors duration-300 ${stockValueStyles[stockValueStatus]}`}
+          style={{ width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
         >
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
-              Stock Value:
-            </span>
-            <span className="text-sm font-semibold break-words">
-              LKR {stockValueNumber.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-            </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+                Stock Value:
+              </span>
+              <span className="text-sm font-semibold" style={{ wordBreak: 'break-word', textAlign: 'right' }}>
+                LKR {stockValueNumber.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+                Remaining:
+              </span>
+              <span className="text-sm font-semibold" style={{ wordBreak: 'break-word', textAlign: 'right' }}>
+                LKR {remainingStockValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            {isStockExhausted ? (
+              <p className="text-xs font-medium leading-relaxed">
+                You have reached your stock value, please contact NGJA for increase it or more details.
+              </p>
+            ) : null}
           </div>
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
-              Remaining:
-            </span>
-            <span className="text-sm font-semibold break-words">
-              LKR {remainingStockValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          {isStockExhausted ? (
-            <p className="text-xs font-medium leading-relaxed sm:max-w-[260px]">
-              You have reached your stock value, please contact NGJA for increase it or more details.
-            </p>
-          ) : null}
         </div>
       ) : null}
 
@@ -628,7 +692,42 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       </div>
 
       {tableConfig.allowAddRows && (
-        <Button onClick={addItem} variant="secondary">+ Add Item</Button>
+        <button
+          type="button"
+          onClick={addItem}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            width: '100%',
+            padding: '0.75rem',
+            borderRadius: 12,
+            border: '1.5px dashed #b8922a',
+            background: '#fffaf1',
+            color: '#b8922a',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+            transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#fdf0d8'
+            e.currentTarget.style.borderStyle = 'solid'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#fffaf1'
+            e.currentTarget.style.borderStyle = 'dashed'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#b8922a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add Item
+        </button>
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
@@ -659,7 +758,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
             </p>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+            <table className="vt-fob-table min-w-full text-left text-sm">
               <thead className="bg-cloud-50 text-xs uppercase tracking-[0.14em] text-ink-500">
                 <tr>
                   <th className="px-4 py-3">Description</th>
@@ -672,55 +771,82 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                 {totals.totalsMap?.totalValueAddition !== undefined && (
                   <tr>
                     <td className="px-4 py-3 font-semibold text-ink-700">Value Addition</td>
-                    {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly /></td>}
-                    <td className="px-4 py-3"><Input type="number" value={
-                      showOtherCurrency
-                        ? ((valueAdditionUsd * otherRateToLkr) / usdRateToLkr).toFixed(2)
-                        : valueAdditionUsd.toFixed(2)
-                    } readOnly />
+                    {showOtherCurrency && (
+                      <td className="px-4 py-3" data-label={selectedCurrency}>
+                        <Input type="number" value={valueAdditionUsd.toFixed(2)} readOnly />
+                      </td>
+                    )}
+                    <td className="px-4 py-3" data-label="USD">
+                      <Input type="number" value={
+                        showOtherCurrency
+                          ? ((valueAdditionUsd * otherRateToLkr) / usdRateToLkr).toFixed(2)
+                          : valueAdditionUsd.toFixed(2)
+                      } readOnly />
                     </td>
-                    <td className="px-4 py-3"><Input type="number" value={valueAdditionLkr.toFixed(2)} readOnly /></td>
+                    <td className="px-4 py-3" data-label="LKR">
+                      <Input type="number" value={valueAdditionLkr.toFixed(2)} readOnly />
+                    </td>
                   </tr>
                 )}
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">FOB</td>
-                  {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={fobOther.toFixed(2)} readOnly /></td>}
-                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? fobOtherUsd : fobUsd).toFixed(2)} readOnly /></td>
-                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? fobOtherLkr : fobLkr).toFixed(2)} readOnly /></td>
+                  {showOtherCurrency && (
+                    <td className="px-4 py-3" data-label={selectedCurrency}>
+                      <Input type="number" value={fobOther.toFixed(2)} readOnly />
+                    </td>
+                  )}
+                  <td className="px-4 py-3" data-label="USD">
+                    <Input type="number" value={(showOtherCurrency ? fobOtherUsd : fobUsd).toFixed(2)} readOnly />
+                  </td>
+                  <td className="px-4 py-3" data-label="LKR">
+                    <Input type="number" value={(showOtherCurrency ? fobOtherLkr : fobLkr).toFixed(2)} readOnly />
+                  </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">Freight</td>
                   {showOtherCurrency && (
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" data-label={selectedCurrency}>
                       <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freightOther`, { valueAsNumber: true })} />
                     </td>
                   )}
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={freightOtherUsd.toFixed(2)} readOnly />
                       : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true })} />}
                   </td>
-                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? freightOtherLkr : freightLkr).toFixed(2)} readOnly /></td>
+                  <td className="px-4 py-3" data-label="LKR">
+                    <Input type="number" value={(showOtherCurrency ? freightOtherLkr : freightLkr).toFixed(2)} readOnly />
+                  </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">Insurance</td>
                   {showOtherCurrency && (
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" data-label={selectedCurrency}>
                       <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insuranceOther`, { valueAsNumber: true })} />
                     </td>
                   )}
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={insuranceOtherUsd.toFixed(2)} readOnly />
                       : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true })} />}
                   </td>
-                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? insuranceOtherLkr : insuranceLkr).toFixed(2)} readOnly /></td>
+                  <td className="px-4 py-3" data-label="LKR">
+                    <Input type="number" value={(showOtherCurrency ? insuranceOtherLkr : insuranceLkr).toFixed(2)} readOnly />
+                  </td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-semibold text-ink-700">CIF</td>
-                  {showOtherCurrency && <td className="px-4 py-3"><Input type="number" value={cifOther.toFixed(2)} readOnly /></td>}
-                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? cifOtherUsd : cifUsd).toFixed(2)} readOnly /></td>
-                  <td className="px-4 py-3"><Input type="number" value={(showOtherCurrency ? cifOtherLkr : cifLkr).toFixed(2)} readOnly /></td>
+                  {showOtherCurrency && (
+                    <td className="px-4 py-3" data-label={selectedCurrency}>
+                      <Input type="number" value={cifOther.toFixed(2)} readOnly />
+                    </td>
+                  )}
+                  <td className="px-4 py-3" data-label="USD">
+                    <Input type="number" value={(showOtherCurrency ? cifOtherUsd : cifUsd).toFixed(2)} readOnly />
+                  </td>
+                  <td className="px-4 py-3" data-label="LKR">
+                    <Input type="number" value={(showOtherCurrency ? cifOtherLkr : cifLkr).toFixed(2)} readOnly />
+                  </td>
                 </tr>
               </tbody>
             </table>
