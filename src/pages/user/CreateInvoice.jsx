@@ -419,6 +419,13 @@ const CreateInvoice = () => {
   return (
     <>
       <style>{`
+        @media (max-width: 640px) {
+          .ci-page {
+            padding: 0.75rem;
+            padding-top: 0.5rem;    /* reduce top breathing room */
+            min-height: unset;      /* don't force full vh if shell adds its own */
+          }
+        }
         .ci-page {
           display: flex;
           flex-direction: column;

@@ -282,6 +282,7 @@ const UserLayout = () => {
       )}
 
       <style>{`
+      
         /* ── Reset & base ── */
         .ul-root {
         display: grid;
@@ -314,12 +315,6 @@ const UserLayout = () => {
           z-index: 1;
         }
 
-        @media (max-width: 768px) {
-          .ul-root {
-            grid-template-columns: 1fr;
-          }
-        }
-
         /* ── Main column ── */
         .ul-main {
           display: flex;
@@ -328,12 +323,7 @@ const UserLayout = () => {
           padding: 1.25rem 1.5rem 2rem;
           min-width: 0;
         }
-        @media (min-width: 640px) {
-          .ul-main {
-            padding: 1.5rem 2rem 2rem;
-          }
-        }
-
+        
         /* ── Breadcrumb row ── */
         .ul-breadcrumb-row {
           margin-bottom: 0.75rem;
@@ -486,17 +476,7 @@ const UserLayout = () => {
           height: 18px;
           stroke-width: 1.8px;
         }
-        @media (max-width: 768px) {
-          .ul-hamburger { display: flex; }
-          .ul-status-badge { display: none; }
-        }
-        @media (max-width: 480px) {
-          .ul-avatar-label { display: none; }
-          .ul-topnav {
-            padding: 0.55rem 0.75rem 0.55rem 1rem;
-          }
-        }
-
+        
         /* ── License warning banner ── */
         .ul-license-banner {
           display: flex;
@@ -696,7 +676,31 @@ const UserLayout = () => {
           color: #0369a1;
           line-height: 1.5;
         }
+          @media (max-width: 768px) {
+          .ul-root {
+            grid-template-columns: 1fr;
+          }
+          .ul-main {
+            padding: 0.75rem 0.75rem 1.5rem;
+          }
+          .ul-breadcrumb-row {
+            margin-bottom: 0.35rem;
+          }
+          .ul-topnav {
+            margin-bottom: 0.75rem;
+          }
+          .ul-hamburger { display: flex; }
+          .ul-status-badge { display: none; }
+          .ul-root > *:first-child {
+            display: none;
+          }
+        }
+
         @media (max-width: 480px) {
+          .ul-avatar-label { display: none; }
+          .ul-topnav {
+            padding: 0.55rem 0.75rem 0.55rem 1rem;
+          }
           .ul-license-modal {
             border-radius: 16px;
           }
