@@ -39,6 +39,9 @@ export const officerApi = {
   // GET /api/v1/stage2/invoices/:originalInvoiceId/history
   getStage2History: (originalInvoiceId) => api.get(`/stage2/invoices/${originalInvoiceId}/history`),
 
+  // GET /api/v1/stage3/invoices/:originalInvoiceId/history
+  getStage3History: (originalInvoiceId) => api.get(`/stage3/invoices/${originalInvoiceId}/history`),
+
   // POST /api/v1/stage2/invoices/:originalInvoiceId/officers/:stage2OfficerId/edit
   editStage2Invoice: (originalInvoiceId, stage2OfficerId, payload) =>
     api.post(`/stage2/invoices/${originalInvoiceId}/officers/${stage2OfficerId}/edit`, payload),
