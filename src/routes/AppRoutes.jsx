@@ -8,6 +8,7 @@ import Stage2InvoiceDetail from '../pages/officer2/InvoiceDetail'
 import Stage2EditInvoice from '../pages/officer2/EditInvoice'
 import Stage3Dashboard from '../pages/officer3/Dashboard'
 import Stage3InvoiceDetail from '../pages/officer3/InvoiceDetail'
+import Stage3EditInvoice from '../pages/officer3/EditInvoice'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
@@ -85,6 +86,7 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/officer3/dashboard" replace />} />
           <Route path="dashboard" element={<Stage3Dashboard />} />
           <Route path="invoices/:invoiceId" element={<Stage3InvoiceDetail />} />
+          <Route path="invoices/:invoiceId/edit" element={<Stage3EditInvoice />} />
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
