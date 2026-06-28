@@ -69,12 +69,13 @@ const InvoiceTable = ({
         </div>
 
         <select
-          value={pagination?.pageSize || 10}
+          key={`page-size-${pagination?.pageSize ?? 10}`}
+          value={String(pagination?.pageSize ?? 10)}
           onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
           className="w-full rounded-xl border border-cloud-200 bg-white px-3 py-2 text-sm text-ink-700 sm:w-auto"
         >
           {PAGE_SIZE_OPTIONS.map((size) => (
-            <option key={size} value={size}>
+            <option key={size} value={String(size)}>
               {size} per page
             </option>
           ))}
@@ -92,7 +93,6 @@ const InvoiceTable = ({
               <th className="px-5 py-3">Total Value (LKR)</th>
               <th className="px-5 py-3">Receiver's Name</th>
               <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cloud-100">
@@ -107,13 +107,6 @@ const InvoiceTable = ({
                   <Badge tone={statusTone[row.status] || 'neutral'}>
                     {formatInvoiceStatus(row.status)}
                   </Badge>
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="ghost">View</Button>
-                    <Button variant="ghost">Edit</Button>
-                    <Button variant="ghost">Download PDF</Button>
-                  </div>
                 </td>
               </tr>
             ))}
@@ -153,12 +146,7 @@ const InvoiceTable = ({
               </div>
             </dl>
 
-            <div className="mt-3 flex flex-wrap gap-2 border-t border-cloud-100 pt-3">
-              <Button variant="ghost">View</Button>
-              <Button variant="ghost">Edit</Button>
-              <Button variant="ghost">Download PDF</Button>
             </div>
-          </div>
         ))}
       </div>
 

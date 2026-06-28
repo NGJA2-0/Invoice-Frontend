@@ -33,6 +33,20 @@ const parseResponse = async (response) => {
   return payload ?? null
 }
 
+// Like parseResponse, but returns the full payload untouched
+// (no auto-unwrap of payload.data) — used when callers need
+// sibling keys like `pagination` alongside `data`.
+const parseResponseRaw = async (response) => {
+  const payload = await response.json().catch(() => null)
+  if (!response.ok || (payload && payload.success === false)) {
+    const error = new Error(payload?.message || response.statusText)
+    error.status = response.status
+    error.details = payload?.errors || null
+    throw error
+  }
+  return payload ?? null
+}
+
 const getStoredUserId = () => {
   try {
     const raw = localStorage.getItem('ngja_user')
@@ -49,15 +63,16 @@ const request = async (path, options = {}) => {
     console.trace(`🔴 API CALL: ${path}`) // prints full call stack
   }
   const userId = getStoredUserId()
+  const { raw, ...fetchOptions } = options
   const response = await fetchWithFallback(buildUrl(path), {
-    ...options,
+    ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',
       ...(userId ? { 'X-User-Id': userId } : {}),
-      ...(options.headers || {}),
+      ...(fetchOptions.headers || {}),
     },
   })
-  return parseResponse(response)
+  return raw ? parseResponseRaw(response) : parseResponse(response)
 }
 
 const requestForm = async (path, formData, options = {}) => {

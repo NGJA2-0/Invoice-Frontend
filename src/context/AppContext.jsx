@@ -94,9 +94,9 @@ export const AppProvider = ({ children }) => {
     if (!userId) return
     const {
       page = 1,
-      pageSize = invoicePagination.pageSize,
-      status = invoiceFilters.status,
-      sort = invoiceFilters.sort,
+      pageSize = 10,
+      status,
+      sort = 'date_desc',
     } = options
 
     const params = new URLSearchParams()
@@ -107,13 +107,14 @@ export const AppProvider = ({ children }) => {
 
     const data = await api.get(`/invoices/user/${userId}?${params.toString()}`, {
       headers: { 'X-User-Id': userId },
+      raw: true,
     })
 
     setInvoices(mapInvoiceRows(data))
     setInvoicePagination(extractPagination(data))
     setInvoiceFilters({ status, sort })
     return data
-  }, [invoicePagination.pageSize, invoiceFilters.status, invoiceFilters.sort])
+  }, [])
 
   const refreshOfficerInvoices = useCallback(async (officerId) => {
     if (!officerId) return
