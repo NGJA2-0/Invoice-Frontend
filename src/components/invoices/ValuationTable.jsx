@@ -366,7 +366,8 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   // ── Currency dropdown state ────────────────────────────────────────────
   const [currencyCodes, setCurrencyCodes] = useState([])
   const [currencyList, setCurrencyList] = useState([])
-  const [selectedCurrency, setSelectedCurrency] = useState('')
+  const selectedCurrency = watch('invoiceData.exchangeRateSection.selectedCurrency') || ''
+  const setSelectedCurrency = (val) => setValue('invoiceData.exchangeRateSection.selectedCurrency', val, { shouldDirty: true })
   const [currencyLoading, setCurrencyLoading] = useState(false)
 
   const isValuationTable = (section?.key || 'valuation') === 'valuationTable'

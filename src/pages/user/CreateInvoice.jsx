@@ -68,6 +68,7 @@ const buildDefaultInvoiceData = () => ({
     insurance: '',
     cif: '',
     cifLkr: '',
+    selectedCurrency: '',
   },
 })
 
@@ -101,8 +102,8 @@ const CreateInvoice = () => {
   const navigate = useNavigate()
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
-  const [category, setCategory] = useState('')
-  const [subCategory, setSubCategory] = useState('')
+  const [category, setCategory] = useState(() => sessionStorage.getItem('ci_category') || '')
+  const [subCategory, setSubCategory] = useState(() => sessionStorage.getItem('ci_subCategory') || '')
   const [templateConfig, setTemplateConfig] = useState(null)
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [preview, setPreview] = useState(null)
@@ -110,6 +111,16 @@ const CreateInvoice = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [businessProfile, setBusinessProfile] = useState(null)
   const previewRef = useRef(null)
+  const isRestoringRef = useRef(false)
+  const blockSaveRef = useRef(false)
+
+  useEffect(() => {
+    sessionStorage.setItem('ci_category', category)
+  }, [category])
+
+  useEffect(() => {
+    sessionStorage.setItem('ci_subCategory', subCategory)
+  }, [subCategory])
 
   const form = useForm({
     defaultValues: {
@@ -118,6 +129,15 @@ const CreateInvoice = () => {
   })
 
   const { register, control, watch, setValue, getValues, reset } = form
+
+  // Watch all values and persist to sessionStorage
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (blockSaveRef.current) return
+      sessionStorage.setItem('ci_invoiceData', JSON.stringify(values))
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
 
   const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
   const isTemplate3 = templateKey === 'TEMPLATE_3'
@@ -134,6 +154,17 @@ const CreateInvoice = () => {
       tone: 'danger',
     })
     return false
+  }
+
+  const handleNewInvoice = () => {
+    sessionStorage.removeItem('ci_invoiceData')
+    sessionStorage.removeItem('ci_category')
+    sessionStorage.removeItem('ci_subCategory')
+    setCategory('')
+    setSubCategory('')
+    setTemplateConfig(null)
+    setPreview(null)
+    reset({ invoiceData: buildDefaultInvoiceData() })
   }
 
   useEffect(() => {
@@ -194,23 +225,36 @@ const CreateInvoice = () => {
         setSubCategoriesLoaded(false)
         return
       }
+
+      const hasSaved = !!sessionStorage.getItem('ci_invoiceData')  // CHECK BEFORE ASYNC
+
       try {
         const data = await invoiceService.getSubCategories(category)
         const normalized = normalizeOptions(data)
         setSubCategories(normalized)
         setSubCategoriesLoaded(true)
         const autoSelected = normalized.length === 1 ? normalized[0].value : ''
-        setSubCategory(autoSelected)
+
+        setSubCategory(prev => sessionStorage.getItem('ci_subCategory') || autoSelected)
         setTemplateConfig(null)
-        const defaults = buildDefaultInvoiceData()
-        if (businessProfile) {
-          defaults.companyHeader.companyName = businessProfile.businessName || ''
-          defaults.companyHeader.companyAddress = businessProfile.businessAddress || ''
-          defaults.companyHeader.companyPhone = (businessProfile.mobileNumbers || [])[0] || ''
-          defaults.companyHeader.tin = businessProfile.tin || ''
-          defaults.companyHeader.stockValueName = businessProfile.stockValueName || ''
+
+        if (!hasSaved) {
+          const defaults = buildDefaultInvoiceData()
+          if (businessProfile) {
+            defaults.companyHeader.companyName = businessProfile.businessName || ''
+            defaults.companyHeader.companyAddress = businessProfile.businessAddress || ''
+            defaults.companyHeader.companyPhone = (businessProfile.mobileNumbers || [])[0] || ''
+            defaults.companyHeader.tin = businessProfile.tin || ''
+            defaults.companyHeader.stockValueName = businessProfile.stockValueName || ''
+          }
+          blockSaveRef.current = true
+          reset({ invoiceData: defaults })
+          setTimeout(() => { blockSaveRef.current = false }, 100)
+        } else {
+          blockSaveRef.current = true   // block saving while we restore
+          isRestoringRef.current = true
         }
-        reset({ invoiceData: defaults })
+
       } catch (error) {
         setSubCategories([])
         setSubCategoriesLoaded(true)
@@ -261,12 +305,30 @@ const CreateInvoice = () => {
 
   // Re-apply business profile values whenever template config becomes available
   useEffect(() => {
-    if (!templateConfig || !businessProfile) return
-    setValue('invoiceData.companyHeader.companyName', businessProfile.businessName || '', { shouldValidate: false })
-    setValue('invoiceData.companyHeader.companyAddress', businessProfile.businessAddress || '', { shouldValidate: false })
-    setValue('invoiceData.companyHeader.companyPhone', (businessProfile.mobileNumbers || [])[0] || '', { shouldValidate: false })
-    setValue('invoiceData.companyHeader.tin', businessProfile.tin || '', { shouldValidate: false })
-    setValue('invoiceData.companyHeader.stockValueName', businessProfile.stockValueName || '', { shouldValidate: false })
+    if (!templateConfig) return
+
+    const saved = sessionStorage.getItem('ci_invoiceData')
+    console.log(sessionStorage.getItem('ci_invoiceData'))
+    if (isRestoringRef.current && saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        reset(parsed)
+      } catch (_) { }
+      isRestoringRef.current = false
+    }
+
+    // Business profile always wins for locked fields
+    if (businessProfile) {
+      setValue('invoiceData.companyHeader.companyName', businessProfile.businessName || '', { shouldValidate: false })
+      setValue('invoiceData.companyHeader.companyAddress', businessProfile.businessAddress || '', { shouldValidate: false })
+      setValue('invoiceData.companyHeader.companyPhone', (businessProfile.mobileNumbers || [])[0] || '', { shouldValidate: false })
+      setValue('invoiceData.companyHeader.tin', businessProfile.tin || '', { shouldValidate: false })
+      setValue('invoiceData.companyHeader.stockValueName', businessProfile.stockValueName || '', { shouldValidate: false })
+    }
+
+    // Unblock saving now that restore + profile overrides are done
+    setTimeout(() => { blockSaveRef.current = false }, 100)
+
   }, [templateConfig, businessProfile, setValue])
 
   const formReady = useMemo(() => Boolean(category && templateConfig), [category, templateConfig])
@@ -1027,6 +1089,14 @@ const CreateInvoice = () => {
               <span className="ci-invoice-badge-number">{invoiceNumber}</span>
             </div>
           )}
+
+          <button
+            type="button"
+            className="ci-btn ci-btn-ghost"
+            onClick={handleNewInvoice}
+          >
+            + Create New Invoice
+          </button>
         </div>
 
         {/* ── Step indicator ── */}

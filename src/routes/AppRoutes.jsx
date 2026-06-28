@@ -50,7 +50,7 @@ const SuperAdminRoute = ({ children }) => {
 
 const ProtectedRoute = ({ children }) => {
   const { role, user } = useApp()
-  console.log('ProtectedRoute check:', { role, user })
+  // console.log('ProtectedRoute check:', { role, user })
   if (!role || !user) {
     return <Navigate to="/auth/login" replace />
   }
