@@ -182,8 +182,8 @@ const InvoiceTable = ({
 
       {/* Pagination */}
       {pagination && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-ink-500">
+        <div className="flex flex-col gap-3 rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs font-medium text-ink-500">
             Page {pagination.currentPage} of {pagination.totalPages} ·{' '}
             {pagination.totalRecords} invoices
           </p>
@@ -192,6 +192,7 @@ const InvoiceTable = ({
               variant="ghost"
               disabled={!pagination.hasPreviousPage}
               onClick={() => onPageChange?.(pagination.currentPage - 1)}
+              className="!rounded-xl !border !border-cloud-200 !bg-white !px-4 !py-2 !text-sm !font-medium !text-ink-700 !shadow-sm transition-all duration-150 hover:!border-[#d9c89a] hover:!bg-cloud-50 disabled:!cursor-not-allowed disabled:!opacity-40 disabled:hover:!border-cloud-200 disabled:hover:!bg-white"
             >
               Previous
             </Button>
@@ -199,6 +200,7 @@ const InvoiceTable = ({
               variant="ghost"
               disabled={!pagination.hasNextPage}
               onClick={() => onPageChange?.(pagination.currentPage + 1)}
+              className="!rounded-xl !border !border-cloud-200 !bg-white !px-4 !py-2 !text-sm !font-medium !text-ink-700 !shadow-sm transition-all duration-150 hover:!border-[#d9c89a] hover:!bg-cloud-50 disabled:!cursor-not-allowed disabled:!opacity-40 disabled:hover:!border-cloud-200 disabled:hover:!bg-white"
             >
               Next
             </Button>
