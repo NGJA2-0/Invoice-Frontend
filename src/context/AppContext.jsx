@@ -37,18 +37,23 @@ const normalizeInvoiceItems = (items) => {
 
 const mapInvoiceRows = (items = []) =>
   normalizeInvoiceItems(items).map((invoice) => ({
-    id: invoice.invoiceNumber,
-    buyer:
-      invoice.data?.buyerInformation?.buyerName ||
-      invoice.data?.buyerInformation?.buyerAddress ||
-      'N/A',
-    date: invoice.createdAt
-      ? new Date(invoice.createdAt).toISOString().slice(0, 10)
-      : 'N/A',
+    id: invoice.invoiceId,
+    invoiceNumber: invoice.invoiceNumber || 'N/A',
+    invoiceDate: invoice.invoiceDate || 'N/A',
+    exportType: invoice.exportType || 'N/A',
+    cifLkr: invoice.cifLkr ?? 0,
+    receiverName: invoice.receiverName || 'N/A',
     status: invoice.status || 'draft',
-    template: invoice.templateKey || 'N/A',
-    totalUsd: invoice.data?.valuation?.totalUsd || 0,
   }))
+
+const extractPagination = (res) => ({
+  currentPage: res?.pagination?.currentPage || 1,
+  pageSize: res?.pagination?.pageSize || 10,
+  totalRecords: res?.pagination?.totalRecords || 0,
+  totalPages: res?.pagination?.totalPages || 1,
+  hasNextPage: res?.pagination?.hasNextPage || false,
+  hasPreviousPage: res?.pagination?.hasPreviousPage || false,
+})
 
 export const AppProvider = ({ children }) => {
   const [role, setRole] = useState(() => localStorage.getItem(ROLE_KEY))
@@ -56,6 +61,18 @@ export const AppProvider = ({ children }) => {
   const [userStatus, setUserStatus] = useState(user?.status || 'not_verified')
   const [registrations, setRegistrations] = useState([])
   const [invoices, setInvoices] = useState([])
+  const [invoicePagination, setInvoicePagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalRecords: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  })
+  const [invoiceFilters, setInvoiceFilters] = useState({
+    status: undefined,
+    sort: 'date_desc',
+  })
   const [users, setUsers] = useState([])
   const [officerInvoices, setOfficerInvoices] = useState([])
   const [stage2OfficerInvoices, setStage2OfficerInvoices] = useState([])
@@ -73,11 +90,30 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
   }, [])
 
-  const refreshInvoices = useCallback(async (userId) => {
+  const refreshInvoices = useCallback(async (userId, options = {}) => {
     if (!userId) return
-    const data = await api.get(`/users/${userId}/invoices`)
-    setInvoices(mapInvoiceRows(data || []))
-  }, [])
+    const {
+      page = 1,
+      pageSize = invoicePagination.pageSize,
+      status = invoiceFilters.status,
+      sort = invoiceFilters.sort,
+    } = options
+
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('pageSize', pageSize)
+    if (status) params.set('status', status)
+    if (sort) params.set('sort', sort)
+
+    const data = await api.get(`/invoices/user/${userId}?${params.toString()}`, {
+      headers: { 'X-User-Id': userId },
+    })
+
+    setInvoices(mapInvoiceRows(data))
+    setInvoicePagination(extractPagination(data))
+    setInvoiceFilters({ status, sort })
+    return data
+  }, [invoicePagination.pageSize, invoiceFilters.status, invoiceFilters.sort])
 
   const refreshOfficerInvoices = useCallback(async (officerId) => {
     if (!officerId) return
@@ -349,6 +385,8 @@ export const AppProvider = ({ children }) => {
       userStatus,
       registrations,
       invoices,
+      invoicePagination,
+      invoiceFilters,
       users,
       officerInvoices,
       stage2OfficerInvoices,
@@ -389,6 +427,8 @@ export const AppProvider = ({ children }) => {
       userStatus,
       registrations,
       invoices,
+      invoicePagination,
+      invoiceFilters,
       users,
       officerInvoices,
       stage2OfficerInvoices,

@@ -4,14 +4,18 @@ import InvoiceTable from '../../components/tables/InvoiceTable'
 import { useApp } from '../../context/AppContext'
 
 const MyInvoices = () => {
-  const { invoices, refreshInvoices, user } = useApp()
+  const { invoices, invoicePagination, invoiceFilters, refreshInvoices, user } = useApp()
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [status, setStatus] = useState(undefined)
+  const [sort, setSort] = useState('date_desc')
 
   useEffect(() => {
     let active = true
     const load = async () => {
       if (user?.id) {
-        await refreshInvoices(user.id)
+        await refreshInvoices(user.id, { page, pageSize, status, sort })
       }
       if (active) {
         setLoading(false)
@@ -21,7 +25,22 @@ const MyInvoices = () => {
     return () => {
       active = false
     }
-  }, [user?.id, refreshInvoices])
+  }, [user?.id, page, pageSize, status, sort, refreshInvoices])
+
+  const handleStatusChange = (nextStatus) => {
+    setStatus(nextStatus)
+    setPage(1)
+  }
+
+  const handleSortChange = (nextSort) => {
+    setSort(nextSort)
+    setPage(1)
+  }
+
+  const handlePageSizeChange = (nextSize) => {
+    setPageSize(nextSize)
+    setPage(1)
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -38,7 +57,16 @@ const MyInvoices = () => {
           <Skeleton className="h-6" />
         </div>
       ) : (
-        <InvoiceTable rows={invoices} />
+        <InvoiceTable
+          rows={invoices}
+          pagination={invoicePagination}
+          status={status}
+          sort={sort}
+          onStatusChange={handleStatusChange}
+          onSortChange={handleSortChange}
+          onPageChange={setPage}
+          onPageSizeChange={handlePageSizeChange}
+        />
       )}
     </div>
   )

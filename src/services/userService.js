@@ -11,8 +11,17 @@ export const userService = {
     return response
   },
 
-  getInvoices: async (userId) => {
-    const response = await api.get(`/users/${userId}/invoices`)
+  getInvoices: async (userId, { page = 1, pageSize = 10, status, sort = 'date_desc' } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('pageSize', pageSize)
+    if (status) params.set('status', status)
+    if (sort) params.set('sort', sort)
+
+    const response = await api.get(
+      `/invoices/user/${userId}?${params.toString()}`,
+      { headers: { 'X-User-Id': userId } }
+    )
     return response
   },
 }
