@@ -1207,14 +1207,7 @@ const CreateInvoice = () => {
                   <Eye />
                   Preview
                 </button>
-                <button
-                  type="button"
-                  className="ci-btn ci-btn-gold"
-                  onClick={exportPdf}
-                >
-                  <Download />
-                  Export PDF
-                </button>
+                
                 <button
                   type="button"
                   className="ci-btn ci-btn-ghost"
@@ -1252,15 +1245,7 @@ const CreateInvoice = () => {
           <div className="ci-preview-card">
             <div className="ci-preview-header no-print">
               <span className="ci-preview-title">Invoice Preview</span>
-              <button
-                type="button"
-                className="ci-btn ci-btn-gold"
-                style={{ height: 32, fontSize: 12 }}
-                onClick={exportPdf}
-              >
-                <Download />
-                Export PDF
-              </button>
+             
             </div>
             <div className="ci-preview-body">
               <InvoicePreview
