@@ -112,7 +112,7 @@ const Login = () => {
           message: 'Welcome to the Admin Portal.',
           tone: 'success',
         })
-        navigate('/admin/dashboard')
+        navigate('/admin/dashboard', { replace: true })
       } else if (verifiedUserInfo.role === 'officer') {
         loggedIn = await officerLogin(username, password)
         pushToast({
@@ -125,7 +125,8 @@ const Login = () => {
             ? '/officer2/dashboard'
             : loggedIn?.stage === 3
             ? '/officer3/dashboard'
-            : '/officer/dashboard'
+            : '/officer/dashboard',
+            { replace: true }
         )
       } else {
         loggedIn = await userLogin(username, password)
@@ -148,7 +149,7 @@ const Login = () => {
           })
         }
 
-        navigate('/user/dashboard')
+        navigate('/user/dashboard', { replace: true })
       }
     } catch (error) {
       pushToast({

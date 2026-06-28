@@ -48,6 +48,15 @@ const SuperAdminRoute = ({ children }) => {
   return children
 }
 
+const ProtectedRoute = ({ children }) => {
+  const { role, user } = useApp()
+  // console.log('ProtectedRoute check:', { role, user })
+  if (!role || !user) {
+    return <Navigate to="/auth/login" replace />
+  }
+  return children
+}
+
 const AppRoutes = () => {
   const location = useLocation()
 
@@ -58,7 +67,7 @@ const AppRoutes = () => {
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
 
-        <Route path="/user" element={<UserLayout />}>
+        <Route path="/user" element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/user/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-invoice" element={<CreateInvoice />} />
@@ -68,28 +77,28 @@ const AppRoutes = () => {
           <Route path="dealer-registration" element={<DealerRegistration />} />
         </Route>
 
-        <Route path="/officer" element={<OfficerLayout />}>
+        <Route path="/officer" element={<ProtectedRoute><OfficerLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/officer/dashboard" replace />} />
           <Route path="dashboard" element={<OfficerDashboard />} />
           <Route path="invoices/:invoiceId" element={<OfficerInvoiceDetail />} />
           <Route path="invoices/:invoiceId/edit" element={<OfficerEditInvoice />} />
         </Route>
 
-        <Route path="/officer2" element={<OfficerLayout />}>
+        <Route path="/officer2" element={<ProtectedRoute><OfficerLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/officer2/dashboard" replace />} />
           <Route path="dashboard" element={<Stage2Dashboard />} />
           <Route path="invoices/:invoiceId" element={<Stage2InvoiceDetail />} />
           <Route path="invoices/:invoiceId/edit" element={<Stage2EditInvoice />} />
         </Route>
 
-        <Route path="/officer3" element={<OfficerLayout />}>
+        <Route path="/officer3" element={<ProtectedRoute><OfficerLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/officer3/dashboard" replace />} />
           <Route path="dashboard" element={<Stage3Dashboard />} />
           <Route path="invoices/:invoiceId" element={<Stage3InvoiceDetail />} />
           <Route path="invoices/:invoiceId/edit" element={<Stage3EditInvoice />} />
         </Route>
 
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="pending-registrations" element={<PendingRegistrations />} />
