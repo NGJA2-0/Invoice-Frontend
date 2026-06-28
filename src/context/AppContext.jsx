@@ -58,6 +58,8 @@ export const AppProvider = ({ children }) => {
   const [invoices, setInvoices] = useState([])
   const [users, setUsers] = useState([])
   const [officerInvoices, setOfficerInvoices] = useState([])
+  const [stage2OfficerInvoices, setStage2OfficerInvoices] = useState([])
+  const [stage3OfficerInvoices, setStage3OfficerInvoices] = useState([])
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
 
@@ -82,6 +84,22 @@ export const AppProvider = ({ children }) => {
     const res = await officerApi.getAssignedInvoices(officerId)
     const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
     setOfficerInvoices(list)
+    return list
+  }, [])
+
+  const refreshStage2OfficerInvoices = useCallback(async (stage2OfficerId) => {
+    if (!stage2OfficerId) return
+    const res = await officerApi.getStage2AssignedInvoices(stage2OfficerId)
+    const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+    setStage2OfficerInvoices(list)
+    return list
+  }, [])
+
+  const refreshStage3OfficerInvoices = useCallback(async (stage3OfficerId) => {
+    if (!stage3OfficerId) return
+    const res = await officerApi.getStage3AssignedInvoices(stage3OfficerId)
+    const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+    setStage3OfficerInvoices(list)
     return list
   }, [])
 
@@ -202,11 +220,22 @@ export const AppProvider = ({ children }) => {
     return data
   }
 
-  // Officer login
+ // Officer login (covers stage 1, stage 2 and stage 3 officers)
   const officerLogin = async (username, password) => {
     const data = await api.post('/auth/officer-login', { username, password })
-    setRole('officer')
-    localStorage.setItem(ROLE_KEY, 'officer')
+    const nextRole = data.stage === 2 ? 'stage2officer' : data.stage === 3 ? 'stage3officer' : 'officer'
+    setRole(nextRole)
+    localStorage.setItem(ROLE_KEY, nextRole)
+    storeUser(data)
+    setUserStatus('verified')
+    return data
+  }
+
+  // Stage 2 officer login
+  const stage2OfficerLogin = async (username, password) => {
+    const data = await api.post('/auth/stage2-officer-login', { username, password })
+    setRole('stage2officer')
+    localStorage.setItem(ROLE_KEY, 'stage2officer')
     storeUser(data)
     setUserStatus('verified')
     return data
@@ -322,6 +351,8 @@ export const AppProvider = ({ children }) => {
       invoices,
       users,
       officerInvoices,
+      stage2OfficerInvoices,
+      stage3OfficerInvoices,
       notifications,
       toasts,
       selectRole,
@@ -329,6 +360,7 @@ export const AppProvider = ({ children }) => {
       userLogin,
       adminLogin,
       officerLogin,
+      stage2OfficerLogin,
       verifyUsername,
       signUp,
       submitLicenseRenewal,
@@ -336,6 +368,8 @@ export const AppProvider = ({ children }) => {
       setUserStatus,
       refreshInvoices,
       refreshOfficerInvoices,
+      refreshStage2OfficerInvoices,
+      refreshStage3OfficerInvoices,
       refreshUserProfile,
       refreshAdminData,
       submitRegistration,
@@ -357,6 +391,8 @@ export const AppProvider = ({ children }) => {
       invoices,
       users,
       officerInvoices,
+      stage2OfficerInvoices,
+      stage3OfficerInvoices,
       notifications,
       toasts,
     ],
@@ -368,6 +404,10 @@ export const AppProvider = ({ children }) => {
         refreshAdminData()
       } else if (role === 'officer') {
         refreshOfficerInvoices(user.id)
+      } else if (role === 'stage2officer') {
+        refreshStage2OfficerInvoices(user.id)
+      } else if (role === 'stage3officer') {
+        refreshStage3OfficerInvoices(user.id)
       } else {
         refreshUserProfile(user.id)
         refreshInvoices(user.id)

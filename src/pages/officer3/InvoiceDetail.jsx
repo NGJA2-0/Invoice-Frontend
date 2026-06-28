@@ -1,99 +1,71 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, Check, X } from 'lucide-react'
+import { useMemo as useMemoAlias } from 'react' // no-op placeholder removed below
+import { ArrowLeft, Check, Pencil, X } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
-import InvoicePreview from '../../components/invoices/InvoicePreview'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
-import InvoiceHistoryDropdown from './InvoiceHistoryDropdown'
+import InvoicePreview from '../../components/invoices/InvoicePreview'
+import Stage3InvoiceHistoryDropdown from './Stage3InvoiceHistoryDropdown'
 
-const OfficerInvoiceDetail = () => {
-  const { invoiceId: originalInvoiceId } = useParams()
+const Stage3InvoiceDetail = () => {
+  const { invoiceId } = useParams()
   const navigate = useNavigate()
-  const { user, pushToast } = useApp()
+  const { user } = useApp()
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [actionLoading, setActionLoading] = useState(null) // 'approve' | 'reject' | null
+  const [actionLoading, setActionLoading] = useState(false)
+  const [approveLoading, setApproveLoading] = useState(false)
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [rejectNotes, setRejectNotes] = useState('Missing supporting documents.')
   const [viewingHistoryRecord, setViewingHistoryRecord] = useState(null) // non-null when previewing a past edition
 
   useEffect(() => {
-    if (!originalInvoiceId) return
+    if (!invoiceId) return
     setLoading(true)
     setError(null)
     officerApi
-      .getDocumentById(originalInvoiceId)
+      .getStage3DocumentById(invoiceId)
       .then((res) => {
         setInvoice(res)
         setViewingHistoryRecord(null)
       })
       .catch((err) => setError(err?.message || 'Failed to load invoice'))
       .finally(() => setLoading(false))
-  }, [originalInvoiceId])
+  }, [invoiceId])
 
-  // When an edition is selected from history, preview that record instead of
-  // the latest invoice. Selecting it back to null (not used here, but kept
-  // explicit) would fall back to the live invoice.
   const previewedInvoice = viewingHistoryRecord || invoice
   const preview = useMemo(() => buildInvoicePreviewData(previewedInvoice), [previewedInvoice])
   const isViewingPastEdition = Boolean(viewingHistoryRecord)
-  const isCompleted = invoice?.status === 'stage1_completed'
+  const isFinalized = invoice?.status === 'stage3_completed' || invoice?.status === 'stage3_rejected'
 
-  const handleReject = async () => {
+  const handleRejectConfirm = async () => {
     if (!invoice || !user?.id) return
-    const notes = window.prompt('Rejection notes:', 'Carrier details are incorrect.')
-    if (notes === null) return // user cancelled the prompt
-
-    setActionLoading('reject')
+    setActionLoading(true)
     try {
-      await officerApi.updateInvoiceStatus(
-        invoice.originalInvoiceId,
-        user.id,
-        { status: 'stage1_rejected', notes }
-      )
-      pushToast({
-        title: 'Invoice rejected',
-        message: notes,
-        tone: 'error',
+      await officerApi.rejectStage3Invoice(invoiceId, user.id, {
+        notes: rejectNotes,
       })
-      navigate('/officer/dashboard')
+      setShowRejectDialog(false)
+      navigate('/officer3/dashboard')
     } catch (err) {
-      pushToast({
-        title: 'Update failed',
-        message: err?.message || 'Could not update invoice status',
-        tone: 'error',
-      })
+      setError(err?.message || 'Could not reject invoice')
     } finally {
-      setActionLoading(null)
+      setActionLoading(false)
     }
   }
 
   const handleApprove = async () => {
     if (!invoice || !user?.id) return
-    const notes = window.prompt('Approval notes:', 'All details verified. Approved.')
-    if (notes === null) return // user cancelled the prompt
-
-    setActionLoading('approve')
+    setApproveLoading(true)
     try {
-      await officerApi.completeInvoice(
-        invoice.originalInvoiceId,
-        user.id,
-        { notes }
-      )
-      pushToast({
-        title: 'Invoice approved',
-        message: notes,
-        tone: 'success',
-      })
-      navigate('/officer/dashboard')
+      await officerApi.completeStage3Invoice(invoiceId, user.id)
+      navigate('/officer3/dashboard')
     } catch (err) {
-      pushToast({
-        title: 'Update failed',
-        message: err?.message || 'Could not complete invoice',
-        tone: 'error',
-      })
+      setError(err?.message || 'Could not approve invoice')
     } finally {
-      setActionLoading(null)
+      setApproveLoading(false)
     }
   }
 
@@ -104,45 +76,45 @@ const OfficerInvoiceDetail = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '1rem',
+          marginBottom: '1.25rem',
           flexWrap: 'wrap',
           gap: 10,
         }}
       >
         <button
           type="button"
-          onClick={() => navigate('/officer/dashboard')}
+          onClick={() => navigate('/officer3/dashboard')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
             background: 'none',
             border: 'none',
+            cursor: 'pointer',
             color: '#374151',
             fontSize: 13,
             fontWeight: 600,
-            cursor: 'pointer',
             padding: 0,
           }}
         >
           <ArrowLeft size={15} />
-          Back to dashboard
+          Back to Assigned Invoices
         </button>
 
         {!loading && !error && invoice && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <InvoiceHistoryDropdown
-              originalInvoiceId={originalInvoiceId}
+            <Stage3InvoiceHistoryDropdown
+              originalInvoiceId={invoiceId}
               activeRecordId={viewingHistoryRecord?.id}
               onSelect={(record) => setViewingHistoryRecord(record)}
             />
 
-            {!isCompleted && (
+            {!isFinalized && (
               <>
                 <button
                   type="button"
-                  onClick={handleReject}
-                  disabled={actionLoading !== null}
+                  onClick={() => setShowRejectDialog(true)}
+                  disabled={actionLoading}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -154,41 +126,41 @@ const OfficerInvoiceDetail = () => {
                     color: '#b91c1c',
                     fontSize: 13,
                     fontWeight: 700,
-                    cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
-                    opacity: actionLoading !== null ? 0.6 : 1,
+                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                    opacity: actionLoading ? 0.6 : 1,
                   }}
                 >
                   <X size={14} />
-                  {actionLoading === 'reject' ? 'Rejecting…' : 'Reject Invoice'}
+                  Reject Invoice
                 </button>
 
                 <button
                   type="button"
                   onClick={handleApprove}
-                  disabled={actionLoading !== null}
+                  disabled={approveLoading}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
                     padding: '0.5rem 1rem',
                     borderRadius: 999,
-                    border: '1px solid rgba(0,0,0,0.12)',
-                    background: '#15803d',
-                    color: '#fff',
+                    border: '1px solid rgba(22,163,74,0.3)',
+                    background: '#fff',
+                    color: '#15803d',
                     fontSize: 13,
                     fontWeight: 700,
-                    cursor: actionLoading !== null ? 'not-allowed' : 'pointer',
-                    opacity: actionLoading !== null ? 0.6 : 1,
+                    cursor: approveLoading ? 'not-allowed' : 'pointer',
+                    opacity: approveLoading ? 0.6 : 1,
                   }}
                 >
                   <Check size={14} />
-                  {actionLoading === 'approve' ? 'Approving…' : 'Approve Invoice'}
+                  {approveLoading ? 'Approving…' : 'Approve Invoice'}
                 </button>
 
                 <button
                   type="button"
                   onClick={() =>
-                    navigate(`/officer/invoices/${originalInvoiceId}/edit`, {
+                    navigate(`/officer3/invoices/${invoiceId}/edit`, {
                       state: { invoice },
                     })
                   }
@@ -221,11 +193,11 @@ const OfficerInvoiceDetail = () => {
         <div style={{ color: '#b91c1c', fontSize: 14 }}>{error}</div>
       )}
 
-      {!loading && !error && !invoice && (
+      {!loading && !error && !preview && (
         <div style={{ color: '#6b7280', fontSize: 14 }}>Invoice not found.</div>
       )}
 
-      {!loading && !error && invoice && (
+      {!loading && !error && preview && (
         <div>
           {isViewingPastEdition && (
             <div
@@ -270,8 +242,92 @@ const OfficerInvoiceDetail = () => {
           </div>
         </div>
       )}
+
+      {showRejectDialog && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 12,
+              padding: '1.25rem',
+              width: '90%',
+              maxWidth: 380,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 0.75rem', fontSize: 15, fontWeight: 700, color: '#111827' }}>
+              Reject Invoice
+            </h3>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>
+              Rejection notes
+            </label>
+            <textarea
+              value={rejectNotes}
+              onChange={(e) => setRejectNotes(e.target.value)}
+              rows={3}
+              style={{
+                width: '100%',
+                marginTop: 6,
+                marginBottom: 14,
+                padding: '0.5rem',
+                borderRadius: 8,
+                border: '1px solid #d1d5db',
+                fontSize: 13,
+                resize: 'vertical',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setShowRejectDialog(false)}
+                disabled={actionLoading}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: 999,
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  background: '#fff',
+                  color: '#374151',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectConfirm}
+                disabled={actionLoading || !rejectNotes.trim()}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: 999,
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  background: '#b91c1c',
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: actionLoading ? 'not-allowed' : 'pointer',
+                  opacity: actionLoading ? 0.6 : 1,
+                }}
+              >
+                {actionLoading ? 'Rejecting…' : 'Confirm Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export default OfficerInvoiceDetail
+export default Stage3InvoiceDetail
