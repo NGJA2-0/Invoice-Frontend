@@ -32,6 +32,27 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20]
 const formatLkr = (value) =>
   `Rs. ${Number(value || 0).toLocaleString()}`
 
+// Module-level cache so the favourites list isn't re-fetched every time
+// InvoiceTable mounts (e.g. navigating away from "My Invoices" and back).
+// Keyed by userId; cleared/replaced whenever it's older than CACHE_TTL_MS
+// or when a favourite is added/removed, so it can't go stale mid-session.
+const favoritesCache = new Map()
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+const getCachedFavoriteIds = (userId) => {
+  const entry = favoritesCache.get(userId)
+  if (!entry) return null
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    favoritesCache.delete(userId)
+    return null
+  }
+  return entry.ids
+}
+
+const setCachedFavoriteIds = (userId, ids) => {
+  favoritesCache.set(userId, { ids, timestamp: Date.now() })
+}
+
 const InvoiceTable = ({
   rows,
   pagination,
@@ -64,6 +85,14 @@ const InvoiceTable = ({
 
     const loadFavoriteIds = async () => {
       if (!user?.id) return
+
+      // Use the cache if we have a recent one — skips the API calls entirely.
+      const cached = getCachedFavoriteIds(user.id)
+      if (cached) {
+        setFavoritedIds(new Set(cached))
+        return
+      }
+
       const ids = new Set()
 
       try {
@@ -94,6 +123,7 @@ const InvoiceTable = ({
 
         if (active) {
           setFavoritedIds(ids)
+          setCachedFavoriteIds(user.id, ids)
         }
       } catch (error) {
         // If this fails, hearts just default to "not favourited" — clicking
@@ -107,12 +137,24 @@ const InvoiceTable = ({
     }
   }, [user?.id])
 
+  // Updates favoritedIds state and keeps the module-level cache in sync,
+  // so a future remount of this table doesn't show stale data.
+  const updateFavoritedIds = (updater) => {
+    setFavoritedIds((prev) => {
+      const next = updater(prev)
+      if (user?.id) {
+        setCachedFavoriteIds(user.id, next)
+      }
+      return next
+    })
+  }
+
   const handleAddFavorite = async (invoiceId) => {
     if (!user?.id || favoritingId) return
     setFavoritingId(invoiceId)
 
     // Optimistic update — heart fills in immediately
-    setFavoritedIds((prev) => new Set(prev).add(invoiceId))
+    updateFavoritedIds((prev) => new Set(prev).add(invoiceId))
 
     try {
       await userService.addFavorite(user.id, invoiceId)
@@ -123,10 +165,10 @@ const InvoiceTable = ({
       if (alreadyFavorited) {
         // Invoice was already favourited (e.g. from a previous session) —
         // keep the heart filled and disabled, just sync silently.
-        setFavoritedIds((prev) => new Set(prev).add(invoiceId))
+        updateFavoritedIds((prev) => new Set(prev).add(invoiceId))
       } else {
         // Genuine failure — roll back so the user can retry
-        setFavoritedIds((prev) => {
+        updateFavoritedIds((prev) => {
           const next = new Set(prev)
           next.delete(invoiceId)
           return next
@@ -147,7 +189,7 @@ const InvoiceTable = ({
     setFavoritingId(invoiceId)
 
     // Optimistic update — icon reverts to empty heart immediately
-    setFavoritedIds((prev) => {
+    updateFavoritedIds((prev) => {
       const next = new Set(prev)
       next.delete(invoiceId)
       return next
@@ -158,7 +200,7 @@ const InvoiceTable = ({
       pushToast?.({ title: 'Removed from favourites', tone: 'success' })
     } catch (error) {
       // Roll back on failure so the icon goes back to "remove" state
-      setFavoritedIds((prev) => new Set(prev).add(invoiceId))
+      updateFavoritedIds((prev) => new Set(prev).add(invoiceId))
       pushToast?.({
         title: 'Could not remove favourite',
         message: error?.message,
