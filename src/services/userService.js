@@ -24,4 +24,17 @@ export const userService = {
     )
     return response
   },
+
+  getFavorites: async (userId, { page, pageSize } = {}) => {
+    const params = new URLSearchParams()
+    if (page) params.set('page', page)
+    if (pageSize) params.set('pageSize', pageSize)
+    const query = params.toString()
+
+    const response = await api.get(
+      `/invoices/favorites/${userId}${query ? `?${query}` : ''}`,
+      { raw: true }
+    )
+    return response
+  },
 }
