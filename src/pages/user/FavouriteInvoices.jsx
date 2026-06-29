@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Heart, HeartOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Skeleton from '../../components/common/Skeleton'
 import Badge from '../../components/common/Badge'
@@ -58,6 +58,7 @@ const FavouriteInvoices = () => {
   const [pagination, setPagination] = useState(null)
   const [pageSize, setPageSize] = useState(10)
   const [loading, setLoading] = useState(true)
+  const [removingId, setRemovingId] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -81,6 +82,29 @@ const FavouriteInvoices = () => {
 
   const handlePageSizeChange = (nextSize) => {
     setPageSize(nextSize)
+  }
+
+  const handleRemoveFavorite = async (invoiceId) => {
+    if (!user?.id || removingId) return
+    setRemovingId(invoiceId)
+
+    // Optimistic removal — invoice disappears immediately
+    const previousRows = rows
+    const previousPagination = pagination
+    setRows((prev) => prev.filter((row) => row.id !== invoiceId))
+    setPagination((prev) =>
+      prev ? { ...prev, totalRecords: Math.max(0, prev.totalRecords - 1) } : prev,
+    )
+
+    try {
+      await userService.removeFavorite(invoiceId, user.id)
+    } catch (error) {
+      // Roll back on failure so the card reappears
+      setRows(previousRows)
+      setPagination(previousPagination)
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   return (
@@ -139,30 +163,70 @@ const FavouriteInvoices = () => {
                   <th className="px-5 py-3">Total Value (LKR)</th>
                   <th className="px-5 py-3">Receiver's Name</th>
                   <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3 text-center">Favourite</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-cloud-100">
-                {rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-cloud-50/60">
-                    <td className="px-5 py-4 font-semibold text-ink-800">{row.invoiceNumber}</td>
-                    <td className="px-5 py-4 text-ink-600">{row.invoiceDate}</td>
-                    <td className="px-5 py-4 text-ink-700">{row.exportType}</td>
-                    <td className="px-5 py-4 font-semibold text-ink-800">{formatLkr(row.cifLkr)}</td>
-                    <td className="px-5 py-4 text-ink-700">{row.receiverName}</td>
-                    <td className="px-5 py-4">
-                      <Badge tone={statusTone[row.status] || 'neutral'}>
-                        {formatInvoiceStatus(row.status)}
-                      </Badge>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cloud-50">
+                          <HeartOff size={20} className="text-ink-400" />
+                        </span>
+                        <p className="text-sm font-medium text-ink-600">
+                          Your favourite list is empty
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  rows.map((row) => (
+                    <tr key={row.id} className="hover:bg-cloud-50/60">
+                      <td className="px-5 py-4 font-semibold text-ink-800">{row.invoiceNumber}</td>
+                      <td className="px-5 py-4 text-ink-600">{row.invoiceDate}</td>
+                      <td className="px-5 py-4 text-ink-700">{row.exportType}</td>
+                      <td className="px-5 py-4 font-semibold text-ink-800">{formatLkr(row.cifLkr)}</td>
+                      <td className="px-5 py-4 text-ink-700">{row.receiverName}</td>
+                      <td className="px-5 py-4">
+                        <Badge tone={statusTone[row.status] || 'neutral'}>
+                          {formatInvoiceStatus(row.status)}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFavorite(row.id)}
+                          disabled={removingId === row.id}
+                          aria-label="Remove from favourites"
+                          className="inline-flex items-center justify-center rounded-full p-1.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Heart
+                            size={18}
+                            className="fill-red-500 text-red-500"
+                          />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Mobile card list */}
           <div className="flex flex-col gap-3 sm:hidden">
-            {rows.map((row) => (
+            {rows.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-cloud-200 bg-white px-4 py-12 shadow-sm">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cloud-50">
+                  <HeartOff size={20} className="text-ink-400" />
+                </span>
+                <p className="text-sm font-medium text-ink-600">
+                  Your favourite list is empty
+                </p>
+              </div>
+            ) : (
+              rows.map((row) => (
               <div
                 key={row.id}
                 className="relative overflow-hidden rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] transition-shadow"
@@ -176,9 +240,20 @@ const FavouriteInvoices = () => {
                     </p>
                     <p className="mt-0.5 text-xs font-medium text-ink-400">{row.invoiceDate}</p>
                   </div>
-                  <Badge tone={statusTone[row.status] || 'neutral'}>
-                    {formatInvoiceStatus(row.status)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge tone={statusTone[row.status] || 'neutral'}>
+                      {formatInvoiceStatus(row.status)}
+                    </Badge>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFavorite(row.id)}
+                      disabled={removingId === row.id}
+                      aria-label="Remove from favourites"
+                      className="inline-flex items-center justify-center rounded-full p-1 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Heart size={18} className="fill-red-500 text-red-500" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="my-3 h-px bg-gradient-to-r from-cloud-200 via-cloud-100 to-transparent pl-2" />
@@ -204,11 +279,12 @@ const FavouriteInvoices = () => {
                   </div>
                 </dl>
               </div>
-            ))}
+              ))
+            )}
           </div>
 
-          {/* Pagination only — no status/sort filters */}
-          {pagination && (
+          {/* Pagination only — no status/sort filters, hidden when list is empty */}
+          {pagination && rows.length > 0 && (
             <div className="flex flex-col gap-3 rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs font-medium text-ink-500">
                 Page {pagination.currentPage} of {pagination.totalPages} ·{' '}

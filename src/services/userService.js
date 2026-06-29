@@ -37,4 +37,11 @@ export const userService = {
     )
     return response
   },
+
+  removeFavorite: async (invoiceId, userId) => {
+    const response = await api.delete(
+      `/invoices/favorites/${invoiceId}?userId=${userId}`
+    )
+    return response
+  },
 }
