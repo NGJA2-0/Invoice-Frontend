@@ -182,7 +182,11 @@ const FavouriteInvoices = () => {
                   </tr>
                 ) : (
                   rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-cloud-50/60">
+                    <tr
+                      key={row.id}
+                      onClick={() => navigate(`/user/invoices/${row.id}`)}
+                      className="cursor-pointer hover:bg-cloud-50/60"
+                    >
                       <td className="px-5 py-4 font-semibold text-ink-800">{row.invoiceNumber}</td>
                       <td className="px-5 py-4 text-ink-600">{row.invoiceDate}</td>
                       <td className="px-5 py-4 text-ink-700">{row.exportType}</td>
@@ -196,7 +200,10 @@ const FavouriteInvoices = () => {
                       <td className="px-5 py-4 text-center">
                         <button
                           type="button"
-                          onClick={() => handleRemoveFavorite(row.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRemoveFavorite(row.id)
+                          }}
                           disabled={removingId === row.id}
                           aria-label="Remove from favourites"
                           className="inline-flex items-center justify-center rounded-full p-1.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40"
@@ -229,7 +236,8 @@ const FavouriteInvoices = () => {
               rows.map((row) => (
               <div
                 key={row.id}
-                className="relative overflow-hidden rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] transition-shadow"
+                onClick={() => navigate(`/user/invoices/${row.id}`)}
+                className="relative cursor-pointer overflow-hidden rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] transition-shadow active:bg-cloud-50/60"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#d4af37] via-[#b8922a] to-[#d4af37]" />
 
@@ -246,7 +254,10 @@ const FavouriteInvoices = () => {
                     </Badge>
                     <button
                       type="button"
-                      onClick={() => handleRemoveFavorite(row.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveFavorite(row.id)
+                      }}
                       disabled={removingId === row.id}
                       aria-label="Remove from favourites"
                       className="inline-flex items-center justify-center rounded-full p-1 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
