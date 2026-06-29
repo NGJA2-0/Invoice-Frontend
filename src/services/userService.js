@@ -44,4 +44,12 @@ export const userService = {
     )
     return response
   },
+
+  addFavorite: async (userId, invoiceId) => {
+    const response = await api.post('/invoices/favorites', {
+      userId,
+      invoiceId,
+    })
+    return response
+  },
 }

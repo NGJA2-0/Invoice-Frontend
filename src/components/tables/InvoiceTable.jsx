@@ -1,7 +1,10 @@
-import { ChevronDown } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronDown, Heart, HeartOff } from 'lucide-react'
 import Badge from '../common/Badge'
 import Button from '../common/Button'
 import { formatInvoiceStatus } from '../../utils/status'
+import { userService } from '../../services/userService'
+import { useApp } from '../../context/AppContext'
 
 const statusTone = {
   draft: 'warning',
@@ -39,6 +42,133 @@ const InvoiceTable = ({
   onPageChange,
   onPageSizeChange,
 }) => {
+  const { user, pushToast } = useApp()
+  const [favoritingId, setFavoritingId] = useState(null)
+  const [favoritedIds, setFavoritedIds] = useState(() => new Set())
+
+  // The invoice list endpoint doesn't tell us which invoices are already
+  // favourited, so we fetch the favourites list separately and use it to
+  // seed which hearts should render filled — otherwise every heart looks
+  // empty again after a refresh even if it was favourited before.
+  useEffect(() => {
+    let active = true
+
+    const extractItems = (data) =>
+      Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.invoices)
+            ? data.invoices
+            : []
+
+    const loadFavoriteIds = async () => {
+      if (!user?.id) return
+      const ids = new Set()
+
+      try {
+        // Fetch page 1 first to learn how many total pages exist.
+        const firstPage = await userService.getFavorites(user.id, { page: 1, pageSize: 100 })
+        extractItems(firstPage).forEach((invoice) => {
+          if (invoice?.invoiceId) ids.add(invoice.invoiceId)
+        })
+
+        // Cap at 50 pages (5,000 favourites) as a safety net against a
+        // backend pagination bug rather than fetching an unbounded amount.
+        const totalPages = Math.min(firstPage?.pagination?.totalPages || 1, 50)
+
+        if (totalPages > 1) {
+          // Fetch remaining pages in parallel instead of one-by-one —
+          // keeps this fast even for users with hundreds of favourites.
+          const remainingPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, i) =>
+              userService.getFavorites(user.id, { page: i + 2, pageSize: 100 }),
+            ),
+          )
+          remainingPages.forEach((data) => {
+            extractItems(data).forEach((invoice) => {
+              if (invoice?.invoiceId) ids.add(invoice.invoiceId)
+            })
+          })
+        }
+
+        if (active) {
+          setFavoritedIds(ids)
+        }
+      } catch (error) {
+        // If this fails, hearts just default to "not favourited" — clicking
+        // add/remove still works fine, so this is a soft failure.
+      }
+    }
+
+    loadFavoriteIds()
+    return () => {
+      active = false
+    }
+  }, [user?.id])
+
+  const handleAddFavorite = async (invoiceId) => {
+    if (!user?.id || favoritingId) return
+    setFavoritingId(invoiceId)
+
+    // Optimistic update — heart fills in immediately
+    setFavoritedIds((prev) => new Set(prev).add(invoiceId))
+
+    try {
+      await userService.addFavorite(user.id, invoiceId)
+      pushToast?.({ title: 'Added to favourites', tone: 'success' })
+    } catch (error) {
+      const alreadyFavorited = /already in favorites/i.test(error?.message || '')
+
+      if (alreadyFavorited) {
+        // Invoice was already favourited (e.g. from a previous session) —
+        // keep the heart filled and disabled, just sync silently.
+        setFavoritedIds((prev) => new Set(prev).add(invoiceId))
+      } else {
+        // Genuine failure — roll back so the user can retry
+        setFavoritedIds((prev) => {
+          const next = new Set(prev)
+          next.delete(invoiceId)
+          return next
+        })
+        pushToast?.({
+          title: 'Could not add favourite',
+          message: error?.message,
+          tone: 'error',
+        })
+      }
+    } finally {
+      setFavoritingId(null)
+    }
+  }
+
+  const handleRemoveFavorite = async (invoiceId) => {
+    if (!user?.id || favoritingId) return
+    setFavoritingId(invoiceId)
+
+    // Optimistic update — icon reverts to empty heart immediately
+    setFavoritedIds((prev) => {
+      const next = new Set(prev)
+      next.delete(invoiceId)
+      return next
+    })
+
+    try {
+      await userService.removeFavorite(invoiceId, user.id)
+      pushToast?.({ title: 'Removed from favourites', tone: 'success' })
+    } catch (error) {
+      // Roll back on failure so the icon goes back to "remove" state
+      setFavoritedIds((prev) => new Set(prev).add(invoiceId))
+      pushToast?.({
+        title: 'Could not remove favourite',
+        message: error?.message,
+        tone: 'error',
+      })
+    } finally {
+      setFavoritingId(null)
+    }
+  }
+
   return (
     <div className="flex w-full min-w-0 flex-col gap-4 overflow-x-hidden">
       {/* Filter / sort controls */}
@@ -112,10 +242,13 @@ const InvoiceTable = ({
               <th className="px-5 py-3">Total Value (LKR)</th>
               <th className="px-5 py-3">Receiver's Name</th>
               <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3 text-center">Favourite</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cloud-100">
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const isFavorited = favoritedIds.has(row.id)
+              return (
               <tr key={row.id} className="hover:bg-cloud-50/60">
                 <td className="px-5 py-4 font-semibold text-ink-800">{row.invoiceNumber}</td>
                 <td className="px-5 py-4 text-ink-600">{row.invoiceDate}</td>
@@ -127,15 +260,36 @@ const InvoiceTable = ({
                     {formatInvoiceStatus(row.status)}
                   </Badge>
                 </td>
+                <td className="px-5 py-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
+                    }
+                    disabled={favoritingId === row.id}
+                    title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                    aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                    className="inline-flex items-center justify-center rounded-full p-1.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isFavorited ? (
+                      <HeartOff size={18} className="text-ink-400" />
+                    ) : (
+                      <Heart size={18} className="text-ink-400" />
+                    )}
+                  </button>
+                </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Mobile card list */}
       <div className="flex flex-col gap-3 sm:hidden">
-        {rows.map((row) => (
+        {rows.map((row) => {
+          const isFavorited = favoritedIds.has(row.id)
+          return (
           <div
             key={row.id}
             className="relative overflow-hidden rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] transition-shadow"
@@ -149,9 +303,27 @@ const InvoiceTable = ({
                 </p>
                 <p className="mt-0.5 text-xs font-medium text-ink-400">{row.invoiceDate}</p>
               </div>
-              <Badge tone={statusTone[row.status] || 'neutral'}>
-                {formatInvoiceStatus(row.status)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge tone={statusTone[row.status] || 'neutral'}>
+                  {formatInvoiceStatus(row.status)}
+                </Badge>
+                <button
+                  type="button"
+                  onClick={() =>
+                    isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
+                  }
+                  disabled={favoritingId === row.id}
+                  title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                  aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                  className="inline-flex items-center justify-center rounded-full p-1 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isFavorited ? (
+                    <HeartOff size={18} className="text-ink-400" />
+                  ) : (
+                    <Heart size={18} className="text-ink-400" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="my-3 h-px bg-gradient-to-r from-cloud-200 via-cloud-100 to-transparent pl-2" />
@@ -177,7 +349,8 @@ const InvoiceTable = ({
               </div>
             </dl>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Pagination */}
