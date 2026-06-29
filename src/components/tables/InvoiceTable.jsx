@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, Heart, HeartOff } from 'lucide-react'
+import { ChevronDown, Heart } from 'lucide-react'
 import Badge from '../common/Badge'
 import Button from '../common/Button'
 import { formatInvoiceStatus } from '../../utils/status'
@@ -314,7 +314,7 @@ const InvoiceTable = ({
                     className="inline-flex items-center justify-center rounded-full p-1.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isFavorited ? (
-                      <HeartOff size={18} className="text-ink-400" />
+                      <Heart size={18} className="fill-red-500 text-red-500" />
                     ) : (
                       <Heart size={18} className="text-ink-400" />
                     )}
@@ -360,7 +360,7 @@ const InvoiceTable = ({
                   className="inline-flex items-center justify-center rounded-full p-1 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isFavorited ? (
-                    <HeartOff size={18} className="text-ink-400" />
+                    <Heart size={18} className="fill-red-500 text-red-500" />
                   ) : (
                     <Heart size={18} className="text-ink-400" />
                   )}
