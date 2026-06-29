@@ -62,6 +62,7 @@ const InvoiceTable = ({
   onSortChange,
   onPageChange,
   onPageSizeChange,
+  onRowClick,
 }) => {
   const { user, pushToast } = useApp()
   const [favoritingId, setFavoritingId] = useState(null)
@@ -291,7 +292,11 @@ const InvoiceTable = ({
             {rows.map((row) => {
               const isFavorited = favoritedIds.has(row.id)
               return (
-              <tr key={row.id} className="hover:bg-cloud-50/60">
+              <tr
+                key={row.id}
+                onClick={() => onRowClick?.(row)}
+                className="cursor-pointer hover:bg-cloud-50/60"
+              >
                 <td className="px-5 py-4 font-semibold text-ink-800">{row.invoiceNumber}</td>
                 <td className="px-5 py-4 text-ink-600">{row.invoiceDate}</td>
                 <td className="px-5 py-4 text-ink-700">{row.exportType}</td>
@@ -305,9 +310,10 @@ const InvoiceTable = ({
                 <td className="px-5 py-4 text-center">
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation()
                       isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
-                    }
+                    }}
                     disabled={favoritingId === row.id}
                     title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
                     aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
@@ -334,7 +340,8 @@ const InvoiceTable = ({
           return (
           <div
             key={row.id}
-            className="relative overflow-hidden rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] transition-shadow"
+            onClick={() => onRowClick?.(row)}
+            className="relative cursor-pointer overflow-hidden rounded-2xl border border-cloud-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] transition-shadow active:bg-cloud-50/60"
           >
             <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#d4af37] via-[#b8922a] to-[#d4af37]" />
 
@@ -349,11 +356,12 @@ const InvoiceTable = ({
                 <Badge tone={statusTone[row.status] || 'neutral'}>
                   {formatInvoiceStatus(row.status)}
                 </Badge>
-                <button
+                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={(e) => {
+                    e.stopPropagation()
                     isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
-                  }
+                  }}
                   disabled={favoritingId === row.id}
                   title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
                   aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}

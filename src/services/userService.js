@@ -6,6 +6,14 @@ export const userService = {
     return response
   },
 
+  // GET /api/v1/invoices/:id
+  getInvoiceById: async (invoiceId, userId) => {
+    const response = await api.get(`/invoices/${invoiceId}`, {
+      headers: { 'X-User-Id': userId },
+    })
+    return response
+  },
+
   updateProfile: async (userId, data) => {
     const response = await api.put(`/users/${userId}`, data)
     return response

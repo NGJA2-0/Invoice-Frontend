@@ -80,6 +80,7 @@ const MyInvoices = () => {
           onSortChange={handleSortChange}
           onPageChange={setPage}
           onPageSizeChange={handlePageSizeChange}
+          onRowClick={(row) => navigate(`/user/invoices/${row.id}`)}
         />
       )}
     </div>
