@@ -6,6 +6,14 @@ export const userService = {
     return response
   },
 
+  // GET /api/v1/invoices/:id
+  getInvoiceById: async (invoiceId, userId) => {
+    const response = await api.get(`/invoices/${invoiceId}`, {
+      headers: { 'X-User-Id': userId },
+    })
+    return response
+  },
+
   updateProfile: async (userId, data) => {
     const response = await api.put(`/users/${userId}`, data)
     return response
@@ -22,6 +30,34 @@ export const userService = {
       `/invoices/user/${userId}?${params.toString()}`,
       { headers: { 'X-User-Id': userId } }
     )
+    return response
+  },
+
+  getFavorites: async (userId, { page, pageSize } = {}) => {
+    const params = new URLSearchParams()
+    if (page) params.set('page', page)
+    if (pageSize) params.set('pageSize', pageSize)
+    const query = params.toString()
+
+    const response = await api.get(
+      `/invoices/favorites/${userId}${query ? `?${query}` : ''}`,
+      { raw: true }
+    )
+    return response
+  },
+
+  removeFavorite: async (invoiceId, userId) => {
+    const response = await api.delete(
+      `/invoices/favorites/${invoiceId}?userId=${userId}`
+    )
+    return response
+  },
+
+  addFavorite: async (userId, invoiceId) => {
+    const response = await api.post('/invoices/favorites', {
+      userId,
+      invoiceId,
+    })
     return response
   },
 }

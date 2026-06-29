@@ -26,6 +26,8 @@ import EditProfile from '../pages/user/EditProfile'
 import CreateInvoice from '../pages/user/CreateInvoice'
 import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
+import UserInvoiceDetail from '../pages/user/InvoiceDetail'
+import FavouriteInvoices from '../pages/user/FavouriteInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
 import { useApp } from '../context/AppContext'
 import OfficerDashboard from '../pages/officer/Dashboard'
@@ -72,6 +74,8 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-invoice" element={<CreateInvoice />} />
           <Route path="my-invoices" element={<MyInvoices />} />
+          <Route path="invoices/:invoiceId" element={<UserInvoiceDetail />} />
+          <Route path="favourite-invoices" element={<FavouriteInvoices />} />
           <Route path="procedure-flow" element={<ProcedureFlow />} />
           <Route path="edit-profile" element={<EditProfile />} />
           <Route path="dealer-registration" element={<DealerRegistration />} />
