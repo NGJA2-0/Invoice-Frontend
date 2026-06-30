@@ -1,94 +1,182 @@
 import { useState } from 'react'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
-import FileUpload from '../../components/forms/FileUpload'
 import { useApp } from '../../context/AppContext'
 
 const EditProfile = () => {
   const { user, updateProfile, pushToast } = useApp()
+
   const [fullName, setFullName] = useState(user?.fullName || '')
-  const [phone, setPhone] = useState(user?.contactInfo?.phone || '')
-  const [email, setEmail] = useState(user?.contactInfo?.email || '')
-  const [address, setAddress] = useState(user?.contactInfo?.address || '')
-  const [tin, setTin] = useState(user?.tin || '')
-  const [vat, setVat] = useState(user?.vat || '')
+  const [businessName, setBusinessName] = useState(user?.businessName || '')
+  const [businessAddress, setBusinessAddress] = useState(user?.businessAddress || '')
+  const [nicOrBrc, setNicOrBrc] = useState(user?.nicOrBrc || '')
+  const [mobile1, setMobile1] = useState(user?.mobileNumbers?.[0] || '')
+  const [mobile2, setMobile2] = useState(user?.mobileNumbers?.[1] || '')
+  const [email, setEmail] = useState(user?.email || '')
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!user?.id) return
+
+    const mobileNumbers = [mobile1, mobile2].filter((num) => num.trim() !== '')
+
+    const payload = {
+      ...(fullName.trim() && { fullName: fullName.trim() }),
+      ...(businessName.trim() && { businessName: businessName.trim() }),
+      ...(businessAddress.trim() && { businessAddress: businessAddress.trim() }),
+      ...(nicOrBrc.trim() && { nicOrBrc: nicOrBrc.trim() }),
+      ...(mobileNumbers.length > 0 && { mobileNumbers }),
+      ...(email.trim() && { email: email.trim() }),
+    }
+
+    if (Object.keys(payload).length === 0) {
+      pushToast({
+        title: 'Nothing to update',
+        message: 'Change at least one field before saving.',
+        tone: 'warning',
+      })
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      await updateProfile(user.id, payload)
+      pushToast({
+        title: 'Profile updated',
+        message: 'Your profile changes were saved.',
+        tone: 'success',
+      })
+    } catch (error) {
+      pushToast({
+        title: 'Update failed',
+        message: error.message || 'Unable to update profile.',
+        tone: 'danger',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="glass-card rounded-2xl border px-6 py-6">
-        <h3 className="text-xl font-semibold text-ink-900">Edit Profile</h3>
-        <p className="mt-2 text-sm text-ink-600">
-          Update your contact details and uploaded licenses.
-        </p>
+    <div className="ep-root">
+      <style>{`
+        .ep-root {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+        .ep-header {
+          border-radius: 1rem;
+          padding: 1.25rem 1.5rem;
+        }
+        .ep-header h3 {
+          font-size: 1.15rem;
+          font-weight: 600;
+          color: #111827;
+          margin: 0;
+        }
+        .ep-header p {
+          margin: 0.4rem 0 0;
+          font-size: 0.85rem;
+          color: #6b7280;
+        }
+        .ep-card {
+          border-radius: 1rem;
+          padding: 1.25rem 1.5rem 1.5rem;
+        }
+        .ep-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem 1.25rem;
+        }
+        .ep-grid .ep-full {
+          grid-column: 1 / -1;
+        }
+        .ep-btn-row {
+          margin-top: 1.5rem;
+          display: flex;
+          justify-content: flex-end;
+        }
+        .ep-btn-row .ep-save-btn {
+          width: 100%;
+        }
+
+        @media (min-width: 640px) {
+          .ep-btn-row .ep-save-btn {
+            width: auto;
+            min-width: 180px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .ep-grid {
+            grid-template-columns: 1fr;
+          }
+          .ep-header,
+          .ep-card {
+            padding: 1rem 1.1rem 1.25rem;
+            border-radius: 0.85rem;
+          }
+        }
+      `}</style>
+
+      <div className="ep-header glass-card border">
+        <h3>Edit Profile</h3>
+        <p>Update only the fields you want to change — everything else stays as is.</p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="surface-card rounded-2xl p-6">
-          <div className="grid gap-4">
-            <Input
-              label="Name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-            />
-            <Input
-              label="Contact Number"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-            />
-            <Input
-              label="Email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-            <Input
-              label="Address"
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
-            />
-            <Input
-              label="TIN"
-              value={tin}
-              onChange={(event) => setTin(event.target.value)}
-            />
-            <Input
-              label="VAT"
-              value={vat}
-              onChange={(event) => setVat(event.target.value)}
-            />
-          </div>
-          <Button
-            className="mt-6"
-            onClick={async () => {
-              if (!user?.id) return
-              try {
-                await updateProfile(user.id, {
-                  fullName,
-                  tin,
-                  vat,
-                  contactInfo: { phone, email, address },
-                })
-                pushToast({
-                  title: 'Profile updated',
-                  message: 'Your profile changes were saved.',
-                  tone: 'success',
-                })
-              } catch (error) {
-                pushToast({
-                  title: 'Update failed',
-                  message: error.message || 'Unable to update profile.',
-                  tone: 'danger',
-                })
-              }
-            }}
-          >
-            Save Changes
-          </Button>
+
+      <div className="ep-card surface-card">
+        <div className="ep-grid">
+          <Input
+            label="Full Name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            placeholder="e.g. John Perera"
+          />
+          <Input
+            label="NIC / BRC"
+            value={nicOrBrc}
+            onChange={(event) => setNicOrBrc(event.target.value)}
+            placeholder="e.g. 199912345678"
+          />
+          <Input
+            label="Business Name"
+            value={businessName}
+            onChange={(event) => setBusinessName(event.target.value)}
+            placeholder="e.g. Perera Gems Pvt Ltd"
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="e.g. john.perera@example.com"
+          />
+          <Input
+            className="ep-full"
+            label="Business Address"
+            value={businessAddress}
+            onChange={(event) => setBusinessAddress(event.target.value)}
+            placeholder="e.g. No 12, Main Street, Colombo 07"
+          />
+          <Input
+            label="Mobile Number 1"
+            value={mobile1}
+            onChange={(event) => setMobile1(event.target.value)}
+            placeholder="e.g. 0771234567"
+          />
+          <Input
+            label="Mobile Number 2"
+            value={mobile2}
+            onChange={(event) => setMobile2(event.target.value)}
+            placeholder="e.g. 0712345678 (optional)"
+          />
         </div>
-        <div className="surface-card rounded-2xl p-6">
-          <div className="grid gap-4">
-            <FileUpload label="Gem Dealer License" value={user?.licenses?.gemDealer} onChange={() => {}} />
-            <FileUpload label="Jewellery License" value={user?.licenses?.jewellery} onChange={() => {}} />
-            <FileUpload label="Customs Exporter License" value={user?.licenses?.customs} onChange={() => {}} />
-          </div>
+
+        <div className="ep-btn-row">
+          <Button className="ep-save-btn" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
       </div>
     </div>

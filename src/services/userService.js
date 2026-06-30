@@ -19,6 +19,13 @@ export const userService = {
     return response
   },
 
+  // PUT /api/v1/users/details — partial update, only send changed fields
+  // api.put() automatically attaches X-User-Id from localStorage via request()
+  updateUserDetails: async (data) => {
+    const response = await api.put('/users/details', data)
+    return response
+  },
+
   getInvoices: async (userId, { page = 1, pageSize = 10, status, sort = 'date_desc' } = {}) => {
     const params = new URLSearchParams()
     params.set('page', page)

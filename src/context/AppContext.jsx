@@ -340,7 +340,7 @@ export const AppProvider = ({ children }) => {
   }
 
   const updateProfile = async (userId, payload) => {
-    await api.put(`/users/${userId}`, payload)
+    await api.put('/users/details', payload)
     await refreshUserProfile(userId)
   }
 
