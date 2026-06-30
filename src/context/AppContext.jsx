@@ -344,6 +344,14 @@ export const AppProvider = ({ children }) => {
     await refreshUserProfile(userId)
   }
 
+  // Submits a regulated-field edit request (tin, stockValueId/Name, gemDealerFileNo).
+  // On success the account is locked pending admin review, so we log the user out.
+  const submitEditRequest = async (payload) => {
+    const data = await api.post('/users/edit-requests', payload)
+    logout()
+    return data
+  }
+
   const updateRegistrationStatus = async (userId, status) => {
     if (!user?.id) return
     const action = status === 'approved' ? 'approve' : 'reject'
@@ -421,6 +429,7 @@ export const AppProvider = ({ children }) => {
       refreshPendingUsers,
       approvePendingUser,
       rejectPendingUser,
+      submitEditRequest,
     }),
     [
       role,

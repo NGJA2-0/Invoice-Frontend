@@ -19,6 +19,19 @@ export const userService = {
     return response
   },
 
+  // POST /api/v1/users/edit-requests — regulated fields, requires admin approval
+  // api.post() automatically attaches X-User-Id from localStorage via request()
+  submitEditRequest: async (data) => {
+    const response = await api.post('/users/edit-requests', data)
+    return response
+  },
+
+  // GET /api/v1/stock-values — list of available stock value brackets
+  getStockValues: async () => {
+    const response = await api.get('/stock-values', { raw: true })
+    return Array.isArray(response?.data) ? response.data : []
+  },
+
   // PUT /api/v1/users/details — partial update, only send changed fields
   // api.put() automatically attaches X-User-Id from localStorage via request()
   updateUserDetails: async (data) => {
