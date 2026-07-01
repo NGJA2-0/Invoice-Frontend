@@ -13,10 +13,10 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import Badge from '../../components/common/Badge'
-import Button from '../../components/common/Button'
-import StatCard from '../../components/cards/StatCard'
-import Skeleton from '../../components/common/Skeleton'
+import {
+  FileText,
+  CheckCircle2,
+} from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { userService } from '../../services/userService'
 import { formatUserStatus, formatInvoiceStatus } from '../../utils/status'
@@ -28,12 +28,12 @@ const statusTone = {
   rejected: 'danger',
 }
 
-const invoiceStatusTone = {
-  draft: 'warning',
-  stage1_in_progress: 'warning',
-  stage2_in_progress: 'info',
-  stage3_in_progress: 'info',
-  completed: 'success',
+const invoiceStatusStyles = {
+  draft: 'bg-[#FBF4E6] text-[#8a6a1e] border border-[#EFDFB8]',
+  stage1_in_progress: 'bg-[#FBF4E6] text-[#8a6a1e] border border-[#EFDFB8]',
+  stage2_in_progress: 'bg-[#EFF4FB] text-[#3f5f8f] border border-[#DCE7F5]',
+  stage3_in_progress: 'bg-[#EFF4FB] text-[#3f5f8f] border border-[#DCE7F5]',
+  completed: 'bg-[#EEF5EE] text-[#3f7a52] border border-[#D6E8D6]',
 }
 
 const formatLkr = (value) => `Rs. ${Number(value || 0).toLocaleString()}`
@@ -94,9 +94,66 @@ const Dashboard = () => {
         transition={{ duration: 0.5 }}
         className="grid gap-4 md:grid-cols-3"
       >
-        <StatCard label="Invoices" value={invoices.length} note="Current fiscal" />
-        <StatCard label="Pending" value={pendingInvoices.length} note="Awaiting approval" />
-        <StatCard label="Approved" value={approvedInvoices.length} note="Export ready" />
+        {[
+          {
+            label: 'Invoices',
+            value: invoices.length,
+            note: 'Current fiscal',
+            icon: FileText,
+            bg: '#EEF2FA',
+            border: '#9DB4DD',
+            fg: '#33517F',
+            iconBg: '#DDE6F6',
+          },
+          {
+            label: 'Approved',
+            value: approvedInvoices.length,
+            note: 'Export ready',
+            icon: CheckCircle2,
+            bg: '#E9F3EC',
+            border: '#84B694',
+            fg: '#2E6A45',
+            iconBg: '#D3E9DA',
+          },
+          {
+            label: 'Pending',
+            value: pendingInvoices.length,
+            note: 'Awaiting approval',
+            icon: Clock3,
+            bg: '#FBF0DC',
+            border: '#D9AE5E',
+            fg: '#7A5A16',
+            iconBg: '#F3E1B4',
+          }
+          
+        ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg }) => (
+          <div
+            key={label}
+            className="flex flex-col gap-4 rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            style={{ backgroundColor: bg, border: `2px solid ${border}` }}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-xl"
+                style={{ color: fg, backgroundColor: iconBg }}
+              >
+                <Icon className="h-4 w-4" />
+              </span>
+              <span
+                className="text-[11px] font-semibold uppercase tracking-[0.18em]"
+                style={{ color: fg }}
+              >
+                {note}
+              </span>
+            </div>
+            <div>
+              <p className="text-3xl font-semibold tracking-tight text-ink-900">
+                {value}
+              </p>
+              <p className="mt-1 text-sm font-medium text-ink-600">{label}</p>
+            </div>
+          </div>
+        ))}
       </motion.div>
 
       <div className="surface-card flex flex-col gap-4 rounded-2xl p-6">
@@ -126,9 +183,9 @@ const Dashboard = () => {
 
         {favouritesLoading ? (
           <div className="flex flex-col gap-3">
-            <Skeleton className="h-14" />
-            <Skeleton className="h-14" />
-            <Skeleton className="h-14" />
+            <div className="h-14 animate-pulse rounded-2xl bg-cloud-100" />
+            <div className="h-14 animate-pulse rounded-2xl bg-cloud-100" />
+            <div className="h-14 animate-pulse rounded-2xl bg-cloud-100" />
           </div>
         ) : favourites.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-cloud-50 px-4 py-10 text-center">
@@ -160,22 +217,26 @@ const Dashboard = () => {
                   <span className="text-sm font-semibold text-[#b8922a]">
                     {formatLkr(row.cifLkr)}
                   </span>
-                  <Badge tone={invoiceStatusTone[row.status] || 'neutral'}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      invoiceStatusStyles[row.status] || 'bg-cloud-100 text-ink-600 border border-cloud-200'
+                    }`}
+                  >
                     {formatInvoiceStatus(row.status)}
-                  </Badge>
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <Button
-          variant="secondary"
+        <button
+          type="button"
           onClick={() => navigate('/user/favourite-invoices')}
-          className="w-full sm:hidden"
+          className="w-full rounded-xl border border-cloud-200 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 shadow-sm transition-colors duration-150 hover:border-[#d9c89a] hover:bg-cloud-50 sm:hidden"
         >
           View All Favourites
-        </Button>
+        </button>
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">
@@ -245,9 +306,13 @@ const Dashboard = () => {
         <p className="text-sm text-ink-600">
           Select the premium template and start preparing export documentation.
         </p>
-        <Button className="w-fit" onClick={() => navigate('/user/create-invoice')}>
+        <button
+          type="button"
+          onClick={() => navigate('/user/create-invoice')}
+          className="w-fit rounded-xl bg-gradient-to-r from-[#d4af37] via-[#c9a233] to-[#b8922a] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-amber-200/60 transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+        >
           Start Invoice
-        </Button>
+        </button>
       </div>
     </div>
   )

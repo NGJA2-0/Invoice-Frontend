@@ -334,39 +334,87 @@ const UserLayout = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 1rem;
-          background: rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-          border-radius: 999px;
-          padding: 0.65rem 1rem 0.65rem 1.5rem;
+          gap: 1.25rem;
+          background: rgba(255, 255, 255, 0.72);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          border-radius: 20px;
+          padding: 0.9rem 1.25rem 0.9rem 1.5rem;
           margin-bottom: 1.75rem;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+          position: relative;
+        }
+        .ul-topnav::before {
+          content: '';
+          position: absolute;
+          left: 1.5rem;
+          right: 1.5rem;
+          top: 0;
+          height: 2px;
+          border-radius: 0 0 2px 2px;
+          background: linear-gradient(90deg, #d4af37 0%, #b8922a 45%, rgba(184,146,42,0) 100%);
+          opacity: 0.9;
         }
 
         /* Left: system label + page title */
         .ul-topnav-left {
           display: flex;
           flex-direction: column;
-          gap: 1px;
+          gap: 3px;
           min-width: 0;
         }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
         .ul-topnav-system {
+          display: flex;
+          align-items: center;
+          gap: 6px;
           font-size: 10px;
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: #6b7280;
+          color: #b8922a;
           white-space: nowrap;
         }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
+        .ul-topnav-system::before {
+          content: '';
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #d4af37;
+          flex-shrink: 0;
+        }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
         .ul-topnav-title {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #111827;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #0f1a2b;
           letter-spacing: -0.02em;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
         }
 
         /* Right: controls */
@@ -376,17 +424,23 @@ const UserLayout = () => {
           gap: 0.5rem;
           flex-shrink: 0;
         }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
 
         /* Status badge */
         .ul-status-badge {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          padding: 4px 12px;
+          gap: 6px;
+          padding: 6px 14px;
           border-radius: 999px;
-          border: 1px solid;
+          border: 1.5px solid;
           font-size: 12px;
-          font-weight: 500;
+          font-weight: 600;
           white-space: nowrap;
         }
         .ul-status-dot {
@@ -398,22 +452,25 @@ const UserLayout = () => {
 
         /* Bell icon button */
         .ul-icon-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          background: rgba(255, 255, 255, 0.5);
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(15, 23, 42, 0.08);
+          background: #ffffff;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #374151;
-          transition: background 0.15s, border-color 0.15s;
+          color: #4b5563;
+          transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
           flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
         .ul-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.7);
-          border-color: rgba(0, 0, 0, 0.2);
+          border-color: #d9c89a;
+          color: #b8922a;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px -4px rgba(184, 146, 42, 0.35);
         }
         .ul-icon-btn svg {
           width: 16px;
@@ -424,36 +481,39 @@ const UserLayout = () => {
         .ul-avatar-pill {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 3px 12px 3px 3px;
+          gap: 9px;
+          padding: 4px 14px 4px 4px;
           border-radius: 999px;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          background: rgba(255, 255, 255, 0.5);
+          border: 1.5px solid rgba(15, 23, 42, 0.08);
+          background: #ffffff;
           cursor: pointer;
-          transition: background 0.15s;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
         .ul-avatar-pill:hover {
-          background: rgba(255, 255, 255, 0.7);
+          border-color: #d9c89a;
+          box-shadow: 0 4px 10px -4px rgba(184, 146, 42, 0.35);
         }
         .ul-avatar {
           width: 30px;
           height: 30px;
           border-radius: 50%;
-          background: #e8edf7;
-          color: #3b5bb5;
+          background: linear-gradient(135deg, #d4af37 0%, #b8922a 100%);
+          color: #ffffff;
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
           text-transform: uppercase;
+          box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35);
         }
         .ul-avatar-label {
           font-size: 13px;
-          font-weight: 500;
-          color: #111827;
+          font-weight: 600;
+          color: #0f1a2b;
           white-space: nowrap;
         }
 
