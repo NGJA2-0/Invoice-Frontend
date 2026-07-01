@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   AlertTriangle,
   FileText,
   LayoutGrid,
+  LogOut,
   PencilLine,
   ScrollText,
   Send,
@@ -50,10 +51,12 @@ const toneStyles = {
 
 const UserLayout = () => {
   const location = useLocation()
-  const { userStatus, user, submitLicenseRenewal, pushToast } = useApp()
+  const { userStatus, user, submitLicenseRenewal, pushToast, logout } = useApp()
   const label = pageLabels[location.pathname] || 'Dashboard'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [licenseWarningDismissed, setLicenseWarningDismissed] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef(null)
 
   // ── Synchronously read from localStorage so modal shows on first render ──
   const readStoredLicenseState = () => {
@@ -102,6 +105,18 @@ const UserLayout = () => {
       setShowLicenseModal(true)
     }
   }, [isLicenseExpired])
+
+  // Close profile dropdown when clicking outside of it
+  useEffect(() => {
+    if (!profileMenuOpen) return
+    const handleClickOutside = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [profileMenuOpen])
 
   const handleLicenseFormChange = (e) => {
     const { name, value } = e.target
@@ -500,6 +515,101 @@ const UserLayout = () => {
           white-space: nowrap;
         }
 
+        /* Profile dropdown */
+        .ul-profile-menu-wrap {
+          position: relative;
+          flex-shrink: 0;
+        }
+        .ul-profile-dropdown {
+          position: absolute;
+          top: calc(100% + 10px);
+          right: 0;
+          width: 260px;
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.25);
+          overflow: hidden;
+          z-index: 50;
+          animation: slideDown 0.18s ease;
+        }
+        .ul-profile-dropdown-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 16px;
+          background: linear-gradient(135deg, #003A6B 0%, #005fa3 100%);
+        }
+        .ul-avatar.large {
+          width: 40px;
+          height: 40px;
+          font-size: 14px;
+        }
+        .ul-profile-dropdown-info {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+        .ul-profile-dropdown-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ul-profile-dropdown-email {
+          font-size: 11.5px;
+          color: rgba(255,255,255,0.75);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ul-profile-dropdown-details {
+          padding: 10px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .ul-profile-dropdown-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 12.5px;
+        }
+        .ul-profile-dropdown-row span:first-child {
+          color: #6b7280;
+          font-weight: 500;
+        }
+        .ul-profile-dropdown-row span:last-child {
+          color: #0f1a2b;
+          font-weight: 600;
+          max-width: 150px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .ul-profile-logout-btn {
+          width: calc(100% - 20px);
+          margin: 4px 10px 10px;
+          padding: 9px;
+          border: none;
+          border-radius: 10px;
+          background: #fff1f2;
+          color: #b91c1c;
+          font-size: 12.5px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          transition: background 0.15s ease;
+        }
+        .ul-profile-logout-btn:hover {
+          background: #fecdd3;
+        }
+
         /* Premium Hamburger */
         .ul-hamburger {
             display: none;
@@ -854,13 +964,65 @@ const UserLayout = () => {
               </button>
 
               {/* Avatar pill */}
-              <div className="ul-avatar-pill">
-                <div className="ul-avatar">
-                  {typeof user?.avatar === 'string' && user.avatar.length <= 3
-                    ? user.avatar
-                    : 'U'}
+              <div className="ul-profile-menu-wrap" ref={profileMenuRef}>
+                <div
+                  className="ul-avatar-pill"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                >
+                  <div className="ul-avatar">
+                    {typeof user?.avatar === 'string' && user.avatar.length <= 3
+                      ? user.avatar
+                      : 'U'}
+                  </div>
+                  <span className="ul-avatar-label">Profile</span>
                 </div>
-                <span className="ul-avatar-label">Profile</span>
+
+                {profileMenuOpen && (
+                  <div className="ul-profile-dropdown">
+                    <div className="ul-profile-dropdown-header">
+                      <div className="ul-avatar large">
+                        {typeof user?.avatar === 'string' && user.avatar.length <= 3
+                          ? user.avatar
+                          : 'U'}
+                      </div>
+                      <div className="ul-profile-dropdown-info">
+                        <span className="ul-profile-dropdown-name">
+                          {user?.fullName || user?.username || 'User'}
+                        </span>
+                        <span className="ul-profile-dropdown-email">
+                          {user?.email || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ul-profile-dropdown-details">
+                      <div className="ul-profile-dropdown-row">
+                        <span>Username</span>
+                        <span>{user?.username || 'N/A'}</span>
+                      </div>
+                      <div className="ul-profile-dropdown-row">
+                        <span>NIC</span>
+                        <span>{user?.nic || 'N/A'}</span>
+                      </div>
+                      <div className="ul-profile-dropdown-row">
+                        <span>Status</span>
+                        <span>{userStatus || 'N/A'}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="ul-profile-logout-btn"
+                      onClick={() => {
+                        setProfileMenuOpen(false)
+                        logout()
+                      }}
+                    >
+                      <LogOut style={{ width: 15, height: 15 }} />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Hamburger (mobile only) */}
