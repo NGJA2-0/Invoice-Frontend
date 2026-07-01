@@ -6,7 +6,7 @@ import { useApp } from '../../context/AppContext'
 import { userService } from '../../services/userService'
 
 const EditProfile = () => {
-  const { user, updateProfile, submitEditRequest, pushToast } = useApp()
+  const { user, updateProfile, submitEditRequest, submitLicenseRenewal, logout, pushToast } = useApp()
 
   const [fullName, setFullName] = useState(user?.fullName || '')
   const [businessName, setBusinessName] = useState(user?.businessName || '')
@@ -24,6 +24,12 @@ const EditProfile = () => {
   const [gemDealerFileNo, setGemDealerFileNo] = useState(user?.gemDealerFileNo || '')
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+
+  // License renewal fields
+  const [newLicenseId, setNewLicenseId] = useState('')
+  const [submittedExpiryDate, setSubmittedExpiryDate] = useState('')
+  const [isSubmittingLicenseRenewal, setIsSubmittingLicenseRenewal] = useState(false)
+  const [showLicenseConfirmModal, setShowLicenseConfirmModal] = useState(false)
 
   // Stock values dropdown
   const [stockValues, setStockValues] = useState([])
@@ -98,6 +104,44 @@ const EditProfile = () => {
       setShowConfirmModal(false)
     } finally {
       setIsSubmittingRequest(false)
+    }
+  }
+
+  const handleLicenseRenewalClick = () => {
+    if (!newLicenseId.trim() || !submittedExpiryDate) {
+      pushToast({
+        title: 'Missing information',
+        message: 'Please fill in both the new license ID and expiry date.',
+        tone: 'warning',
+      })
+      return
+    }
+    setShowLicenseConfirmModal(true)
+  }
+
+  const handleLicenseConfirmSubmit = async () => {
+    setIsSubmittingLicenseRenewal(true)
+    try {
+      await submitLicenseRenewal({
+        newLicenseId: newLicenseId.trim(),
+        submittedExpiryDate,
+      })
+      pushToast({
+        title: 'Renewal Submitted',
+        message: 'Your account is locked until an admin reviews this request.',
+        tone: 'success',
+      })
+      // Account is locked pending review — log the user out, same as edit requests.
+      logout()
+    } catch (error) {
+      pushToast({
+        title: 'Submission Failed',
+        message: error.message || 'Unable to submit license renewal request.',
+        tone: 'danger',
+      })
+      setShowLicenseConfirmModal(false)
+    } finally {
+      setIsSubmittingLicenseRenewal(false)
     }
   }
 
@@ -482,6 +526,42 @@ const EditProfile = () => {
         </div>
       </div>
 
+      {/* ── License renewal — admin approval required ── */}
+      <div className="ep-card surface-card">
+        <div className="ep-regulated-header">
+          <h4>License Renewal</h4>
+          <p>
+            Submitting a renewal will lock your account until an admin approves
+            the request.
+          </p>
+        </div>
+
+        <div className="ep-grid">
+          <Input
+            label="New License ID"
+            value={newLicenseId}
+            onChange={(event) => setNewLicenseId(event.target.value)}
+            placeholder="e.g. NEW-LIC-2027"
+          />
+          <Input
+            label="New Expiry Date"
+            type="date"
+            value={submittedExpiryDate}
+            onChange={(event) => setSubmittedExpiryDate(event.target.value)}
+          />
+        </div>
+
+        <div className="ep-btn-row">
+          <Button
+            className="ep-save-btn ep-request-btn"
+            onClick={handleLicenseRenewalClick}
+            disabled={isSubmittingLicenseRenewal}
+          >
+            Submit Renewal Request
+          </Button>
+        </div>
+      </div>
+
       {/* ── Confirmation modal ── */}
       {showConfirmModal && (
         <div className="ep-modal-overlay">
@@ -510,6 +590,41 @@ const EditProfile = () => {
                 disabled={isSubmittingRequest}
               >
                 {isSubmittingRequest ? 'Submitting...' : 'OK, Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── License renewal confirmation modal ── */}
+      {showLicenseConfirmModal && (
+        <div className="ep-modal-overlay">
+          <div className="ep-modal">
+            <div className="ep-modal-icon">
+              <AlertTriangle style={{ width: 22, height: 22, color: '#fff' }} />
+            </div>
+            <h3 className="ep-modal-title">Are you sure?</h3>
+            <p className="ep-modal-body">
+              After submitting this, your account will be disabled till the admin
+              approval of your request. This will take 1 to 2 working days. Thank
+              you for your patience.
+            </p>
+            <div className="ep-modal-actions">
+              <button
+                type="button"
+                className="ep-modal-btn ep-modal-cancel"
+                onClick={() => setShowLicenseConfirmModal(false)}
+                disabled={isSubmittingLicenseRenewal}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ep-modal-btn ep-modal-confirm"
+                onClick={handleLicenseConfirmSubmit}
+                disabled={isSubmittingLicenseRenewal}
+              >
+                {isSubmittingLicenseRenewal ? 'Submitting...' : 'OK, Submit'}
               </button>
             </div>
           </div>
