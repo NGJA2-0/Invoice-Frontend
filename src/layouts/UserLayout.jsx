@@ -9,7 +9,6 @@ import {
   X,
 } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
-import Breadcrumbs from '../components/layout/Breadcrumbs'
 import Sidebar from '../components/layout/Sidebar'
 import TopNav from '../components/layout/TopNav'
 import { useApp } from '../context/AppContext'
@@ -323,11 +322,6 @@ const UserLayout = () => {
           padding: 1.25rem 1.5rem 2rem;
           min-width: 0;
         }
-        
-        /* ── Breadcrumb row ── */
-        .ul-breadcrumb-row {
-          margin-bottom: 0.75rem;
-        }
 
         /* ── Top nav card ── */
         .ul-topnav {
@@ -344,17 +338,6 @@ const UserLayout = () => {
           margin-bottom: 1.75rem;
           box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
           position: relative;
-        }
-        .ul-topnav::before {
-          content: '';
-          position: absolute;
-          left: 1.5rem;
-          right: 1.5rem;
-          top: 0;
-          height: 2px;
-          border-radius: 0 0 2px 2px;
-          background: linear-gradient(90deg, #d4af37 0%, #b8922a 45%, rgba(184,146,42,0) 100%);
-          opacity: 0.9;
         }
 
         /* Left: system label + page title */
@@ -517,24 +500,66 @@ const UserLayout = () => {
           white-space: nowrap;
         }
 
-        /* Hamburger (mobile) */
+        /* Premium Hamburger */
         .ul-hamburger {
-          display: none;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          background: rgba(255, 255, 255, 0.15);
-          cursor: pointer;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          flex-shrink: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+
+            width: 44px;
+            height: 44px;
+
+            border-radius: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+
+            color: #2f2f2f;
+
+            background: linear-gradient(
+                145deg,
+                rgba(255,255,255,0.75),
+                rgba(235,235,235,0.65)
+            );
+
+            border: 1px solid rgba(255,255,255,0.6);
+
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+
+            box-shadow:
+                0 8px 20px rgba(0,0,0,0.10),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+
+            transition: all .25s ease;
         }
-        .ul-hamburger svg {
-          width: 18px;
-          height: 18px;
-          stroke-width: 1.8px;
+
+        .ul-hamburger svg{
+            width:20px;
+            height:20px;
+            stroke-width:2;
+            transition:transform .25s ease;
+        }
+
+        .ul-hamburger:hover{
+            transform:translateY(-2px);
+
+            background:linear-gradient(
+                145deg,
+                #ffffff,
+                #f2f2f2
+            );
+
+            box-shadow:
+                0 12px 28px rgba(0,0,0,.16),
+                inset 0 1px 0 rgba(255,255,255,.9);
+        }
+
+        .ul-hamburger:hover svg{
+            transform:scale(1.08);
+        }
+
+        .ul-hamburger:active{
+            transform:scale(.95);
         }
         
         /* ── License warning banner ── */
@@ -743,9 +768,6 @@ const UserLayout = () => {
           .ul-main {
             padding: 0.75rem 0.75rem 1.5rem;
           }
-          .ul-breadcrumb-row {
-            margin-bottom: 0.35rem;
-          }
           .ul-topnav {
             margin-bottom: 0.75rem;
           }
@@ -783,22 +805,14 @@ const UserLayout = () => {
         />
 
         <main className="ul-main">
-          {/* Breadcrumbs */}
-          <div className="ul-breadcrumb-row">
-            <Breadcrumbs
-              items={[
-                { label: 'User', active: false },
-                { label, active: true },
-              ]}
-            />
-          </div>
-
           {/* ── Top nav bar (replaces TopNav component visually) ── */}
           <div className="ul-topnav">
             {/* Left */}
             <div className="ul-topnav-left">
               <span className="ul-topnav-system">Export Invoice System</span>
-              <span className="ul-topnav-title">{label}</span>
+              {location.pathname === '/user/dashboard' && (
+                <span className="ul-topnav-title">{label}</span>
+              )}
             </div>
 
             {/* Right */}
