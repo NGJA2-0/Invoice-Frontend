@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, Heart } from 'lucide-react'
+import { createRoot } from 'react-dom/client'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import { ChevronDown, Heart, Download } from 'lucide-react'
+import InvoicePreview from '../invoices/InvoicePreview' // ← adjust path if different
 import Badge from '../common/Badge'
 import Button from '../common/Button'
 import { formatInvoiceStatus } from '../../utils/status'
@@ -67,6 +71,69 @@ const InvoiceTable = ({
   const { user, pushToast } = useApp()
   const [favoritingId, setFavoritingId] = useState(null)
   const [favoritedIds, setFavoritedIds] = useState(() => new Set())
+  const [downloadingId, setDownloadingId] = useState(null)
+
+  const handleDownloadPdf = async (invoiceId, invoiceNumber) => {
+    if (!user?.id || downloadingId) return
+    setDownloadingId(invoiceId)
+
+    // Off-screen container to render the real InvoicePreview layout for snapshotting
+    const container = document.createElement('div')
+    container.style.position = 'fixed'
+    container.style.top = '0'
+    container.style.left = '-10000px'
+    container.style.zIndex = '-1'
+    document.body.appendChild(container)
+    const root = createRoot(container)
+
+    try {
+      const preview = await userService.getInvoicePdfData(invoiceId)
+
+      await new Promise((resolve) => {
+        root.render(<InvoicePreview preview={preview} />)
+        // Let React paint (and any logo image load) before snapshotting
+        setTimeout(resolve, 400)
+      })
+
+      const target = container.querySelector('#invoice-pdf-capture-target')
+      if (!target) throw new Error('Could not render invoice for PDF export')
+
+      const canvas = await html2canvas(target, { scale: 2, useCORS: true })
+      const imgData = canvas.toDataURL('image/png')
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgWidth = 210
+      const pageHeight = 297
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      // Tolerance guards against floating-point rounding leaving a
+      // sub-millimetre remainder that would otherwise trigger a blank extra page.
+      const EPSILON = 1
+      let heightLeft = imgHeight
+      let position = 0
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+
+      while (heightLeft > EPSILON) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
+      }
+
+      pdf.save(`invoice-${invoiceNumber || invoiceId}.pdf`)
+    } catch (error) {
+      pushToast?.({
+        title: 'Could not download invoice',
+        message: error?.message,
+        tone: 'error',
+      })
+    } finally {// REPLACEMENT (keep only the first block's closing, then go straight to favourites logic)
+      root.unmount()
+      container.remove()
+      setDownloadingId(null)
+    }
+  }
 
   // The invoice list endpoint doesn't tell us which invoices are already
   // favourited, so we fetch the favourites list separately and use it to
@@ -286,6 +353,7 @@ const InvoiceTable = ({
               <th className="px-5 py-3">Receiver's Name</th>
               <th className="px-5 py-3">Status</th>
               <th className="px-5 py-3 text-center">Favourite</th>
+              <th className="px-5 py-3 text-center">Download</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cloud-100">
@@ -324,6 +392,21 @@ const InvoiceTable = ({
                     ) : (
                       <Heart size={18} className="text-ink-400" />
                     )}
+                  </button>
+                </td>
+                <td className="px-5 py-4 text-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDownloadPdf(row.id, row.invoiceNumber)
+                    }}
+                    disabled={downloadingId === row.id}
+                    title="Download PDF"
+                    aria-label="Download invoice PDF"
+                    className="inline-flex items-center justify-center rounded-full p-1.5 text-ink-500 transition-transform duration-150 hover:scale-110 hover:text-[#b8922a] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Download size={18} />
                   </button>
                 </td>
               </tr>
@@ -372,6 +455,19 @@ const InvoiceTable = ({
                   ) : (
                     <Heart size={18} className="text-ink-400" />
                   )}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDownloadPdf(row.id, row.invoiceNumber)
+                  }}
+                  disabled={downloadingId === row.id}
+                  title="Download PDF"
+                  aria-label="Download invoice PDF"
+                  className="inline-flex items-center justify-center rounded-full p-1 text-ink-500 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Download size={18} />
                 </button>
               </div>
             </div>

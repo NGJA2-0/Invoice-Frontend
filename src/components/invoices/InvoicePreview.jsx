@@ -825,7 +825,7 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
         }}
       >
         <div className="invoice-scale-inner">
-          <div ref={pageRef} style={styles.page}>
+           <div ref={pageRef} id="invoice-pdf-capture-target" style={styles.page}>
 
             {/* right-edge gold bar */}
             <div style={styles.goldAccent} />
