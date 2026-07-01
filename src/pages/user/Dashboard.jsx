@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { FilePlus2, ShieldCheck, Timer } from 'lucide-react'
+import { FilePlus2, ShieldCheck, Timer, FileEdit, Gem, ArrowUpRight, Clock3 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Badge from '../../components/common/Badge'
 import Button from '../../components/common/Button'
@@ -79,6 +79,58 @@ const Dashboard = () => {
             Download report
           </Button>
         </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => navigate('/user/edit-profile#regulated-details')}
+          className="group glass-card relative flex flex-col gap-4 rounded-2xl border px-6 py-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-azure-100"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-azure-500 to-azure-700 text-white shadow-lg shadow-azure-200">
+              <FileEdit className="h-5 w-5" />
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-ink-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-azure-600" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-ink-900">
+              Edit your Regulated Details
+            </h3>
+            <p className="mt-1.5 text-sm text-ink-600">
+              Now you can edit your TIN, Gem Dealer File No, and Stock Value.
+            </p>
+          </div>
+          <div className="mt-auto flex items-center gap-2 rounded-2xl bg-cloud-50 px-4 py-2.5 text-xs text-ink-600">
+            <Clock3 className="h-3.5 w-3.5 flex-shrink-0" />
+            Verification period: 1–2 working days
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('/user/edit-profile#license-renewal')}
+          className="group glass-card relative flex flex-col gap-4 rounded-2xl border px-6 py-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-azure-100"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-azure-500 to-azure-700 text-white shadow-lg shadow-azure-200">
+              <Gem className="h-5 w-5" />
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-ink-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-azure-600" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-ink-900">
+              User License Renewal
+            </h3>
+            <p className="mt-1.5 text-sm text-ink-600">
+              You can edit your license expiry date now using this.
+            </p>
+          </div>
+          <div className="mt-auto flex items-center gap-2 rounded-2xl bg-cloud-50 px-4 py-2.5 text-xs text-ink-600">
+            <Clock3 className="h-3.5 w-3.5 flex-shrink-0" />
+            Verification period: 1–2 working days
+          </div>
+        </button>
       </div>
 
       <div className="surface-card flex flex-col gap-4 rounded-2xl p-6">

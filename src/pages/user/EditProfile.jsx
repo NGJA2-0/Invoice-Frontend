@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { AlertTriangle, ChevronDown, RefreshCw, UserCog } from 'lucide-react'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
@@ -7,6 +8,7 @@ import { userService } from '../../services/userService'
 
 const EditProfile = () => {
   const { user, updateProfile, submitEditRequest, submitLicenseRenewal, logout, pushToast } = useApp()
+  const location = useLocation()
 
   const [fullName, setFullName] = useState(user?.fullName || '')
   const [businessName, setBusinessName] = useState(user?.businessName || '')
@@ -56,6 +58,20 @@ const EditProfile = () => {
     loadStockValues()
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (!location.hash) return
+
+    // Delay slightly so the page (and stock-value select) has settled before we measure/scroll
+    const timer = setTimeout(() => {
+      const el = document.querySelector(location.hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [location.hash])
 
   const handleStockValueSelect = (event) => {
     const selectedId = event.target.value
@@ -271,6 +287,7 @@ const EditProfile = () => {
         .ep-card {
           border-radius: 1rem;
           padding: 1.25rem 1.5rem 1.5rem;
+          scroll-margin-top: 1.5rem;
         }
         .ep-grid {
           display: grid;
@@ -662,7 +679,7 @@ const EditProfile = () => {
       </div>
 
       {/* ── Regulated fields — admin approval required ── */}
-      <div className="ep-card surface-card">
+      <div id="regulated-details" className="ep-card surface-card">
         <div className="ep-regulated-header">
           <h4>Regulated Details</h4>
           <p>
@@ -719,7 +736,7 @@ const EditProfile = () => {
       </div>
 
       {/* ── License renewal — admin approval required ── */}
-      <div className="ep-card surface-card ep-license-section">
+      <div id="license-renewal" className="ep-card surface-card ep-license-section">
         <div className="ep-license-header-row">
           <div className="ep-license-icon-badge">
             <RefreshCw style={{ width: 18, height: 18 }} />
