@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle, ChevronDown } from 'lucide-react'
+import { AlertTriangle, ChevronDown, RefreshCw, UserCog } from 'lucide-react'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
 import { useApp } from '../../context/AppContext'
@@ -196,19 +196,77 @@ const EditProfile = () => {
           gap: 1.25rem;
         }
         .ep-header {
+          position: relative;
+          overflow: hidden;
           border-radius: 1rem;
-          padding: 1.25rem 1.5rem;
+          padding: 1.5rem 1.75rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          background: linear-gradient(135deg, #0a1628 0%, #003A6B 60%, #005fa3 100%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 10px 28px rgba(0, 58, 107, 0.22);
+        }
+        .ep-header::after {
+          content: '';
+          position: absolute;
+          top: -40%;
+          right: -8%;
+          width: 220px;
+          height: 220px;
+          background: radial-gradient(circle, rgba(255, 222, 26, 0.14) 0%, rgba(255, 222, 26, 0) 70%);
+          pointer-events: none;
+        }
+        .ep-header-icon-badge {
+          flex-shrink: 0;
+          width: 46px;
+          height: 46px;
+          border-radius: 12px;
+          background: rgba(255, 222, 26, 0.12);
+          border: 1px solid rgba(255, 222, 26, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffde1a;
+          position: relative;
+          z-index: 1;
+        }
+        .ep-header-text {
+          position: relative;
+          z-index: 1;
+          min-width: 0;
         }
         .ep-header h3 {
-          font-size: 1.15rem;
-          font-weight: 600;
-          color: #111827;
+          font-size: 1.2rem;
+          font-weight: 700;
+          letter-spacing: -0.01em;
+          color: #ffffff;
           margin: 0;
         }
         .ep-header p {
-          margin: 0.4rem 0 0;
+          margin: 0.35rem 0 0;
           font-size: 0.85rem;
-          color: #6b7280;
+          color: rgba(255, 255, 255, 0.72);
+          line-height: 1.4;
+        }
+
+        @media (max-width: 640px) {
+          .ep-header {
+            padding: 1.15rem 1.25rem;
+            gap: 0.8rem;
+            border-radius: 0.85rem;
+          }
+          .ep-header-icon-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+          }
+          .ep-header h3 {
+            font-size: 1.05rem;
+          }
+          .ep-header p {
+            font-size: 0.8rem;
+          }
         }
         .ep-card {
           border-radius: 1rem;
@@ -267,35 +325,78 @@ const EditProfile = () => {
           width: 100%;
           appearance: none;
           -webkit-appearance: none;
-          padding: 0.65rem 2.5rem 0.65rem 1rem;
+          padding: 0.7rem 2.5rem 0.7rem 1rem;
           font-size: 0.875rem;
-          border: 1.5px solid #e5e7eb;
+          font-weight: 500;
+          border: 1.5px solid #cbd5e1;
           border-radius: 10px;
-          background: #f9fafb;
+          background: #eef1f6;
           color: #111827;
           outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
           box-sizing: border-box;
           cursor: pointer;
         }
         .ep-select:focus {
           border-color: #003A6B;
-          box-shadow: 0 0 0 3px rgba(0, 58, 107, 0.1);
-          background: #fff;
+          box-shadow: 0 0 0 3px rgba(0, 58, 107, 0.12);
+          background: #ffffff;
+        }
+        .ep-select:hover:not(:disabled) {
+          border-color: #9aa7ba;
         }
         .ep-select:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
+        .ep-select option {
+          background: #ffffff;
+          color: #111827;
+        }
         .ep-select-icon {
           position: absolute;
-          right: 0.85rem;
+          right: 0.9rem;
           top: 50%;
           transform: translateY(-50%);
           width: 16px;
           height: 16px;
           color: #6b7280;
           pointer-events: none;
+        }
+
+        /* ── Premium light inputs (applies to shared Input component too) ── */
+        .ep-grid input,
+        .ep-grid input[type="text"],
+        .ep-grid input[type="email"],
+        .ep-grid input[type="date"] {
+          background: #eef1f6 !important;
+          color: #111827 !important;
+          border: 1.5px solid #cbd5e1 !important;
+          border-radius: 10px !important;
+          padding: 0.7rem 1rem !important;
+          font-weight: 500 !important;
+          box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+          transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
+        }
+        .ep-grid input::placeholder {
+          color: #9ca3af !important;
+          font-weight: 400 !important;
+        }
+        .ep-grid input:hover:not(:focus):not(:disabled) {
+          border-color: #9aa7ba !important;
+        }
+        .ep-grid input:focus {
+          border-color: #003A6B !important;
+          box-shadow: 0 0 0 3px rgba(0, 58, 107, 0.12), inset 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+          background: #ffffff !important;
+        }
+        .ep-grid input:disabled {
+          opacity: 0.6 !important;
+          cursor: not-allowed !important;
+        }
+        .ep-grid label,
+        .ep-select-label {
+          color: #374151 !important;
         }
 
         /* ── Regulated fields section ── */
@@ -319,6 +420,92 @@ const EditProfile = () => {
         }
         .ep-request-btn:hover:not(:disabled) {
           background: #92400e !important;
+        }
+
+        /* ── License renewal section ── */
+        .ep-license-section {
+          position: relative;
+          border-top: 3px solid #003A6B;
+        }
+        .ep-license-header-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.85rem;
+          margin-bottom: 1.1rem;
+        }
+        .ep-license-icon-badge {
+          flex-shrink: 0;
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, #003A6B 0%, #005fa3 100%);
+          color: #ffde1a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(0, 58, 107, 0.25);
+        }
+        .ep-license-title-wrap {
+          min-width: 0;
+        }
+        .ep-license-title-line {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .ep-license-title-line h4 {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 600;
+          color: #111827;
+        }
+        .ep-license-pill {
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: #003A6B;
+          background: #e8f1fb;
+          border: 1px solid #cfe0f4;
+          padding: 2px 9px;
+          border-radius: 999px;
+          white-space: nowrap;
+        }
+        .ep-license-title-wrap p {
+          margin: 0.35rem 0 0;
+          font-size: 0.8rem;
+          color: #6b7280;
+          line-height: 1.45;
+        }
+        .ep-license-btn {
+          background: #003A6B !important;
+          color: #ffde1a !important;
+        }
+        .ep-license-btn:hover:not(:disabled) {
+          background: #004f96 !important;
+        }
+        .ep-license-btn:disabled {
+          background: #9ca3af !important;
+          color: #ffffff !important;
+        }
+
+        @media (max-width: 640px) {
+          .ep-license-section {
+            border-top-width: 2.5px;
+          }
+          .ep-license-header-row {
+            gap: 0.65rem;
+            margin-bottom: 0.9rem;
+          }
+          .ep-license-icon-badge {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+          }
+          .ep-license-title-line {
+            gap: 0.4rem;
+          }
         }
 
         /* ── Confirmation modal ── */
@@ -409,9 +596,14 @@ const EditProfile = () => {
         }
       `}</style>
 
-      <div className="ep-header glass-card border">
-        <h3>Edit Profile</h3>
-        <p>Update only the fields you want to change — everything else stays as is.</p>
+      <div className="ep-header">
+        <div className="ep-header-icon-badge">
+          <UserCog style={{ width: 22, height: 22 }} />
+        </div>
+        <div className="ep-header-text">
+          <h3>Edit Profile</h3>
+          <p>Update only the fields you want to change — everything else stays as is.</p>
+        </div>
       </div>
 
       <div className="ep-card surface-card">
@@ -527,13 +719,21 @@ const EditProfile = () => {
       </div>
 
       {/* ── License renewal — admin approval required ── */}
-      <div className="ep-card surface-card">
-        <div className="ep-regulated-header">
-          <h4>License Renewal</h4>
-          <p>
-            Submitting a renewal will lock your account until an admin approves
-            the request.
-          </p>
+      <div className="ep-card surface-card ep-license-section">
+        <div className="ep-license-header-row">
+          <div className="ep-license-icon-badge">
+            <RefreshCw style={{ width: 18, height: 18 }} />
+          </div>
+          <div className="ep-license-title-wrap">
+            <div className="ep-license-title-line">
+              <h4>License Renewal</h4>
+              <span className="ep-license-pill">Requires Approval</span>
+            </div>
+            <p>
+              Submitting a renewal will lock your account until an admin approves
+              the request — this usually takes 1–2 working days.
+            </p>
+          </div>
         </div>
 
         <div className="ep-grid">
@@ -553,11 +753,11 @@ const EditProfile = () => {
 
         <div className="ep-btn-row">
           <Button
-            className="ep-save-btn ep-request-btn"
+            className="ep-save-btn ep-license-btn"
             onClick={handleLicenseRenewalClick}
             disabled={isSubmittingLicenseRenewal}
           >
-            Submit Renewal Request
+            {isSubmittingLicenseRenewal ? 'Submitting...' : 'Submit Renewal Request'}
           </Button>
         </div>
       </div>
