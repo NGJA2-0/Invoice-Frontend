@@ -106,18 +106,6 @@ const UserLayout = () => {
     }
   }, [isLicenseExpired])
 
-  // Close profile dropdown when clicking outside of it
-  useEffect(() => {
-    if (!profileMenuOpen) return
-    const handleClickOutside = (e) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
-        setProfileMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [profileMenuOpen])
-
   const handleLicenseFormChange = (e) => {
     const { name, value } = e.target
     setLicenseForm(prev => ({ ...prev, [name]: value }))
@@ -181,6 +169,68 @@ const UserLayout = () => {
 
   return (
     <>
+      {/* ── Profile Popup Modal — rendered outside ul-root/topnav so fixed positioning is relative to the viewport, not clipped by the topnav's backdrop-filter ── */}
+      {profileMenuOpen && (
+        <div
+          className="ul-profile-modal-overlay"
+          onClick={() => setProfileMenuOpen(false)}
+        >
+          <div
+            className="ul-profile-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="ul-profile-modal-close"
+              aria-label="Close"
+              onClick={() => setProfileMenuOpen(false)}
+            >
+              <X style={{ width: 16, height: 16 }} />
+            </button>
+            <div className="ul-profile-dropdown-header">
+              <div className="ul-avatar large">
+                {typeof user?.avatar === 'string' && user.avatar.length <= 3
+                  ? user.avatar
+                  : 'U'}
+              </div>
+              <div className="ul-profile-dropdown-info">
+                <span className="ul-profile-dropdown-name">
+                  {user?.fullName || user?.username || 'User'}
+                </span>
+                <span className="ul-profile-dropdown-email">
+                  {user?.email || 'N/A'}
+                </span>
+              </div>
+            </div>
+            <div className="ul-profile-dropdown-details">
+              <div className="ul-profile-dropdown-row">
+                <span>Username</span>
+                <span>{user?.username || 'N/A'}</span>
+              </div>
+              <div className="ul-profile-dropdown-row">
+                <span>NIC</span>
+                <span>{user?.nic || 'N/A'}</span>
+              </div>
+              <div className="ul-profile-dropdown-row">
+                <span>Status</span>
+                <span>{userStatus || 'N/A'}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="ul-profile-logout-btn"
+              onClick={() => {
+                setProfileMenuOpen(false)
+                logout()
+              }}
+            >
+              <LogOut style={{ width: 15, height: 15 }} />
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── License Expired Modal — rendered outside ul-root to cover everything ── */}
       {showLicenseModal && (
         <div className="ul-license-modal-overlay" style={{
@@ -520,18 +570,48 @@ const UserLayout = () => {
           position: relative;
           flex-shrink: 0;
         }
-        .ul-profile-dropdown {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 0;
-          width: 260px;
+        .ul-profile-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 99999;
+          background: rgba(0, 10, 30, 0.82);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+        }
+        .ul-profile-modal {
+          position: relative;
+          width: 100%;
+          max-width: 300px;
           background: #ffffff;
           border-radius: 16px;
           border: 1px solid rgba(15, 23, 42, 0.08);
-          box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.25);
+          box-shadow: 0 24px 64px rgba(0,0,0,0.4);
           overflow: hidden;
-          z-index: 50;
-          animation: slideDown 0.18s ease;
+          animation: modalIn 0.22s ease;
+        }
+        .ul-profile-modal-close {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255,255,255,0.2);
+          color: #ffffff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2;
+          transition: background 0.15s ease;
+        }
+        .ul-profile-modal-close:hover {
+          background: rgba(255,255,255,0.35);
         }
         .ul-profile-dropdown-header {
           display: flex;
@@ -978,51 +1058,6 @@ const UserLayout = () => {
                   </div>
                   <span className="ul-avatar-label">Profile</span>
                 </div>
-
-                {profileMenuOpen && (
-                  <div className="ul-profile-dropdown">
-                    <div className="ul-profile-dropdown-header">
-                      <div className="ul-avatar large">
-                        {typeof user?.avatar === 'string' && user.avatar.length <= 3
-                          ? user.avatar
-                          : 'U'}
-                      </div>
-                      <div className="ul-profile-dropdown-info">
-                        <span className="ul-profile-dropdown-name">
-                          {user?.fullName || user?.username || 'User'}
-                        </span>
-                        <span className="ul-profile-dropdown-email">
-                          {user?.email || 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ul-profile-dropdown-details">
-                      <div className="ul-profile-dropdown-row">
-                        <span>Username</span>
-                        <span>{user?.username || 'N/A'}</span>
-                      </div>
-                      <div className="ul-profile-dropdown-row">
-                        <span>NIC</span>
-                        <span>{user?.nic || 'N/A'}</span>
-                      </div>
-                      <div className="ul-profile-dropdown-row">
-                        <span>Status</span>
-                        <span>{userStatus || 'N/A'}</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="ul-profile-logout-btn"
-                      onClick={() => {
-                        setProfileMenuOpen(false)
-                        logout()
-                      }}
-                    >
-                      <LogOut style={{ width: 15, height: 15 }} />
-                      Logout
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Hamburger (mobile only) */}
