@@ -6,11 +6,19 @@ export const userService = {
     return response
   },
 
-  // GET /api/v1/invoices/:id
+   // GET /api/v1/invoices/:id
   getInvoiceById: async (invoiceId, userId) => {
     const response = await api.get(`/invoices/${invoiceId}`, {
       headers: { 'X-User-Id': userId },
     })
+    return response
+  },
+
+  // POST /api/v1/invoices/:id/pdf — returns { data: <invoiceData>, meta, sections }
+  // matching exactly what InvoicePreview expects as its `preview` prop.
+  // api.post() auto-attaches X-User-Id and unwraps payload.data for us.
+  getInvoicePdfData: async (invoiceId) => {
+    const response = await api.post(`/invoices/${invoiceId}/pdf`)
     return response
   },
 
