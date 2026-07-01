@@ -9,7 +9,6 @@ import {
   X,
 } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
-import Breadcrumbs from '../components/layout/Breadcrumbs'
 import Sidebar from '../components/layout/Sidebar'
 import TopNav from '../components/layout/TopNav'
 import { useApp } from '../context/AppContext'
@@ -323,50 +322,82 @@ const UserLayout = () => {
           padding: 1.25rem 1.5rem 2rem;
           min-width: 0;
         }
-        
-        /* ── Breadcrumb row ── */
-        .ul-breadcrumb-row {
-          margin-bottom: 0.75rem;
-        }
 
         /* ── Top nav card ── */
         .ul-topnav {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 1rem;
-          background: rgba(255, 255, 255, 0.55);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-          border-radius: 999px;
-          padding: 0.65rem 1rem 0.65rem 1.5rem;
+          gap: 1.25rem;
+          background: rgba(255, 255, 255, 0.72);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          border-radius: 20px;
+          padding: 0.9rem 1.25rem 0.9rem 1.5rem;
           margin-bottom: 1.75rem;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+          position: relative;
         }
 
         /* Left: system label + page title */
         .ul-topnav-left {
           display: flex;
           flex-direction: column;
-          gap: 1px;
+          gap: 3px;
           min-width: 0;
         }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
         .ul-topnav-system {
+          display: flex;
+          align-items: center;
+          gap: 6px;
           font-size: 10px;
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: #6b7280;
+          color: #b8922a;
           white-space: nowrap;
         }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
+        .ul-topnav-system::before {
+          content: '';
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #d4af37;
+          flex-shrink: 0;
+        }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
         .ul-topnav-title {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #111827;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #0f1a2b;
           letter-spacing: -0.02em;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
         }
 
         /* Right: controls */
@@ -376,17 +407,23 @@ const UserLayout = () => {
           gap: 0.5rem;
           flex-shrink: 0;
         }
+        .ul-topnav-divider {
+          width: 1px;
+          align-self: stretch;
+          background: linear-gradient(180deg, transparent, rgba(15,23,42,0.12), transparent);
+          flex-shrink: 0;
+        }
 
         /* Status badge */
         .ul-status-badge {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
-          padding: 4px 12px;
+          gap: 6px;
+          padding: 6px 14px;
           border-radius: 999px;
-          border: 1px solid;
+          border: 1.5px solid;
           font-size: 12px;
-          font-weight: 500;
+          font-weight: 600;
           white-space: nowrap;
         }
         .ul-status-dot {
@@ -398,22 +435,25 @@ const UserLayout = () => {
 
         /* Bell icon button */
         .ul-icon-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          background: rgba(255, 255, 255, 0.5);
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(15, 23, 42, 0.08);
+          background: #ffffff;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #374151;
-          transition: background 0.15s, border-color 0.15s;
+          color: #4b5563;
+          transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
           flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
         .ul-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.7);
-          border-color: rgba(0, 0, 0, 0.2);
+          border-color: #d9c89a;
+          color: #b8922a;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px -4px rgba(184, 146, 42, 0.35);
         }
         .ul-icon-btn svg {
           width: 16px;
@@ -424,57 +464,102 @@ const UserLayout = () => {
         .ul-avatar-pill {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 3px 12px 3px 3px;
+          gap: 9px;
+          padding: 4px 14px 4px 4px;
           border-radius: 999px;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          background: rgba(255, 255, 255, 0.5);
+          border: 1.5px solid rgba(15, 23, 42, 0.08);
+          background: #ffffff;
           cursor: pointer;
-          transition: background 0.15s;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
         .ul-avatar-pill:hover {
-          background: rgba(255, 255, 255, 0.7);
+          border-color: #d9c89a;
+          box-shadow: 0 4px 10px -4px rgba(184, 146, 42, 0.35);
         }
         .ul-avatar {
           width: 30px;
           height: 30px;
           border-radius: 50%;
-          background: #e8edf7;
-          color: #3b5bb5;
+          background: linear-gradient(135deg, #d4af37 0%, #b8922a 100%);
+          color: #ffffff;
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
           text-transform: uppercase;
+          box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35);
         }
         .ul-avatar-label {
           font-size: 13px;
-          font-weight: 500;
-          color: #111827;
+          font-weight: 600;
+          color: #0f1a2b;
           white-space: nowrap;
         }
 
-        /* Hamburger (mobile) */
+        /* Premium Hamburger */
         .ul-hamburger {
-          display: none;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          background: rgba(255, 255, 255, 0.15);
-          cursor: pointer;
-          align-items: center;
-          justify-content: center;
-          color: #fff;
-          flex-shrink: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+
+            width: 44px;
+            height: 44px;
+
+            border-radius: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+
+            color: #2f2f2f;
+
+            background: linear-gradient(
+                145deg,
+                rgba(255,255,255,0.75),
+                rgba(235,235,235,0.65)
+            );
+
+            border: 1px solid rgba(255,255,255,0.6);
+
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+
+            box-shadow:
+                0 8px 20px rgba(0,0,0,0.10),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+
+            transition: all .25s ease;
         }
-        .ul-hamburger svg {
-          width: 18px;
-          height: 18px;
-          stroke-width: 1.8px;
+
+        .ul-hamburger svg{
+            width:20px;
+            height:20px;
+            stroke-width:2;
+            transition:transform .25s ease;
+        }
+
+        .ul-hamburger:hover{
+            transform:translateY(-2px);
+
+            background:linear-gradient(
+                145deg,
+                #ffffff,
+                #f2f2f2
+            );
+
+            box-shadow:
+                0 12px 28px rgba(0,0,0,.16),
+                inset 0 1px 0 rgba(255,255,255,.9);
+        }
+
+        .ul-hamburger:hover svg{
+            transform:scale(1.08);
+        }
+
+        .ul-hamburger:active{
+            transform:scale(.95);
         }
         
         /* ── License warning banner ── */
@@ -683,9 +768,6 @@ const UserLayout = () => {
           .ul-main {
             padding: 0.75rem 0.75rem 1.5rem;
           }
-          .ul-breadcrumb-row {
-            margin-bottom: 0.35rem;
-          }
           .ul-topnav {
             margin-bottom: 0.75rem;
           }
@@ -723,22 +805,14 @@ const UserLayout = () => {
         />
 
         <main className="ul-main">
-          {/* Breadcrumbs */}
-          <div className="ul-breadcrumb-row">
-            <Breadcrumbs
-              items={[
-                { label: 'User', active: false },
-                { label, active: true },
-              ]}
-            />
-          </div>
-
           {/* ── Top nav bar (replaces TopNav component visually) ── */}
           <div className="ul-topnav">
             {/* Left */}
             <div className="ul-topnav-left">
               <span className="ul-topnav-system">Export Invoice System</span>
-              <span className="ul-topnav-title">{label}</span>
+              {location.pathname === '/user/dashboard' && (
+                <span className="ul-topnav-title">{label}</span>
+              )}
             </div>
 
             {/* Right */}

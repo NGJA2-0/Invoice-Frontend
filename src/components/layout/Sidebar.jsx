@@ -117,19 +117,20 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
       )}
 
       {/* ── Desktop sidebar — always visible, hidden on mobile via CSS ── */}
-      <aside className="ul-sidebar hidden md:flex flex-col gap-6 border-r border-white/30 bg-white/30 backdrop-blur-xl px-6 py-8">
+      <aside className="ul-sidebar hidden md:flex flex-col gap-8 border-r border-white/60 bg-white/70 backdrop-blur-xl px-6 py-8">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+          <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8922a]">
+            <span className="h-[5px] w-[5px] rounded-full bg-[#d4af37]" />
             {subtitle}
           </p>
-          <h1 className="mt-2 font-display text-2xl text-gray-900">{title}</h1>
+          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-[#0f1a2b]">{title}</h1>
         </div>
 
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col gap-1.5">
           {items.map((item, index) => {
             if (item.type === 'divider') {
               return (
-                <div key={`divider-${index}`} className="mt-2 mb-1">
+                <div key={`divider-${index}`} className="mt-3 mb-1.5">
                   <p className="px-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">
                     {item.label}
                   </p>
@@ -142,15 +143,26 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                  `group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150 ${
                     isActive
-                      ? 'bg-white/60 text-gray-900 shadow-soft'
-                      : 'text-gray-700 hover:bg-white/40 hover:text-gray-900'
+                      ? 'bg-[#FBF4E6] text-[#8a6a1e]'
+                      : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
                   }`
                 }
               >
-                <Icon className="h-4 w-4" />
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#d4af37] to-[#b8922a] transition-opacity duration-150 ${
+                        isActive ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    />
+                    <Icon
+                      className={`h-4 w-4 ${isActive ? 'text-[#b8922a]' : 'text-gray-400 group-hover:text-gray-600'}`}
+                    />
+                    {item.label}
+                  </>
+                )}
               </NavLink>
             )
           })}
