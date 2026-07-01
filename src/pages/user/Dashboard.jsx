@@ -92,7 +92,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid gap-4 md:grid-cols-3"
+        className="grid grid-cols-3 gap-2 md:gap-4"
       >
         {[
           {
@@ -129,28 +129,26 @@ const Dashboard = () => {
         ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg }) => (
           <div
             key={label}
-            className="flex flex-col gap-4 rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            className="flex flex-row items-center justify-center gap-2 rounded-2xl p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:flex-col md:items-stretch md:justify-start md:gap-4 md:p-6"
             style={{ backgroundColor: bg, border: `2px solid ${border}` }}
           >
-            <div className="flex items-center justify-between">
-              <span
-                className="flex h-9 w-9 items-center justify-center rounded-xl"
-                style={{ color: fg, backgroundColor: iconBg }}
-              >
-                <Icon className="h-4 w-4" />
-              </span>
-              <span
-                className="text-[11px] font-semibold uppercase tracking-[0.18em]"
-                style={{ color: fg }}
-              >
-                {note}
-              </span>
-            </div>
-            <div>
-              <p className="text-3xl font-semibold tracking-tight text-ink-900">
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg md:h-9 md:w-9 md:rounded-xl"
+              style={{ color: fg, backgroundColor: iconBg }}
+            >
+              <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
+            </span>
+            <span
+              className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] md:inline"
+              style={{ color: fg }}
+            >
+              {note}
+            </span>
+            <div className="text-center md:text-left">
+              <p className="text-xl font-semibold tracking-tight text-ink-900 md:text-3xl">
                 {value}
               </p>
-              <p className="mt-1 text-sm font-medium text-ink-600">{label}</p>
+              <p className="mt-0.5 truncate text-xs font-medium text-ink-600 md:text-sm md:mt-1">{label}</p>
             </div>
           </div>
         ))}

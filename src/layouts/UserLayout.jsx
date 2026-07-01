@@ -959,7 +959,7 @@ const UserLayout = () => {
             padding: 0.75rem 0.75rem 1.5rem;
           }
           .ul-topnav {
-            margin-bottom: 0.75rem;
+            margin-bottom: 1.75rem;
           }
           .ul-hamburger { display: flex; }
           .ul-status-badge { display: none; }
