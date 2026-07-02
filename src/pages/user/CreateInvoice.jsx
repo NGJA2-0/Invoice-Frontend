@@ -113,6 +113,7 @@ const CreateInvoice = () => {
   const previewRef = useRef(null)
   const isRestoringRef = useRef(false)
   const blockSaveRef = useRef(false)
+  const [showDraftConfirm, setShowDraftConfirm] = useState(false)
 
   useEffect(() => {
     sessionStorage.setItem('ci_category', category)
@@ -416,6 +417,11 @@ const CreateInvoice = () => {
         tone: 'danger',
       })
     }
+  }
+
+  const confirmSaveDraft = async () => {
+    setShowDraftConfirm(false)
+    await handleSave('draft')
   }
 
   const ensurePreviewData = async () => {
@@ -822,6 +828,43 @@ const CreateInvoice = () => {
           max-width: 240px;
           line-height: 1.6;
         }
+        /* ── Draft confirm modal ── */
+        .ci-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 15, 15, 0.45);
+          backdrop-filter: blur(2px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+        .ci-modal {
+          background: #fff;
+          border-radius: 16px;
+          padding: 1.75rem;
+          max-width: 400px;
+          width: 100%;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+        }
+        .ci-modal-title {
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: #0f0f0f;
+          margin: 0 0 0.6rem;
+        }
+        .ci-modal-text {
+          font-size: 13px;
+          color: #666;
+          line-height: 1.6;
+          margin: 0 0 1.5rem;
+        }
+        .ci-modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.75rem;
+        }
 
         /* ── Invoice preview sheet ── */
         .print-sheet {
@@ -1181,7 +1224,7 @@ const CreateInvoice = () => {
                 <button
                   type="button"
                   className="ci-btn ci-btn-ghost"
-                  onClick={() => handleSave('draft')}
+                  onClick={() => setShowDraftConfirm(true)}
                 >
                   <Save />
                   Save Draft
@@ -1255,6 +1298,36 @@ const CreateInvoice = () => {
             </div>
           </div>
         ) : null}
+
+        {/* ── Draft confirmation modal ── */}
+        {showDraftConfirm && (
+          <div className="ci-modal-overlay no-print" onClick={() => setShowDraftConfirm(false)}>
+            <div className="ci-modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="ci-modal-title">Save as Draft?</h3>
+              <p className="ci-modal-text">
+                Do you really want to send this invoice to draft? Once saved,
+                you won't be able to edit it later — you'll only be able to
+                resubmit it.
+              </p>
+              <div className="ci-modal-actions">
+                <button
+                  type="button"
+                  className="ci-btn ci-btn-ghost"
+                  onClick={() => setShowDraftConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ci-btn ci-btn-gold"
+                  onClick={confirmSaveDraft}
+                >
+                  Save as Draft
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </>
