@@ -150,7 +150,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-4"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
       >
         {[
           {
@@ -175,41 +175,7 @@ const Dashboard = () => {
             iconBg: '#E4F2E8',
             onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
           },
-          {
-            label: 'Stage 1',
-            value: stageCounts.stage1,
-            note: 'In progress',
-            icon: Clock3,
-            bg: '#FEFCF6',
-            border: '#D9AE5E',
-            fg: '#7A5A16',
-            iconBg: '#F8ECD0',
-            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
-          },
-          {
-            label: 'Stage 2',
-            value: stageCounts.stage2,
-            note: 'In progress',
-            icon: Clock3,
-            bg: '#F7FAFE',
-            border: '#9DBBE0',
-            fg: '#3f5f8f',
-            iconBg: '#EAF1FB',
-            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
-          },
-          {
-            label: 'Stage 3',
-            value: stageCounts.stage3,
-            note: 'In progress',
-            icon: Clock3,
-            bg: '#FBF8FE',
-            border: '#C3A8E0',
-            fg: '#6b4a94',
-            iconBg: '#F1E9FA',
-            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
-          },
-
-        ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg, onClick }) => (
+          ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg, onClick }) => (
           <div
             key={label}
             onClick={onClick}
@@ -236,6 +202,56 @@ const Dashboard = () => {
             </div>
           </div>
         ))}
+
+        {/* Merged "In Progress" premium card — combines stage 1/2/3 counts */}
+        <div
+          onClick={() => navigate('/user/my-invoices', { state: { scrollToTable: true } })}
+          className="group relative cursor-pointer overflow-hidden rounded-2xl p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
+          style={{
+            background: 'linear-gradient(135deg, #fdfbf6 0%, #f7f4fb 50%, #f6f9fd 100%)',
+            border: '1px solid #e6e1f0',
+          }}
+        >
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+            style={{ background: 'linear-gradient(90deg, #d9ae5e, #9dbbe0, #c3a8e0)' }}
+          />
+
+          <div className="mb-3 flex items-center justify-between md:mb-4">
+            <div className="flex items-center gap-2">
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg md:h-9 md:w-9 md:rounded-xl"
+                style={{ color: '#6b5a8f', backgroundColor: '#efeaf7' }}
+              >
+                <Clock3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">
+                In Progress
+              </span>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-ink-300 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ink-500" />
+          </div>
+
+          <div className="grid grid-cols-3 divide-x divide-cloud-200/70">
+            {[
+              { label: 'Stage 1', value: stageCounts.stage1, dot: '#d9ae5e' },
+              { label: 'Stage 2', value: stageCounts.stage2, dot: '#7fa3d6' },
+              { label: 'Stage 3', value: stageCounts.stage3, dot: '#b18fdb' },
+            ].map(({ label, value, dot }) => (
+              <div key={label} className="flex flex-col items-center gap-1 px-1 text-center md:items-start md:px-4 md:text-left">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
+                  <span className="text-2xl font-semibold tracking-tight text-ink-900 md:text-3xl">
+                    {value}
+                  </span>
+                </span>
+                <span className="truncate text-[11px] font-medium text-ink-500 md:text-xs">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </motion.div>
 
       <div className="surface-card flex flex-col gap-4 rounded-2xl p-6">
