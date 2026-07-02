@@ -27,6 +27,7 @@ const DraftInvoices = () => {
   })
   const [pageSize, setPageSize] = useState(10)
   const [loading, setLoading] = useState(false)
+  const [submittingId, setSubmittingId] = useState(null)
 
   const loadDrafts = async (page = 1, size = pageSize) => {
     if (!user?.id) return
@@ -67,6 +68,29 @@ const DraftInvoices = () => {
   const goToPage = (page) => {
     if (page < 1 || page > pagination.totalPages) return
     loadDrafts(page, pageSize)
+  }
+
+  const handleSubmitInvoice = async (e, invoiceId) => {
+    e.stopPropagation()
+    if (!user?.id || submittingId) return
+    setSubmittingId(invoiceId)
+    try {
+      await invoiceService.submitInvoice(invoiceId, user.id)
+      pushToast({
+        title: 'Invoice submitted',
+        message: 'Invoice submitted successfully.',
+        tone: 'success',
+      })
+      loadDrafts(pagination.currentPage, pageSize)
+    } catch (error) {
+      pushToast({
+        title: 'Submit failed',
+        message: error.message || 'Unable to submit invoice.',
+        tone: 'danger',
+      })
+    } finally {
+      setSubmittingId(null)
+    }
   }
 
   return (
@@ -271,6 +295,38 @@ const DraftInvoices = () => {
           font-weight: 600;
           color: #1a1a1a;
         }
+        .di-submit-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 0 0.85rem;
+          height: 30px;
+          border-radius: 8px;
+          font-size: 11.5px;
+          font-weight: 600;
+          cursor: pointer;
+          border: 1px solid #b8922a;
+          background: #fff;
+          color: #b8922a;
+          transition: all 0.18s ease;
+          white-space: nowrap;
+        }
+        .di-submit-btn:hover:not(:disabled) {
+          background: #b8922a;
+          color: #fff;
+        }
+        .di-submit-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        @media (max-width: 640px) {
+          .di-submit-btn {
+            width: 100%;
+            height: 34px;
+            margin-top: 0.35rem;
+          }
+        }
 
         /* ── Cards (mobile) ── */
         .di-cards {
@@ -463,6 +519,7 @@ const DraftInvoices = () => {
                     <th>Receiver</th>
                     <th>CIF (LKR)</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -478,6 +535,16 @@ const DraftInvoices = () => {
                       <td className="di-amount">{formatCurrency(invoice.cifLkr)}</td>
                       <td>
                         <span className="di-status-pill">{invoice.status}</span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="di-submit-btn"
+                          disabled={submittingId === invoice.invoiceId}
+                          onClick={(e) => handleSubmitInvoice(e, invoice.invoiceId)}
+                        >
+                          {submittingId === invoice.invoiceId ? 'Submitting…' : 'Submit'}
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -515,6 +582,14 @@ const DraftInvoices = () => {
                       <span>CIF (LKR)</span>
                       <span>{formatCurrency(invoice.cifLkr)}</span>
                     </div>
+                    <button
+                      type="button"
+                      className="di-submit-btn"
+                      disabled={submittingId === invoice.invoiceId}
+                      onClick={(e) => handleSubmitInvoice(e, invoice.invoiceId)}
+                    >
+                      {submittingId === invoice.invoiceId ? 'Submitting…' : 'Submit Invoice'}
+                    </button>
                   </div>
                 ))}
               </div>

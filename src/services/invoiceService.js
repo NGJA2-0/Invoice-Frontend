@@ -71,6 +71,13 @@ export const invoiceService = {
     return response
   },
 
+  submitInvoice: async (invoiceId, userId) => {
+    const response = await api.post(`/invoices/${invoiceId}/submit`, {}, {
+      headers: { 'X-User-Id': String(userId) },
+    })
+    return response
+  },
+
   generateNumber: async () => {
     const response = await api.get('/invoices/generate-number')
     return response
