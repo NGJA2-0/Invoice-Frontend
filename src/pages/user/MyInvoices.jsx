@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Heart } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Skeleton from '../../components/common/Skeleton'
 import InvoiceTable from '../../components/tables/InvoiceTable'
 import Button from '../../components/common/Button'
@@ -9,6 +9,8 @@ import { useApp } from '../../context/AppContext'
 const MyInvoices = () => {
   const { invoices, invoicePagination, invoiceFilters, refreshInvoices, user } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
+  const tableRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -46,6 +48,13 @@ const MyInvoices = () => {
     setPage(1)
   }
 
+  useEffect(() => {
+    if (!location.state?.scrollToTable || loading) return
+    tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Clear the flag so it doesn't re-trigger on future re-renders (e.g. pagination)
+    navigate(location.pathname, { replace: true, state: {} })
+  }, [location.state, loading])
+
   return (
     <div className="flex flex-col gap-6">
       <div className="glass-card flex flex-col gap-4 rounded-2xl border px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -71,6 +80,7 @@ const MyInvoices = () => {
           <Skeleton className="h-6" />
         </div>
       ) : (
+        <div ref={tableRef}>
         <InvoiceTable
           rows={invoices}
           pagination={invoicePagination}
@@ -82,6 +92,7 @@ const MyInvoices = () => {
           onPageSizeChange={handlePageSizeChange}
           onRowClick={(row) => navigate(`/user/invoices/${row.id}`)}
         />
+        </div>
       )}
     </div>
   )

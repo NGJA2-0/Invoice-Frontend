@@ -120,7 +120,7 @@ const Dashboard = () => {
             border: '#9DB4DD',
             fg: '#33517F',
             iconBg: '#EAF0FA',
-            onClick: () => navigate('/user/my-invoices'),
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
           },
           {
             label: 'Approved',
