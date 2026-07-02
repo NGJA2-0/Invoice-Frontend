@@ -114,6 +114,7 @@ const CreateInvoice = () => {
   const isRestoringRef = useRef(false)
   const blockSaveRef = useRef(false)
   const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
 
   useEffect(() => {
     sessionStorage.setItem('ci_category', category)
@@ -390,14 +391,14 @@ const CreateInvoice = () => {
   }
 
   const handleSave = async (status) => {
-    if (!ensureTemplate3NiDetails()) return
+    if (!ensureTemplate3NiDetails()) return false
     if (!user?.id) {
       pushToast({
         title: 'Missing user profile',
         message: 'Please login again to continue.',
         tone: 'danger',
       })
-      return
+      return false
     }
 
     try {
@@ -410,18 +411,34 @@ const CreateInvoice = () => {
             : 'Invoice submitted for review.',
         tone: 'success',
       })
+      return true
     } catch (error) {
       pushToast({
         title: 'Submission failed',
         message: error.message || 'Unable to submit invoice.',
         tone: 'danger',
       })
+      return false
     }
   }
 
   const confirmSaveDraft = async () => {
     setShowDraftConfirm(false)
     await handleSave('draft')
+  }
+
+  const confirmSubmitInvoice = async () => {
+    setShowSubmitConfirm(false)
+    const success = await handleSave('submitted')
+    if (success) {
+      handleNewInvoice()
+      try {
+        const nextNumber = await invoiceService.generateNumber()
+        setInvoiceNumber(nextNumber?.invoiceNumber || '')
+      } catch (error) {
+        setInvoiceNumber('')
+      }
+    }
   }
 
   const ensurePreviewData = async () => {
@@ -1232,7 +1249,7 @@ const CreateInvoice = () => {
                 <button
                   type="button"
                   className="ci-btn ci-btn-primary"
-                  onClick={() => handleSave('submitted')}
+                  onClick={() => setShowSubmitConfirm(true)}
                 >
                   <Save />
                   Submit Invoice
@@ -1251,7 +1268,7 @@ const CreateInvoice = () => {
                   Preview
                 </button>
                 
-                <button
+                {/* <button
                   type="button"
                   className="ci-btn ci-btn-ghost"
                   onClick={() => {
@@ -1264,7 +1281,7 @@ const CreateInvoice = () => {
                 >
                   <Eye />
                   Print
-                </button>
+                </button> */}
               </div>
             </div>
           </form>
@@ -1323,6 +1340,36 @@ const CreateInvoice = () => {
                   onClick={confirmSaveDraft}
                 >
                   Save as Draft
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Submit confirmation modal ── */}
+        {showSubmitConfirm && (
+          <div className="ci-modal-overlay no-print" onClick={() => setShowSubmitConfirm(false)}>
+            <div className="ci-modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="ci-modal-title">Submit Invoice?</h3>
+              <p className="ci-modal-text">
+                Do you really want to submit this invoice? Once submitted, you'll
+                need to wait for admin approval before you can use it, and you
+                will no longer be able to edit it.
+              </p>
+              <div className="ci-modal-actions">
+                <button
+                  type="button"
+                  className="ci-btn ci-btn-ghost"
+                  onClick={() => setShowSubmitConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ci-btn ci-btn-gold"
+                  onClick={confirmSubmitInvoice}
+                >
+                  Submit
                 </button>
               </div>
             </div>
