@@ -86,6 +86,18 @@ export const invoiceService = {
     return response
   },
 
+  getDraftInvoices: async (userId, { page = 1, pageSize = 10 } = {}) => {
+    const params = new URLSearchParams()
+    params.set('status', 'draft')
+    params.set('page', page)
+    params.set('pageSize', pageSize)
+    const response = await api.get(`/invoices/user/${userId}?${params.toString()}`, {
+      headers: { 'X-User-Id': String(userId) },
+      raw: true,
+    })
+    return response
+  },
+
   getTerms: async () => {
     const response = await api.get('/terms')
     return response

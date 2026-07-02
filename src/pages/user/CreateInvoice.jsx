@@ -1150,13 +1150,22 @@ const CreateInvoice = () => {
             </div>
           )}
 
-          <button
-            type="button"
-            className="ci-btn ci-btn-ghost"
-            onClick={handleNewInvoice}
-          >
-            + Create New Invoice
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="ci-btn ci-btn-ghost"
+              onClick={() => navigate('/user/draft-invoices')}
+            >
+              View Drafts
+            </button>
+            <button
+              type="button"
+              className="ci-btn ci-btn-ghost"
+              onClick={handleNewInvoice}
+            >
+              + Create New Invoice
+            </button>
+          </div>
         </div>
 
         {/* ── Step indicator ── */}
