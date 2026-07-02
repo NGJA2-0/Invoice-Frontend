@@ -67,6 +67,7 @@ const Dashboard = () => {
   const [favouritesLoading, setFavouritesLoading] = useState(true)
   const [totalInvoices, setTotalInvoices] = useState(0)
   const [approvedCount, setApprovedCount] = useState(0)
+  const [stageCounts, setStageCounts] = useState({ stage1: 0, stage2: 0, stage3: 0 })
 
   useEffect(() => {
     let active = true
@@ -100,6 +101,31 @@ const Dashboard = () => {
 
   useEffect(() => {
     let active = true
+    const loadStageCounts = async () => {
+      if (!user?.id) return
+      try {
+        const [stage1, stage2, stage3] = await Promise.all([
+          userService.getInvoiceCountByStatus(user.id, 'stage1_in_progress'),
+          userService.getInvoiceCountByStatus(user.id, 'stage2_in_progress'),
+          userService.getInvoiceCountByStatus(user.id, 'stage3_in_progress'),
+        ])
+        if (active) {
+          setStageCounts({
+            stage1: stage1?.totalInvoices ?? 0,
+            stage2: stage2?.totalInvoices ?? 0,
+            stage3: stage3?.totalInvoices ?? 0,
+          })
+        }
+      } catch {
+        if (active) setStageCounts({ stage1: 0, stage2: 0, stage3: 0 })
+      }
+    }
+    loadStageCounts()
+    return () => { active = false }
+  }, [user?.id])
+
+  useEffect(() => {
+    let active = true
     const loadFavourites = async () => {
       if (!user?.id) {
         setFavouritesLoading(false)
@@ -124,7 +150,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-3 gap-2 md:gap-4"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-4"
       >
         {[
           {
@@ -150,16 +176,39 @@ const Dashboard = () => {
             onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
           },
           {
-            label: 'Pending',
-            value: pendingInvoices.length,
-            note: 'Awaiting approval',
+            label: 'Stage 1',
+            value: stageCounts.stage1,
+            note: 'In progress',
             icon: Clock3,
             bg: '#FEFCF6',
             border: '#D9AE5E',
             fg: '#7A5A16',
             iconBg: '#F8ECD0',
-          }
-          
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
+          },
+          {
+            label: 'Stage 2',
+            value: stageCounts.stage2,
+            note: 'In progress',
+            icon: Clock3,
+            bg: '#F7FAFE',
+            border: '#9DBBE0',
+            fg: '#3f5f8f',
+            iconBg: '#EAF1FB',
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
+          },
+          {
+            label: 'Stage 3',
+            value: stageCounts.stage3,
+            note: 'In progress',
+            icon: Clock3,
+            bg: '#FBF8FE',
+            border: '#C3A8E0',
+            fg: '#6b4a94',
+            iconBg: '#F1E9FA',
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
+          },
+
         ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg, onClick }) => (
           <div
             key={label}
