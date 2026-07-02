@@ -97,4 +97,12 @@ export const userService = {
     })
     return response
   },
+
+  // GET /api/v1/invoices/status-count?status=<status> — returns { status, totalInvoices, xUserID }
+  getInvoiceCountByStatus: async (userId, status) => {
+    const response = await api.get(`/invoices/status-count?status=${status}`, {
+      headers: { 'X-User-Id': userId },
+    })
+    return response
+  },
 }

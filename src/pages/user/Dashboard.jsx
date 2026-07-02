@@ -66,6 +66,7 @@ const Dashboard = () => {
   const [favourites, setFavourites] = useState([])
   const [favouritesLoading, setFavouritesLoading] = useState(true)
   const [totalInvoices, setTotalInvoices] = useState(0)
+  const [approvedCount, setApprovedCount] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -79,6 +80,21 @@ const Dashboard = () => {
       }
     }
     loadTotalInvoices()
+    return () => { active = false }
+  }, [user?.id])
+
+  useEffect(() => {
+    let active = true
+    const loadApprovedCount = async () => {
+      if (!user?.id) return
+      try {
+        const data = await userService.getInvoiceCountByStatus(user.id, 'completed')
+        if (active) setApprovedCount(data?.totalInvoices ?? 0)
+      } catch {
+        if (active) setApprovedCount(approvedInvoices.length)
+      }
+    }
+    loadApprovedCount()
     return () => { active = false }
   }, [user?.id])
 
@@ -124,13 +140,14 @@ const Dashboard = () => {
           },
           {
             label: 'Approved',
-            value: approvedInvoices.length,
+            value: approvedCount,
             note: 'Export ready',
             icon: CheckCircle2,
             bg: '#F9FCFA',
             border: '#84B694',
             fg: '#2E6A45',
             iconBg: '#E4F2E8',
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
           },
           {
             label: 'Pending',
