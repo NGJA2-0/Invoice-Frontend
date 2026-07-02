@@ -65,6 +65,22 @@ const Dashboard = () => {
 
   const [favourites, setFavourites] = useState([])
   const [favouritesLoading, setFavouritesLoading] = useState(true)
+  const [totalInvoices, setTotalInvoices] = useState(0)
+
+  useEffect(() => {
+    let active = true
+    const loadTotalInvoices = async () => {
+      if (!user?.id) return
+      try {
+        const data = await userService.getTotalInvoices(user.id)
+        if (active) setTotalInvoices(data?.totalInvoices ?? 0)
+      } catch {
+        if (active) setTotalInvoices(invoices.length)
+      }
+    }
+    loadTotalInvoices()
+    return () => { active = false }
+  }, [user?.id])
 
   useEffect(() => {
     let active = true
@@ -97,13 +113,14 @@ const Dashboard = () => {
         {[
           {
             label: 'Invoices',
-            value: invoices.length,
+            value: totalInvoices,
             note: 'Current fiscal',
             icon: FileText,
             bg: '#FBFCFE',
             border: '#9DB4DD',
             fg: '#33517F',
             iconBg: '#EAF0FA',
+            onClick: () => navigate('/user/my-invoices'),
           },
           {
             label: 'Approved',
@@ -126,10 +143,11 @@ const Dashboard = () => {
             iconBg: '#F8ECD0',
           }
           
-        ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg }) => (
+        ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg, onClick }) => (
           <div
             key={label}
-            className="flex flex-row items-center justify-center gap-2 rounded-2xl p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:flex-col md:items-stretch md:justify-start md:gap-4 md:p-6"
+            onClick={onClick}
+            className={`flex flex-row items-center justify-center gap-2 rounded-2xl p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:flex-col md:items-stretch md:justify-start md:gap-4 md:p-6 ${onClick ? 'cursor-pointer' : ''}`}
             style={{ backgroundColor: bg, border: `2px solid ${border}` }}
           >
             <span

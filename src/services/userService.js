@@ -88,4 +88,13 @@ export const userService = {
     })
     return response
   },
+
+  // GET /api/v1/invoices/total — returns { totalInvoices, xUserID }
+  // api.get() automatically attaches X-User-Id from localStorage via request()
+  getTotalInvoices: async (userId) => {
+    const response = await api.get('/invoices/total', {
+      headers: { 'X-User-Id': userId },
+    })
+    return response
+  },
 }
