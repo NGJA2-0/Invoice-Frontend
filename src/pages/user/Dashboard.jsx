@@ -150,7 +150,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4"
       >
         {[
           {
@@ -206,7 +206,7 @@ const Dashboard = () => {
         {/* Merged "In Progress" premium card — combines stage 1/2/3 counts */}
         <div
           onClick={() => navigate('/user/my-invoices', { state: { scrollToTable: true } })}
-          className="group relative cursor-pointer overflow-hidden rounded-2xl p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg md:p-6"
+          className="group relative col-span-2 cursor-pointer overflow-hidden rounded-2xl p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:col-span-1 md:p-6"
           style={{
             background: 'linear-gradient(135deg, #fdfbf6 0%, #f7f4fb 50%, #f6f9fd 100%)',
             border: '1px solid #e6e1f0',
