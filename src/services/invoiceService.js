@@ -71,6 +71,13 @@ export const invoiceService = {
     return response
   },
 
+  submitInvoice: async (invoiceId, userId) => {
+    const response = await api.post(`/invoices/${invoiceId}/submit`, {}, {
+      headers: { 'X-User-Id': String(userId) },
+    })
+    return response
+  },
+
   generateNumber: async () => {
     const response = await api.get('/invoices/generate-number')
     return response
@@ -83,6 +90,18 @@ export const invoiceService = {
 
   getByUser: async (userId) => {
     const response = await api.get(`/users/${userId}/invoices`)
+    return response
+  },
+
+  getDraftInvoices: async (userId, { page = 1, pageSize = 10 } = {}) => {
+    const params = new URLSearchParams()
+    params.set('status', 'draft')
+    params.set('page', page)
+    params.set('pageSize', pageSize)
+    const response = await api.get(`/invoices/user/${userId}?${params.toString()}`, {
+      headers: { 'X-User-Id': String(userId) },
+      raw: true,
+    })
     return response
   },
 

@@ -6,6 +6,7 @@ import Input from '../../components/common/Input'
 import { useApp } from '../../context/AppContext'
 import { api } from '../../services/api'
 import signupBg from '../../assets/signup.jpg'
+import ForgotPassword from '../auth/ForgotPassword'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ const Login = () => {
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [showSignupPassword, setShowSignupPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [isUsernameVerified, setIsUsernameVerified] = useState(false)
   const [verifiedUserInfo, setVerifiedUserInfo] = useState(null)
 
@@ -867,6 +869,27 @@ const Login = () => {
                 }
               </button>
 
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#ffde1a',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  letterSpacing: '0.02em',
+                  padding: '0',
+                  textAlign: 'center',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                Forgot Password?
+              </button>
+
               {/* Divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)', }} />
@@ -994,6 +1017,7 @@ const Login = () => {
                 }
               </button>
 
+              // NEW
               <button
                 type="button"
                 onClick={handleResetLogin}
@@ -1034,6 +1058,8 @@ const Login = () => {
           .login-right { width: 100%; }
         }
       `}</style>
+
+      <ForgotPassword isOpen={showForgotPassword} onClose={() => setShowForgotPassword(false)} />
     </div>
   )
 }

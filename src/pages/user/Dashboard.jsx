@@ -65,6 +65,64 @@ const Dashboard = () => {
 
   const [favourites, setFavourites] = useState([])
   const [favouritesLoading, setFavouritesLoading] = useState(true)
+  const [totalInvoices, setTotalInvoices] = useState(0)
+  const [approvedCount, setApprovedCount] = useState(0)
+  const [stageCounts, setStageCounts] = useState({ stage1: 0, stage2: 0, stage3: 0 })
+
+  useEffect(() => {
+    let active = true
+    const loadTotalInvoices = async () => {
+      if (!user?.id) return
+      try {
+        const data = await userService.getTotalInvoices(user.id)
+        if (active) setTotalInvoices(data?.totalInvoices ?? 0)
+      } catch {
+        if (active) setTotalInvoices(invoices.length)
+      }
+    }
+    loadTotalInvoices()
+    return () => { active = false }
+  }, [user?.id])
+
+  useEffect(() => {
+    let active = true
+    const loadApprovedCount = async () => {
+      if (!user?.id) return
+      try {
+        const data = await userService.getInvoiceCountByStatus(user.id, 'completed')
+        if (active) setApprovedCount(data?.totalInvoices ?? 0)
+      } catch {
+        if (active) setApprovedCount(approvedInvoices.length)
+      }
+    }
+    loadApprovedCount()
+    return () => { active = false }
+  }, [user?.id])
+
+  useEffect(() => {
+    let active = true
+    const loadStageCounts = async () => {
+      if (!user?.id) return
+      try {
+        const [stage1, stage2, stage3] = await Promise.all([
+          userService.getInvoiceCountByStatus(user.id, 'stage1_in_progress'),
+          userService.getInvoiceCountByStatus(user.id, 'stage2_in_progress'),
+          userService.getInvoiceCountByStatus(user.id, 'stage3_in_progress'),
+        ])
+        if (active) {
+          setStageCounts({
+            stage1: stage1?.totalInvoices ?? 0,
+            stage2: stage2?.totalInvoices ?? 0,
+            stage3: stage3?.totalInvoices ?? 0,
+          })
+        }
+      } catch {
+        if (active) setStageCounts({ stage1: 0, stage2: 0, stage3: 0 })
+      }
+    }
+    loadStageCounts()
+    return () => { active = false }
+  }, [user?.id])
 
   useEffect(() => {
     let active = true
@@ -92,44 +150,36 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-3 gap-2 md:gap-4"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4"
       >
         {[
           {
             label: 'Invoices',
-            value: invoices.length,
+            value: totalInvoices,
             note: 'Current fiscal',
             icon: FileText,
             bg: '#FBFCFE',
             border: '#9DB4DD',
             fg: '#33517F',
             iconBg: '#EAF0FA',
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
           },
           {
             label: 'Approved',
-            value: approvedInvoices.length,
+            value: approvedCount,
             note: 'Export ready',
             icon: CheckCircle2,
             bg: '#F9FCFA',
             border: '#84B694',
             fg: '#2E6A45',
             iconBg: '#E4F2E8',
+            onClick: () => navigate('/user/my-invoices', { state: { scrollToTable: true } }),
           },
-          {
-            label: 'Pending',
-            value: pendingInvoices.length,
-            note: 'Awaiting approval',
-            icon: Clock3,
-            bg: '#FEFCF6',
-            border: '#D9AE5E',
-            fg: '#7A5A16',
-            iconBg: '#F8ECD0',
-          }
-          
-        ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg }) => (
+          ].map(({ label, value, note, icon: Icon, bg, border, fg, iconBg, onClick }) => (
           <div
             key={label}
-            className="flex flex-row items-center justify-center gap-2 rounded-2xl p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:flex-col md:items-stretch md:justify-start md:gap-4 md:p-6"
+            onClick={onClick}
+            className={`flex flex-row items-center justify-center gap-2 rounded-2xl p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md md:flex-col md:items-stretch md:justify-start md:gap-4 md:p-6 ${onClick ? 'cursor-pointer' : ''}`}
             style={{ backgroundColor: bg, border: `2px solid ${border}` }}
           >
             <span
@@ -152,6 +202,56 @@ const Dashboard = () => {
             </div>
           </div>
         ))}
+
+        {/* Merged "In Progress" premium card — combines stage 1/2/3 counts */}
+        <div
+          onClick={() => navigate('/user/my-invoices', { state: { scrollToTable: true } })}
+          className="group relative col-span-2 cursor-pointer overflow-hidden rounded-2xl p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:col-span-1 md:p-6"
+          style={{
+            background: 'linear-gradient(135deg, #fdfbf6 0%, #f7f4fb 50%, #f6f9fd 100%)',
+            border: '1px solid #e6e1f0',
+          }}
+        >
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+            style={{ background: 'linear-gradient(90deg, #d9ae5e, #9dbbe0, #c3a8e0)' }}
+          />
+
+          <div className="mb-3 flex items-center justify-between md:mb-4">
+            <div className="flex items-center gap-2">
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg md:h-9 md:w-9 md:rounded-xl"
+                style={{ color: '#6b5a8f', backgroundColor: '#efeaf7' }}
+              >
+                <Clock3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">
+                In Progress
+              </span>
+            </div>
+            <ArrowUpRight className="h-4 w-4 text-ink-300 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ink-500" />
+          </div>
+
+          <div className="grid grid-cols-3 divide-x divide-cloud-200/70">
+            {[
+              { label: 'Stage 1', value: stageCounts.stage1, dot: '#d9ae5e' },
+              { label: 'Stage 2', value: stageCounts.stage2, dot: '#7fa3d6' },
+              { label: 'Stage 3', value: stageCounts.stage3, dot: '#b18fdb' },
+            ].map(({ label, value, dot }) => (
+              <div key={label} className="flex flex-col items-center gap-1 px-1 text-center md:items-start md:px-4 md:text-left">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
+                  <span className="text-2xl font-semibold tracking-tight text-ink-900 md:text-3xl">
+                    {value}
+                  </span>
+                </span>
+                <span className="truncate text-[11px] font-medium text-ink-500 md:text-xs">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </motion.div>
 
       <div className="surface-card flex flex-col gap-4 rounded-2xl p-6">
