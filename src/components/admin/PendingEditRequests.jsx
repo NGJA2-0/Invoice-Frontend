@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FileEdit, Inbox, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { adminService } from '../../services/adminService'
 import { useApp } from '../../context/AppContext'
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20]
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+// Module-level cache: persists across route navigation (component unmount/remount)
+// within the same browser session, but is wiped on an actual page refresh since the
+// JS module re-evaluates from scratch. Keyed by userId + page + limit so different
+// admins / pages / page-sizes don't collide.
+const editRequestsCache = new Map()
+
+const getCacheKey = (userId, page, limit) => `${userId}-${page}-${limit}`
 
 const STATUS_STYLES = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -66,30 +75,69 @@ const PendingEditRequests = () => {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const refreshTimerRef = useRef(null)
 
-  const fetchRequests = useCallback(async (page, limit) => {
+  // force=true bypasses the cache and always hits the API (used by the 5-min auto-refresh timer)
+  const fetchRequests = useCallback(async (page, limit, force = false) => {
+    const cacheKey = getCacheKey(user?.id, page, limit)
+    const cached = editRequestsCache.get(cacheKey)
+    const isFresh = cached && Date.now() - cached.timestamp < CACHE_TTL_MS
+
+    if (!force && isFresh) {
+      setRequests(cached.data.requests)
+      setPagination(cached.data.pagination)
+      setLoading(false)
+      setError(null)
+      scheduleAutoRefresh(page, limit, cached.timestamp)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
       const data = await adminService.getEditRequests(page, limit)
-      setRequests(data?.requests || [])
-      setPagination({
+      const requestsList = data?.requests || []
+      const paginationData = {
         page: data?.pagination?.page || page,
         limit: data?.pagination?.limit || limit,
         total: data?.pagination?.total || 0,
         totalPages: data?.pagination?.totalPages || 1,
+      }
+
+      setRequests(requestsList)
+      setPagination(paginationData)
+
+      const timestamp = Date.now()
+      editRequestsCache.set(cacheKey, {
+        data: { requests: requestsList, pagination: paginationData },
+        timestamp,
       })
+      scheduleAutoRefresh(page, limit, timestamp)
     } catch (err) {
       setError(err?.message || 'Failed to load edit requests')
       setRequests([])
     } finally {
       setLoading(false)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  // Schedules a silent refetch for exactly when the cache entry turns stale, so the
+  // view auto-refreshes after 5 minutes if the user just stays on the page.
+  const scheduleAutoRefresh = useCallback((page, limit, sinceTimestamp) => {
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+    const remaining = CACHE_TTL_MS - (Date.now() - sinceTimestamp)
+    refreshTimerRef.current = setTimeout(() => {
+      fetchRequests(page, limit, true)
+    }, Math.max(remaining, 0))
+  }, [fetchRequests])
 
   useEffect(() => {
     if (user?.id) {
       fetchRequests(1, pagination.limit)
+    }
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
