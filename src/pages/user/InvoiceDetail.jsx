@@ -13,6 +13,7 @@ const InvoiceDetail = () => {
   const location = useLocation()
   const cameFromFavourites = location.state?.from === 'favourites'
   const cameFromDashboard = location.state?.from === 'dashboard'
+  const cameFromDrafts = location.state?.from === 'drafts'
   const { user } = useApp()
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -39,7 +40,9 @@ const InvoiceDetail = () => {
             ? 'Back to Dashboard'
             : cameFromFavourites
               ? 'Back to Favourite Invoices'
-              : 'Back to My Invoices'
+              : cameFromDrafts
+                ? 'Back to Drafts'
+                : 'Back to My Invoices'
         }
         onBack={() =>
           navigate(
@@ -47,7 +50,9 @@ const InvoiceDetail = () => {
               ? '/user/dashboard'
               : cameFromFavourites
                 ? '/user/favourite-invoices'
-                : '/user/my-invoices',
+                : cameFromDrafts
+                  ? '/user/draft-invoices'
+                  : '/user/my-invoices',
           )
         }
       />

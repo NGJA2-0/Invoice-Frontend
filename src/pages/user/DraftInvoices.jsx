@@ -526,7 +526,7 @@ const DraftInvoices = () => {
                   {drafts.map((invoice) => (
                     <tr
                       key={invoice.invoiceId}
-                      onClick={() => navigate(`/user/invoices/${invoice.invoiceId}`)}
+                      onClick={() => navigate(`/user/invoices/${invoice.invoiceId}`, { state: { from: 'drafts' } })}
                     >
                       <td className="di-invoice-number">{invoice.invoiceNumber}</td>
                       <td>{invoice.invoiceDate}</td>
@@ -557,7 +557,7 @@ const DraftInvoices = () => {
                   <div
                     key={invoice.invoiceId}
                     className="di-mobile-card"
-                    onClick={() => navigate(`/user/invoices/${invoice.invoiceId}`)}
+                    onClick={() => navigate(`/user/invoices/${invoice.invoiceId}`, { state: { from: 'drafts' } })}
                   >
                     <div className="di-mobile-row-top">
                       <span className="di-invoice-number">
