@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
-import { ChevronDown, Heart, Download } from 'lucide-react'
+import { ChevronDown, Heart, Download, Receipt } from 'lucide-react'
 import InvoicePreview from '../invoices/InvoicePreview' // ← adjust path if different
 import Badge from '../common/Badge'
 import Button from '../common/Button'
@@ -56,6 +56,20 @@ const getCachedFavoriteIds = (userId) => {
 const setCachedFavoriteIds = (userId, ids) => {
   favoritesCache.set(userId, { ids, timestamp: Date.now() })
 }
+
+const EmptyInvoicesState = () => (
+  <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-cloud-200 bg-white/70 px-6 py-16 text-center">
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#f6ecd2] to-[#fdf9ec] ring-1 ring-[#e8d9a8]">
+      <Receipt size={26} className="text-[#b8922a]" strokeWidth={1.75} />
+    </div>
+    <div className="space-y-1.5">
+      <p className="text-base font-semibold text-ink-800">No invoices yet</p>
+      <p className="mx-auto max-w-sm text-sm leading-relaxed text-ink-500">
+        Once you create your first export invoice, it'll show up here — ready to track, favourite, and download.
+      </p>
+    </div>
+  </div>
+)
 
 const InvoiceTable = ({
   rows,
@@ -341,6 +355,10 @@ const InvoiceTable = ({
       </div>
       </div>
 
+      {rows.length === 0 ? (
+        <EmptyInvoicesState />
+      ) : (
+      <>
       {/* Desktop / tablet table */}
       <div className="hidden overflow-x-auto rounded-2xl border border-cloud-200 bg-white sm:block">
         <table className="min-w-full text-left text-sm">
@@ -498,6 +516,8 @@ const InvoiceTable = ({
           )
         })}
       </div>
+      </>
+      )}
 
       {/* Pagination */}
       {pagination && (
