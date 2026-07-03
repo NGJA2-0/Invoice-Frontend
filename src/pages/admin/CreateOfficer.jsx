@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
+import OfficerCapacitySlots from '../../components/admin/OfficerCapacitySlots'
 
 const STAGES = [
   { value: 1, label: 'Stage 1' },
@@ -300,29 +301,35 @@ function OfficerFormModal({
 // ---------- Officer row ----------
 function OfficerRow({ officer, onEdit, onDelete }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex flex-col">
         <span className="text-sm font-semibold text-gray-900">{officer.name}</span>
         <span className="text-xs text-gray-500">{officer.email} · {officer.phone}</span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
           {stageLabel(officer.stage)}
         </span>
-        <button
-          onClick={() => onEdit(officer)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-          title="Edit officer"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => onDelete(officer)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-          title="Delete officer"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <OfficerCapacitySlots
+          totalCapacity={officer.totalCapacity ?? 0}
+          occupiedSlots={officer.occupiedSlots ?? 0}
+        />
+        <div className="ml-auto flex items-center gap-1 sm:ml-0">
+          <button
+            onClick={() => onEdit(officer)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            title="Edit officer"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onDelete(officer)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+            title="Delete officer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   )
