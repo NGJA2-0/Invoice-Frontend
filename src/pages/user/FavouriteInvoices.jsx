@@ -184,7 +184,7 @@ const FavouriteInvoices = () => {
                   rows.map((row) => (
                     <tr
                       key={row.id}
-                      onClick={() => navigate(`/user/invoices/${row.id}`)}
+                      onClick={() => navigate(`/user/invoices/${row.id}`, { state: { from: 'favourites' } })}
                       className="cursor-pointer hover:bg-cloud-50/60"
                     >
                       <td className="px-5 py-4 font-semibold text-ink-800">{row.invoiceNumber}</td>

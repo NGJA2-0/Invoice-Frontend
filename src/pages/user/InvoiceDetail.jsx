@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { userService } from '../../services/userService'
 import { useApp } from '../../context/AppContext'
 import { buildInvoicePreviewData } from '../../utils/buildInvoicePreviewData'
@@ -10,6 +10,10 @@ import InvoiceDetailStates from '../../components/invoices/InvoiceDetailStates'
 const InvoiceDetail = () => {
   const { invoiceId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const cameFromFavourites = location.state?.from === 'favourites'
+  const cameFromDashboard = location.state?.from === 'dashboard'
+  const cameFromDrafts = location.state?.from === 'drafts'
   const { user } = useApp()
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -30,7 +34,28 @@ const InvoiceDetail = () => {
 
   return (
     <div>
-      <InvoiceDetailHeader title="Back to My Invoices" onBack={() => navigate('/user/my-invoices')} />
+      <InvoiceDetailHeader
+        title={
+          cameFromDashboard
+            ? 'Back to Dashboard'
+            : cameFromFavourites
+              ? 'Back to Favourite Invoices'
+              : cameFromDrafts
+                ? 'Back to Drafts'
+                : 'Back to My Invoices'
+        }
+        onBack={() =>
+          navigate(
+            cameFromDashboard
+              ? '/user/dashboard'
+              : cameFromFavourites
+                ? '/user/favourite-invoices'
+                : cameFromDrafts
+                  ? '/user/draft-invoices'
+                  : '/user/my-invoices',
+          )
+        }
+      />
 
       <InvoiceDetailStates loading={loading} error={error} hasPreview={Boolean(preview)} />
 
