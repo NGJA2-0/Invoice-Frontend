@@ -21,6 +21,8 @@ const STAGES = [
   { value: 2, label: 'Stage 2' },
   { value: 3, label: 'Stage 3' },
 ]
+// New officers are provisioned with this many slots by default.
+const DEFAULT_OFFICER_CAPACITY = 10
 
 const stageLabel = (value) => STAGES.find((s) => s.value === value)?.label || `Stage ${value}`
 
@@ -86,10 +88,16 @@ function OfficerFormModal({
         password,
       }
       if (mode === 'create') {
-        await officerApi.create({
+        const created = await officerApi.create({
           ...payload,
           createdBy: currentUser?.id,
         })
+        const newOfficerId = created?.id || created?._id
+        if (newOfficerId) {
+          await officerApi.updateCapacity(newOfficerId, {
+            totalCapacity: DEFAULT_OFFICER_CAPACITY,
+          })
+        }
       } else {
         await officerApi.update(officer.id, {
           ...payload,
