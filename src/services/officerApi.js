@@ -18,6 +18,9 @@ export const officerApi = {
   // PUT /api/v1/admin/officers/:id
   update: (id, payload) => api.put(`${BASE}/officers/${id}`, payload),
 
+  // PATCH /api/v1/admin/officers/:id/capacity
+  updateCapacity: (id, payload) => api.patch(`${BASE}/officers/${id}/capacity`, payload),
+
   // DELETE /api/v1/admin/officers/:id
   remove: (id) => api.delete(`${BASE}/officers/${id}`),
 

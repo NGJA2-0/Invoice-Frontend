@@ -9,10 +9,12 @@ import {
   Users2,
   Eye,
   EyeOff,
+  Gauge,
 } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
 import OfficerCapacitySlots from '../../components/admin/OfficerCapacitySlots'
+import UpdateCapacityModal from '../../components/admin/UpdateCapacityModal'
 
 const STAGES = [
   { value: 1, label: 'Stage 1' },
@@ -299,7 +301,7 @@ function OfficerFormModal({
 }
 
 // ---------- Officer row ----------
-function OfficerRow({ officer, onEdit, onDelete }) {
+function OfficerRow({ officer, onEdit, onDelete, onUpdateCapacity }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex flex-col">
@@ -315,6 +317,13 @@ function OfficerRow({ officer, onEdit, onDelete }) {
           occupiedSlots={officer.occupiedSlots ?? 0}
         />
         <div className="ml-auto flex items-center gap-1 sm:ml-0">
+          <button
+            onClick={() => onUpdateCapacity(officer)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            title="Update capacity"
+          >
+            <Gauge className="h-4 w-4" />
+          </button>
           <button
             onClick={() => onEdit(officer)}
             className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
@@ -365,6 +374,9 @@ export default function CreateOfficer() {
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Capacity update modal
+  const [capacityTarget, setCapacityTarget] = useState(null)
 
   useEffect(() => {
     if (!isSuperAdmin) return
@@ -421,6 +433,13 @@ export default function CreateOfficer() {
     setModalOpen(false)
     setSuccessMsg(editingOfficer ? 'Officer updated successfully' : 'Officer created successfully')
     setEditingOfficer(null)
+    await fetchList()
+    setTimeout(() => setSuccessMsg(''), 3000)
+  }
+
+  const handleCapacitySaved = async () => {
+    setCapacityTarget(null)
+    setSuccessMsg('Officer capacity updated successfully')
     await fetchList()
     setTimeout(() => setSuccessMsg(''), 3000)
   }
@@ -505,6 +524,7 @@ export default function CreateOfficer() {
                       officer={officer}
                       onEdit={openEditModal}
                       onDelete={setDeleteTarget}
+                      onUpdateCapacity={setCapacityTarget}
                     />
                   ))}
                 </div>
@@ -526,6 +546,7 @@ export default function CreateOfficer() {
                   officer={officer}
                   onEdit={openEditModal}
                   onDelete={setDeleteTarget}
+                  onUpdateCapacity={setCapacityTarget}
                 />
               ))}
             </div>
@@ -544,6 +565,15 @@ export default function CreateOfficer() {
           officer={editingOfficer}
           onClose={() => { setModalOpen(false); setEditingOfficer(null) }}
           onSaved={handleSaved}
+        />
+      )}
+
+      {/* Capacity update modal */}
+      {capacityTarget && (
+        <UpdateCapacityModal
+          officer={capacityTarget}
+          onClose={() => setCapacityTarget(null)}
+          onSaved={handleCapacitySaved}
         />
       )}
 
