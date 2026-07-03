@@ -12,6 +12,7 @@ const InvoiceDetail = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const cameFromFavourites = location.state?.from === 'favourites'
+  const cameFromDashboard = location.state?.from === 'dashboard'
   const { user } = useApp()
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -33,8 +34,22 @@ const InvoiceDetail = () => {
   return (
     <div>
       <InvoiceDetailHeader
-        title={cameFromFavourites ? 'Back to Favourite Invoices' : 'Back to My Invoices'}
-        onBack={() => navigate(cameFromFavourites ? '/user/favourite-invoices' : '/user/my-invoices')}
+        title={
+          cameFromDashboard
+            ? 'Back to Dashboard'
+            : cameFromFavourites
+              ? 'Back to Favourite Invoices'
+              : 'Back to My Invoices'
+        }
+        onBack={() =>
+          navigate(
+            cameFromDashboard
+              ? '/user/dashboard'
+              : cameFromFavourites
+                ? '/user/favourite-invoices'
+                : '/user/my-invoices',
+          )
+        }
       />
 
       <InvoiceDetailStates loading={loading} error={error} hasPreview={Boolean(preview)} />
