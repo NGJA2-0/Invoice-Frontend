@@ -11,11 +11,13 @@ import {
   Eye,
   EyeOff,
   Gauge,
+  ArrowRightLeft,
 } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
 import OfficerCapacitySlots from '../../components/admin/OfficerCapacitySlots'
 import UpdateCapacityModal from '../../components/admin/UpdateCapacityModal'
+import TransferSlotsModal from '../../components/admin/TransferSlotsModal'
 
 const STAGES = [
   { value: 1, label: 'Stage 1' },
@@ -421,6 +423,9 @@ export default function CreateOfficer() {
   // Capacity update modal
   const [capacityTarget, setCapacityTarget] = useState(null)
 
+  // Transfer slots modal
+  const [transferModalOpen, setTransferModalOpen] = useState(false)
+
   useEffect(() => {
     if (!isSuperAdmin) return
     const fetchAdmins = async () => {
@@ -487,6 +492,13 @@ export default function CreateOfficer() {
     setTimeout(() => setSuccessMsg(''), 3000)
   }
 
+  const handleTransferSaved = async () => {
+    setTransferModalOpen(false)
+    setSuccessMsg('Slots transferred successfully')
+    await fetchList()
+    setTimeout(() => setSuccessMsg(''), 3000)
+  }
+
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
@@ -518,13 +530,22 @@ export default function CreateOfficer() {
             </p>
           </div>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700"
-        >
-          <UserPlus className="h-4 w-4" />
-          Create Officer
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setTransferModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            <ArrowRightLeft className="h-4 w-4" />
+            Transfer Slots
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700"
+          >
+            <UserPlus className="h-4 w-4" />
+            Create Officer
+          </button>
+        </div>
       </div>
 
       {successMsg && (
@@ -617,6 +638,15 @@ export default function CreateOfficer() {
           officer={capacityTarget}
           onClose={() => setCapacityTarget(null)}
           onSaved={handleCapacitySaved}
+        />
+      )}
+
+      {/* Transfer slots modal */}
+      {transferModalOpen && (
+        <TransferSlotsModal
+          adminId={user?.id}
+          onClose={() => setTransferModalOpen(false)}
+          onSuccess={handleTransferSaved}
         />
       )}
 

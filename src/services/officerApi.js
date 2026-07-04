@@ -24,6 +24,9 @@ export const officerApi = {
   // DELETE /api/v1/admin/officers/:id
   remove: (id) => api.delete(`${BASE}/officers/${id}`),
 
+  // PATCH /api/v1/admin/officers/transfer-slots
+  transferSlots: (payload) => api.patch(`${BASE}/officers/transfer-slots`, payload),
+
   // GET /api/v1/stage1/officers/:officerId/invoices
   getAssignedInvoices: (officerId) => api.get(`/stage1/officers/${officerId}/invoices`),
 
