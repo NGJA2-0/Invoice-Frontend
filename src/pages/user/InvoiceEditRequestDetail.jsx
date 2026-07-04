@@ -475,6 +475,30 @@ const InvoiceEditRequestDetail = () => {
           margin-bottom: 10px;
           z-index: 2;
         }
+        @media (min-width: 641px) {
+          .ierd-preview-overlay {
+            align-items: center;
+          }
+          .ierd-preview-inner {
+            justify-content: center;
+          }
+          .ierd-preview-close {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            background: #ffffff;
+            color: #1a1a1a;
+            box-shadow: 0 8px 24px -6px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.06);
+            margin-bottom: 0;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+          }
+          .ierd-preview-close:hover {
+            transform: scale(1.08);
+            box-shadow: 0 10px 28px -6px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.08);
+          }
+        }
         @media (max-width: 640px) {
           .ierd-panel { border-radius: 14px; padding: 18px 16px 20px; }
         }
@@ -632,7 +656,11 @@ const InvoiceEditRequestDetail = () => {
           <button className="ierd-preview-close" onClick={() => setPreviewStage(null)}>
             <X size={18} />
           </button>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <div
+            className="ierd-preview-inner"
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+          >
             <InvoicePreview preview={buildPreviewForStage(previewStage)} />
           </div>
         </div>
