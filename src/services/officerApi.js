@@ -89,7 +89,7 @@ export const officerApi = {
   completeInvoice: (originalInvoiceId, officerId, payload) =>
     api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/complete`, payload),
 
-  // POST /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/edit
+  // POST /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/propose-edits
   editInvoice: (originalInvoiceId, officerId, payload) =>
-    api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/edit`, payload),
+    api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/propose-edits`, payload),
 }
