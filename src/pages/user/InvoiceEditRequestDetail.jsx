@@ -11,6 +11,7 @@ import InvoicePreview from '../../components/invoices/InvoicePreview'
 const GOLD = '#9a7b3c'
 const LIGHT_GOLD = '#c9a96e'
 const RULE = '#e8dfc8'
+const BG = '#fffdf8'
 
 const SECTION_LABELS = {
   companyHeader: 'Company Details',
@@ -161,6 +162,54 @@ const InvoiceEditRequestDetail = () => {
       />
 
       <style>{`
+        .ierd-panel {
+          position: relative;
+          background: ${BG};
+          border: 1px solid ${RULE};
+          border-radius: 18px;
+          padding: 22px 24px 24px;
+          box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 12px 32px -16px rgba(154,123,60,0.25);
+          overflow: hidden;
+        }
+        .ierd-panel-head {
+          border-bottom: 1px solid ${RULE};
+          padding-bottom: 14px;
+          margin-bottom: 18px;
+        }
+        .ierd-eyebrow {
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: ${GOLD};
+          margin-bottom: 6px;
+        }
+        .ierd-heading {
+          font-size: 17px;
+          font-weight: 800;
+          color: #1a1a1a;
+          letter-spacing: -0.01em;
+          margin: 0 0 4px;
+          line-height: 1.4;
+        }
+        .ierd-subheading {
+          font-size: 12.5px;
+          color: #8a8a8a;
+          margin: 0;
+          line-height: 1.5;
+        }
+        .ierd-status-line { font-size: 13px; color: #888; padding: 6px 0; }
+        .ierd-status-line.error { color: #b91c1c; }
+        .ierd-actions-card {
+          background: #ffffff;
+          border: 1px solid ${RULE};
+          border-radius: 14px;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+        }
         .ierd-section {
           background: rgba(255,255,255,0.9);
           border: 1px solid ${RULE};
@@ -426,10 +475,15 @@ const InvoiceEditRequestDetail = () => {
           margin-bottom: 10px;
           z-index: 2;
         }
+        @media (max-width: 640px) {
+          .ierd-panel { border-radius: 14px; padding: 18px 16px 20px; }
+        }
         @media (max-width: 480px) {
+          .ierd-heading { font-size: 15px; }
           .ierd-section-head { font-size: 10px; padding: 9px 12px; }
           .ierd-field-row { padding: 10px 12px; flex-direction: column; align-items: flex-start; }
           .ierd-value-pair { width: 100%; }
+          .ierd-actions-card { padding: 12px; }
           .ierd-review-modal { padding: 20px 16px 18px; border-radius: 16px; }
           .ierd-review-actions { flex-direction: column; }
           .ierd-review-btn-accept, .ierd-review-btn-reject, .ierd-review-btn-cancel {
@@ -438,64 +492,69 @@ const InvoiceEditRequestDetail = () => {
         }
       `}</style>
 
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>
-        Proposed Edits — Invoice #
-        {originalInvoice?.data?.invoiceMeta?.invoiceNumber ||
-          originalInvoice?.invoiceNumber ||
-          invoiceId}
-      </h2>
-      <p style={{ fontSize: 12.5, color: '#888', marginBottom: 16 }}>
-        Only the fields that changed are shown below.
-      </p>
-
-      {loading && <div style={{ fontSize: 13, color: '#888' }}>Loading proposed edits…</div>}
-      {error && <div style={{ fontSize: 13, color: '#b91c1c' }}>{error}</div>}
-
-      {!loading && !error && stageDiffs.length === 0 && (
-        <div className="ierd-empty">
-          <FileEdit size={26} style={{ marginBottom: 8 }} />
-          <div>No pending edits proposed for this invoice.</div>
+      <div className="ierd-panel">
+        <div className="ierd-panel-head">
+          <div className="ierd-eyebrow">Officer Review</div>
+          <h2 className="ierd-heading">
+            Proposed Edits — Invoice #
+            {originalInvoice?.data?.invoiceMeta?.invoiceNumber ||
+              originalInvoice?.invoiceNumber ||
+              invoiceId}
+          </h2>
+          <p className="ierd-subheading">Only the fields that changed are shown below.</p>
         </div>
-      )}
 
-      {!loading && !error && stageDiffs.map(({ stage, groupedDiff }) => (
-        <div key={stage} className="ierd-stage-block">
-          <div className="ierd-stage-heading">{STAGE_LABELS[stage]} — Proposed Changes</div>
+        {loading && <div className="ierd-status-line">Loading proposed edits…</div>}
+        {error && <div className="ierd-status-line error">{error}</div>}
 
-          {groupedDiff.map(({ sectionKey, fields }) => (
-            <div className="ierd-section" key={sectionKey}>
-              <div className="ierd-section-head">
-                {SECTION_LABELS[sectionKey] || formatLabel(sectionKey)}
-              </div>
-              {fields.map((f, i) => (
-                <div className="ierd-field-row" key={i}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="ierd-field-label">{f.fieldPath.map(formatLabel).join(' / ')}</div>
-                    <div className="ierd-value-pair">
-                      <span className="ierd-old-value">{formatVal(f.oldValue)}</span>
-                      <ArrowRight size={13} color="#9ca3af" />
-                      <span className="ierd-new-value">{formatVal(f.newValue)}</span>
+        {!loading && !error && stageDiffs.length === 0 && (
+          <div className="ierd-empty">
+            <FileEdit size={26} style={{ marginBottom: 8 }} />
+            <div>No pending edits proposed for this invoice.</div>
+          </div>
+        )}
+
+        {!loading && !error && stageDiffs.map(({ stage, groupedDiff }) => (
+          <div key={stage} className="ierd-stage-block">
+            <div className="ierd-stage-heading">{STAGE_LABELS[stage]} — Proposed Changes</div>
+
+            {groupedDiff.map(({ sectionKey, fields }) => (
+              <div className="ierd-section" key={sectionKey}>
+                <div className="ierd-section-head">
+                  {SECTION_LABELS[sectionKey] || formatLabel(sectionKey)}
+                </div>
+                {fields.map((f, i) => (
+                  <div className="ierd-field-row" key={i}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="ierd-field-label">{f.fieldPath.map(formatLabel).join(' / ')}</div>
+                      <div className="ierd-value-pair">
+                        <span className="ierd-old-value">{formatVal(f.oldValue)}</span>
+                        <ArrowRight size={13} color="#9ca3af" />
+                        <span className="ierd-new-value">{formatVal(f.newValue)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            ))}
+
+            <div className="ierd-actions-card">
+              <button
+                className="ierd-review-btn"
+                onClick={() => setReviewModalStage(stage)}
+              >
+                <CheckCircle2 size={17} />
+                Approve or Reject {STAGE_LABELS[stage]} Changes
+              </button>
+
+              <button className="ierd-preview-btn" onClick={() => setPreviewStage(stage)}>
+                <Eye size={17} />
+                Preview Invoice With {STAGE_LABELS[stage]} Changes
+              </button>
             </div>
-          ))}
-
-          <button
-            className="ierd-review-btn"
-            onClick={() => setReviewModalStage(stage)}
-          >
-            <CheckCircle2 size={17} />
-            Approve or Reject {STAGE_LABELS[stage]} Changes
-          </button>
-
-          <button className="ierd-preview-btn" onClick={() => setPreviewStage(stage)}>
-            <Eye size={17} />
-            Preview Invoice With {STAGE_LABELS[stage]} Changes
-          </button>
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
 
       {reviewModalStage && (
         <div className="ierd-review-overlay" onClick={closeReviewModal}>
