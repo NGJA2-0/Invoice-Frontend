@@ -14,21 +14,23 @@ export const userService = {
     return response
   },
 
-  // GET /api/v1/stage1/invoices/:originalInvoiceId/users/:userId/proposed-edits
+  // Valid stages: 'stage1' | 'stage2' | 'stage3'
+
+  // GET /api/v1/:stage/invoices/:originalInvoiceId/users/:userId/proposed-edits
   // returns { originalData, proposedData }
-  getProposedEdits: async (originalInvoiceId, userId) => {
+  getProposedEdits: async (stage, originalInvoiceId, userId) => {
     const response = await api.get(
-      `/stage1/invoices/${originalInvoiceId}/users/${userId}/proposed-edits`,
+      `/${stage}/invoices/${originalInvoiceId}/users/${userId}/proposed-edits`,
       { headers: { 'X-User-Id': userId } },
     )
     return response
   },
 
-  // POST /api/v1/stage1/invoices/:originalInvoiceId/users/:userId/review-edits
+  // POST /api/v1/:stage/invoices/:originalInvoiceId/users/:userId/review-edits
   // body: { approved: boolean, rejectionReason: string }
-  reviewProposedEdits: async (originalInvoiceId, userId, { approved, rejectionReason }) => {
+  reviewProposedEdits: async (stage, originalInvoiceId, userId, { approved, rejectionReason }) => {
     const response = await api.post(
-      `/stage1/invoices/${originalInvoiceId}/users/${userId}/review-edits`,
+      `/${stage}/invoices/${originalInvoiceId}/users/${userId}/review-edits`,
       { approved, rejectionReason },
       { headers: { 'X-User-Id': userId } },
     )

@@ -37,17 +37,25 @@ const formatVal = (v) => {
   return String(v)
 }
 
+const STAGES = ['stage1', 'stage2', 'stage3']
+const STAGE_LABELS = {
+  stage1: 'Stage 1 Officer',
+  stage2: 'Stage 2 Officer',
+  stage3: 'Stage 3 Officer',
+}
+
 const InvoiceEditRequestDetail = () => {
   const { invoiceId } = useParams()
   const navigate = useNavigate()
   const { user } = useApp()
 
-  const [edits, setEdits] = useState(null)
+  // { stage1: {originalData, proposedData} | null, stage2: ..., stage3: ... }
+  const [editsByStage, setEditsByStage] = useState({})
   const [originalInvoice, setOriginalInvoice] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showPreview, setShowPreview] = useState(false)
-  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [previewStage, setPreviewStage] = useState(null) // which stage's preview is open
+  const [reviewModalStage, setReviewModalStage] = useState(null) // which stage's review modal is open
   const [reviewStep, setReviewStep] = useState('choice') // 'choice' | 'reject-reason'
   const [rejectionReason, setRejectionReason] = useState('')
   const [reviewError, setReviewError] = useState('')
@@ -57,43 +65,64 @@ const InvoiceEditRequestDetail = () => {
     if (!invoiceId || !user?.id) return
     setLoading(true)
     setError(null)
+
     Promise.all([
-      userService.getProposedEdits(invoiceId, user.id),
+      ...STAGES.map((stage) =>
+        userService
+          .getProposedEdits(stage, invoiceId, user.id)
+          .then((res) => ({ stage, res }))
+          .catch(() => ({ stage, res: null })), // no pending edits at this stage
+      ),
       userService.getInvoiceById(invoiceId, user.id),
     ])
-      .then(([editsRes, invoiceRes]) => {
-        setEdits(editsRes)
+      .then((results) => {
+        const invoiceRes = results.pop()
+        const stageMap = {}
+        results.forEach(({ stage, res }) => {
+          stageMap[stage] = res
+        })
+        setEditsByStage(stageMap)
         setOriginalInvoice(invoiceRes)
       })
       .catch((err) => setError(err?.message || 'Failed to load proposed edits'))
       .finally(() => setLoading(false))
   }, [invoiceId, user?.id])
 
-  const groupedDiff = useMemo(() => {
-    if (!edits) return []
-    const flat = diffInvoiceData(edits.originalData, edits.proposedData)
-    return groupDiffBySection(flat)
-  }, [edits])
+  // Returns [{ stage, edits, groupedDiff }] — only stages that actually have changes
+  const stageDiffs = useMemo(() => {
+    return STAGES
+      .map((stage) => {
+        const edits = editsByStage[stage]
+        if (!edits) return null
+        const flat = diffInvoiceData(edits.originalData, edits.proposedData)
+        const groupedDiff = groupDiffBySection(flat)
+        if (groupedDiff.length === 0) return null
+        return { stage, edits, groupedDiff }
+      })
+      .filter(Boolean)
+  }, [editsByStage])
 
-  const previewData = useMemo(() => {
+  const buildPreviewForStage = (stage) => {
+    const edits = editsByStage[stage]
     if (!edits || !originalInvoice) return null
     const syntheticInvoice = { ...originalInvoice, data: edits.proposedData }
     return buildInvoicePreviewData(syntheticInvoice)
-  }, [edits, originalInvoice])
+  }
 
   const closeReviewModal = () => {
     if (isSubmittingReview) return
-    setShowReviewModal(false)
+    setReviewModalStage(null)
     setReviewStep('choice')
     setRejectionReason('')
     setReviewError('')
   }
 
   const handleApprove = async () => {
+    if (!reviewModalStage) return
     setIsSubmittingReview(true)
     setReviewError('')
     try {
-      await userService.reviewProposedEdits(invoiceId, user.id, {
+      await userService.reviewProposedEdits(reviewModalStage, invoiceId, user.id, {
         approved: true,
         rejectionReason: 'none',
       })
@@ -105,6 +134,7 @@ const InvoiceEditRequestDetail = () => {
   }
 
   const handleRejectSubmit = async () => {
+    if (!reviewModalStage) return
     if (!rejectionReason.trim()) {
       setReviewError('Please enter a reason for rejection')
       return
@@ -112,7 +142,7 @@ const InvoiceEditRequestDetail = () => {
     setIsSubmittingReview(true)
     setReviewError('')
     try {
-      await userService.reviewProposedEdits(invoiceId, user.id, {
+      await userService.reviewProposedEdits(reviewModalStage, invoiceId, user.id, {
         approved: false,
         rejectionReason: rejectionReason.trim(),
       })
@@ -202,6 +232,23 @@ const InvoiceEditRequestDetail = () => {
           cursor: pointer;
           box-shadow: 0 4px 14px -4px rgba(154,123,60,0.5);
           margin: 8px 0 6px;
+        }
+        .ierd-stage-block {
+          margin-bottom: 26px;
+          padding-bottom: 4px;
+          border-bottom: 1px dashed ${RULE};
+        }
+        .ierd-stage-block:last-of-type {
+          border-bottom: none;
+        }
+        .ierd-stage-heading {
+          font-size: 12.5px;
+          font-weight: 800;
+          color: #1a1a1a;
+          text-transform: uppercase;
+          letter-spacing: 0.6px;
+          margin-bottom: 10px;
+          padding-left: 2px;
         }
         .ierd-review-btn {
           display: flex;
@@ -392,7 +439,10 @@ const InvoiceEditRequestDetail = () => {
       `}</style>
 
       <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>
-        Proposed Edits — Invoice #{edits?.proposedData?.invoiceMeta?.invoiceNumber || invoiceId}
+        Proposed Edits — Invoice #
+        {originalInvoice?.data?.invoiceMeta?.invoiceNumber ||
+          originalInvoice?.invoiceNumber ||
+          invoiceId}
       </h2>
       <p style={{ fontSize: 12.5, color: '#888', marginBottom: 16 }}>
         Only the fields that changed are shown below.
@@ -401,51 +451,53 @@ const InvoiceEditRequestDetail = () => {
       {loading && <div style={{ fontSize: 13, color: '#888' }}>Loading proposed edits…</div>}
       {error && <div style={{ fontSize: 13, color: '#b91c1c' }}>{error}</div>}
 
-      {!loading && !error && groupedDiff.length === 0 && (
+      {!loading && !error && stageDiffs.length === 0 && (
         <div className="ierd-empty">
           <FileEdit size={26} style={{ marginBottom: 8 }} />
           <div>No pending edits proposed for this invoice.</div>
         </div>
       )}
 
-      {!loading && !error && groupedDiff.map(({ sectionKey, fields }) => (
-        <div className="ierd-section" key={sectionKey}>
-          <div className="ierd-section-head">
-            {SECTION_LABELS[sectionKey] || formatLabel(sectionKey)}
-          </div>
-          {fields.map((f, i) => (
-            <div className="ierd-field-row" key={i}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="ierd-field-label">{f.fieldPath.map(formatLabel).join(' / ')}</div>
-                <div className="ierd-value-pair">
-                  <span className="ierd-old-value">{formatVal(f.oldValue)}</span>
-                  <ArrowRight size={13} color="#9ca3af" />
-                  <span className="ierd-new-value">{formatVal(f.newValue)}</span>
-                </div>
+      {!loading && !error && stageDiffs.map(({ stage, groupedDiff }) => (
+        <div key={stage} className="ierd-stage-block">
+          <div className="ierd-stage-heading">{STAGE_LABELS[stage]} — Proposed Changes</div>
+
+          {groupedDiff.map(({ sectionKey, fields }) => (
+            <div className="ierd-section" key={sectionKey}>
+              <div className="ierd-section-head">
+                {SECTION_LABELS[sectionKey] || formatLabel(sectionKey)}
               </div>
+              {fields.map((f, i) => (
+                <div className="ierd-field-row" key={i}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="ierd-field-label">{f.fieldPath.map(formatLabel).join(' / ')}</div>
+                    <div className="ierd-value-pair">
+                      <span className="ierd-old-value">{formatVal(f.oldValue)}</span>
+                      <ArrowRight size={13} color="#9ca3af" />
+                      <span className="ierd-new-value">{formatVal(f.newValue)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
+
+          <button
+            className="ierd-review-btn"
+            onClick={() => setReviewModalStage(stage)}
+          >
+            <CheckCircle2 size={17} />
+            Approve or Reject {STAGE_LABELS[stage]} Changes
+          </button>
+
+          <button className="ierd-preview-btn" onClick={() => setPreviewStage(stage)}>
+            <Eye size={17} />
+            Preview Invoice With {STAGE_LABELS[stage]} Changes
+          </button>
         </div>
       ))}
 
-      {!loading && !error && edits && groupedDiff.length > 0 && (
-        <button
-          className="ierd-review-btn"
-          onClick={() => setShowReviewModal(true)}
-        >
-          <CheckCircle2 size={17} />
-          Approve or Reject Changes
-        </button>
-      )}
-
-      {!loading && !error && edits && (
-        <button className="ierd-preview-btn" onClick={() => setShowPreview(true)}>
-          <Eye size={17} />
-          Preview Updated Invoice
-        </button>
-      )}
-
-      {showReviewModal && (
+      {reviewModalStage && (
         <div className="ierd-review-overlay" onClick={closeReviewModal}>
           <div className="ierd-review-modal" onClick={(e) => e.stopPropagation()}>
             <button className="ierd-review-modal-close" onClick={closeReviewModal} disabled={isSubmittingReview}>
@@ -454,9 +506,9 @@ const InvoiceEditRequestDetail = () => {
 
             {reviewStep === 'choice' ? (
               <>
-                <h3 className="ierd-review-title">Review Proposed Changes</h3>
+                <h3 className="ierd-review-title">Review {STAGE_LABELS[reviewModalStage]} Changes</h3>
                 <p className="ierd-review-subtitle">
-                  Do you want to accept or reject the changes proposed for this invoice?
+                  Do you want to accept or reject the changes proposed at this stage?
                 </p>
                 {reviewError && <div className="ierd-review-error">{reviewError}</div>}
                 <div className="ierd-review-actions">
@@ -516,13 +568,13 @@ const InvoiceEditRequestDetail = () => {
         </div>
       )}
 
-      {showPreview && previewData && (
-        <div className="ierd-preview-overlay" onClick={() => setShowPreview(false)}>
-          <button className="ierd-preview-close" onClick={() => setShowPreview(false)}>
+      {previewStage && buildPreviewForStage(previewStage) && (
+        <div className="ierd-preview-overlay" onClick={() => setPreviewStage(null)}>
+          <button className="ierd-preview-close" onClick={() => setPreviewStage(null)}>
             <X size={18} />
           </button>
           <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-            <InvoicePreview preview={previewData} />
+            <InvoicePreview preview={buildPreviewForStage(previewStage)} />
           </div>
         </div>
       )}
