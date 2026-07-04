@@ -20,9 +20,9 @@ const InvoiceEditRequests = () => {
     setLoading(true)
     setError(null)
     userService
-      .getInvoices(user.id, { page: 1, pageSize: 50 })
+      .getActionableInvoices(user.id, { page: 1, pageSize: 50 })
       .then((res) => {
-        const list = Array.isArray(res) ? res : res?.invoices || res?.data || []
+        const list = res?.data?.invoices || res?.invoices || []
         setInvoices(list)
       })
       .catch((err) => setError(err?.message || 'Failed to load invoices'))
@@ -78,12 +78,12 @@ const InvoiceEditRequests = () => {
       {!loading && !error && invoices.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
           <Inbox size={28} style={{ marginBottom: 8 }} />
-          <div style={{ fontSize: 13 }}>No invoices found.</div>
+          <div style={{ fontSize: 13 }}>No pending edit requests found.</div>
         </div>
       )}
 
       {!loading && !error && invoices.map((inv) => {
-        const id = inv.invoiceId || inv.id
+        const id = inv.originalInvoiceId || inv.invoiceId || inv.id
         return (
           <div
             key={id}
@@ -94,7 +94,9 @@ const InvoiceEditRequests = () => {
               <div className="ier-icon"><GitCompare size={17} /></div>
               <div style={{ minWidth: 0 }}>
                 <div className="ier-title">Invoice #{inv.invoiceNumber || 'N/A'}</div>
-                <div className="ier-sub">{inv.invoiceDate || 'N/A'} · {inv.receiverName || 'N/A'}</div>
+                <div className="ier-sub">
+                  Stage {inv.stage || '—'} · Pending your review
+                </div>
               </div>
             </div>
             <ChevronRight size={18} color="#c9a96e" />

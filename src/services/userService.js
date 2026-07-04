@@ -128,4 +128,18 @@ export const userService = {
     })
     return response
   },
+
+  // GET /api/v1/invoices/user/:userId/actionable
+  // returns { total, page, pageSize, totalPages, invoices: [...] }
+  getActionableInvoices: async (userId, { page = 1, pageSize = 10 } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('pageSize', pageSize)
+
+    const response = await api.get(
+      `/invoices/user/${userId}/actionable?${params.toString()}`,
+      { headers: { 'X-User-Id': userId }, raw: true },
+    )
+    return response
+  },
 }
