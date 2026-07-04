@@ -24,6 +24,17 @@ export const userService = {
     return response
   },
 
+  // POST /api/v1/stage1/invoices/:originalInvoiceId/users/:userId/review-edits
+  // body: { approved: boolean, rejectionReason: string }
+  reviewProposedEdits: async (originalInvoiceId, userId, { approved, rejectionReason }) => {
+    const response = await api.post(
+      `/stage1/invoices/${originalInvoiceId}/users/${userId}/review-edits`,
+      { approved, rejectionReason },
+      { headers: { 'X-User-Id': userId } },
+    )
+    return response
+  },
+
   // POST /api/v1/invoices/:id/pdf — returns { data: <invoiceData>, meta, sections }
   // matching exactly what InvoicePreview expects as its `preview` prop.
   // api.post() auto-attaches X-User-Id and unwraps payload.data for us.
