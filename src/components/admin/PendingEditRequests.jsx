@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FileEdit, Inbox, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FileEdit, Inbox, Loader2, ChevronLeft, ChevronRight, CheckCircle2, XCircle, X } from 'lucide-react'
 import { adminService } from '../../services/adminService'
 import { useApp } from '../../context/AppContext'
 
@@ -47,7 +47,7 @@ const TableSkeleton = () => (
   <tbody>
     {Array.from({ length: 5 }).map((_, i) => (
       <tr key={i} className="border-b border-white/5">
-        {Array.from({ length: 7 }).map((__, j) => (
+        {Array.from({ length: 8 }).map((__, j) => (
           <td key={j} className="px-4 py-4">
             <div className="h-3.5 w-full max-w-[120px] animate-pulse rounded bg-slate-200" />
           </td>
@@ -76,6 +76,11 @@ const PendingEditRequests = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const refreshTimerRef = useRef(null)
+
+  const [actionModal, setActionModal] = useState(null) // { id, action: 'approve' | 'reject' }
+  const [adminNotes, setAdminNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [actionError, setActionError] = useState(null)
 
   // force=true bypasses the cache and always hits the API (used by the 5-min auto-refresh timer)
   const fetchRequests = useCallback(async (page, limit, force = false) => {
@@ -151,6 +156,42 @@ const PendingEditRequests = () => {
     fetchRequests(1, Number(nextLimit))
   }
 
+  const openActionModal = (id, action) => {
+    setActionModal({ id, action })
+    setAdminNotes('')
+    setActionError(null)
+  }
+
+  const closeActionModal = () => {
+    if (submitting) return
+    setActionModal(null)
+    setAdminNotes('')
+    setActionError(null)
+  }
+
+  const handleConfirmAction = async () => {
+    if (!actionModal) return
+    setSubmitting(true)
+    setActionError(null)
+    try {
+      const { id, action } = actionModal
+      if (action === 'approve') {
+        await adminService.approveEditRequest(id, { adminNotes })
+      } else {
+        await adminService.rejectEditRequest(id, { adminNotes })
+      }
+      setActionModal(null)
+      setAdminNotes('')
+      // Force a fresh fetch from the server (bypasses cache) so the table
+      // reflects the latest state after the approve/reject action.
+      await fetchRequests(pagination.page, pagination.limit, true)
+    } catch (err) {
+      setActionError(err?.message || 'Failed to submit. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
       {/* Header */}
@@ -201,7 +242,7 @@ const PendingEditRequests = () => {
           <table className="w-full min-w-[900px] text-left">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                {['Dealer', 'Assigned Admin', 'TIN', 'Stock Value', 'Gem Dealer File No.', 'Status', 'Submitted'].map((col) => (
+                {['Dealer', 'Assigned Admin', 'TIN', 'Stock Value', 'Gem Dealer File No.', 'Status', 'Submitted', 'Actions'].map((col) => (
                   <th
                     key={col}
                     className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-slate-500"
@@ -229,6 +270,30 @@ const PendingEditRequests = () => {
                       <StatusBadge status={req.status} />
                     </td>
                     <td className="px-4 py-4 text-sm text-slate-500">{formatDate(req.submittedAt)}</td>
+                    <td className="px-4 py-4">
+                      {req.status === 'pending' ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openActionModal(req.id, 'approve')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openActionModal(req.id, 'reject')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-100"
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -269,6 +334,67 @@ const PendingEditRequests = () => {
         <div className="flex items-center justify-center gap-2 border-t border-slate-200 px-5 py-4 text-xs text-slate-500">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Loading requests…
+        </div>
+      )}
+
+      {actionModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 px-4 pb-4 sm:items-center sm:pb-0">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {actionModal.action === 'approve' ? 'Approve edit request' : 'Reject edit request'}
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Add a note for this decision. It will be saved with the request.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeActionModal}
+                disabled={submitting}
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <textarea
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              rows={4}
+              placeholder="e.g. Verified with NGJA records. Approved."
+              className="mt-4 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-indigo-400"
+            />
+
+            {actionError && (
+              <p className="mt-2 text-xs text-rose-600">{actionError}</p>
+            )}
+
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeActionModal}
+                disabled={submitting}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAction}
+                disabled={submitting}
+                className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 ${
+                  actionModal.action === 'approve'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-rose-600 hover:bg-rose-700'
+                }`}
+              >
+                {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Send
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

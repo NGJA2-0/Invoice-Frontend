@@ -15,6 +15,16 @@ export const adminService = {
     return response
   },
 
+  approveEditRequest: async (id, data) => {
+    const response = await api.put(`/admin/edit-requests/${id}/approve`, data)
+    return response
+  },
+
+  rejectEditRequest: async (id, data) => {
+    const response = await api.put(`/admin/edit-requests/${id}/reject`, data)
+    return response
+  },
+
   getAllUsers: async () => {
     const response = await api.get('/admin/users')
     return response
