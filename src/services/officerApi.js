@@ -15,6 +15,9 @@ export const officerApi = {
   // GET /api/v1/admin/officers/grouped
   getGrouped: () => api.get(`${BASE}/officers/grouped`),
 
+  // GET /api/v1/admin/officers/:id/capacity
+  getCapacity: (officerId) => api.get(`${BASE}/officers/${officerId}/capacity`),
+
   // PUT /api/v1/admin/officers/:id
   update: (id, payload) => api.put(`${BASE}/officers/${id}`, payload),
 

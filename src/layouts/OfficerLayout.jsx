@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import OfficerCapacity from '../components/officer/OfficerCapacity'
 
 const OfficerLayout = () => {
   const navigate = useNavigate()
@@ -139,6 +140,7 @@ const OfficerLayout = () => {
         </div>
 
         <main className="ol-main">
+          <OfficerCapacity officerId={user?.id} />
           <Outlet />
         </main>
       </div>
