@@ -27,6 +27,8 @@ import CreateInvoice from '../pages/user/CreateInvoice'
 import Dashboard from '../pages/user/Dashboard'
 import MyInvoices from '../pages/user/MyInvoices'
 import UserInvoiceDetail from '../pages/user/InvoiceDetail'
+import InvoiceEditRequests from '../pages/user/InvoiceEditRequests'
+import InvoiceEditRequestDetail from '../pages/user/InvoiceEditRequestDetail'
 import FavouriteInvoices from '../pages/user/FavouriteInvoices'
 import DraftInvoices from '../pages/user/DraftInvoices'
 import ProcedureFlow from '../pages/user/ProcedureFlow'
@@ -77,6 +79,8 @@ const AppRoutes = () => {
           <Route path="create-invoice" element={<CreateInvoice />} />
           <Route path="my-invoices" element={<MyInvoices />} />
           <Route path="invoices/:invoiceId" element={<UserInvoiceDetail />} />
+          <Route path="invoice-edit-requests" element={<InvoiceEditRequests />} />
+          <Route path="invoice-edit-requests/:invoiceId" element={<InvoiceEditRequestDetail />} />
           <Route path="favourite-invoices" element={<FavouriteInvoices />} />
           <Route path="draft-invoices" element={<DraftInvoices />} />
           <Route path="procedure-flow" element={<ProcedureFlow />} />
