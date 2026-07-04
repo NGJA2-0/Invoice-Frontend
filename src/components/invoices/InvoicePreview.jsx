@@ -794,6 +794,10 @@ const InvoicePreview = forwardRef(({ preview }, _ref) => {
       <DownloadButton targetRef={pageRef} />
 
       <style>{`
+        .invoice-scale-wrapper {
+          display: flex;
+          justify-content: center;
+        }
         @media (max-width: 640px) {
           .invoice-scale-wrapper {
             width: 100%;

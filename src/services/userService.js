@@ -14,6 +14,29 @@ export const userService = {
     return response
   },
 
+  // Valid stages: 'stage1' | 'stage2' | 'stage3'
+
+  // GET /api/v1/:stage/invoices/:originalInvoiceId/users/:userId/proposed-edits
+  // returns { originalData, proposedData }
+  getProposedEdits: async (stage, originalInvoiceId, userId) => {
+    const response = await api.get(
+      `/${stage}/invoices/${originalInvoiceId}/users/${userId}/proposed-edits`,
+      { headers: { 'X-User-Id': userId } },
+    )
+    return response
+  },
+
+  // POST /api/v1/:stage/invoices/:originalInvoiceId/users/:userId/review-edits
+  // body: { approved: boolean, rejectionReason: string }
+  reviewProposedEdits: async (stage, originalInvoiceId, userId, { approved, rejectionReason }) => {
+    const response = await api.post(
+      `/${stage}/invoices/${originalInvoiceId}/users/${userId}/review-edits`,
+      { approved, rejectionReason },
+      { headers: { 'X-User-Id': userId } },
+    )
+    return response
+  },
+
   // POST /api/v1/invoices/:id/pdf — returns { data: <invoiceData>, meta, sections }
   // matching exactly what InvoicePreview expects as its `preview` prop.
   // api.post() auto-attaches X-User-Id and unwraps payload.data for us.
@@ -103,6 +126,20 @@ export const userService = {
     const response = await api.get(`/invoices/status-count?status=${status}`, {
       headers: { 'X-User-Id': userId },
     })
+    return response
+  },
+
+  // GET /api/v1/invoices/user/:userId/actionable
+  // returns { total, page, pageSize, totalPages, invoices: [...] }
+  getActionableInvoices: async (userId, { page = 1, pageSize = 10 } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('pageSize', pageSize)
+
+    const response = await api.get(
+      `/invoices/user/${userId}/actionable?${params.toString()}`,
+      { headers: { 'X-User-Id': userId }, raw: true },
+    )
     return response
   },
 }

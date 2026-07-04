@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   AlertTriangle,
   FileText,
+  GitCompare,
   LayoutGrid,
   LogOut,
   PencilLine,
@@ -19,6 +20,7 @@ const navItems = [
   { label: 'Dashboard', path: '/user/dashboard', icon: LayoutGrid },
   { label: 'Create Invoice', path: '/user/create-invoice', icon: Send },
   { label: 'My Invoices', path: '/user/my-invoices', icon: FileText },
+  { label: 'Invoice Edit Requests', path: '/user/invoice-edit-requests', icon: GitCompare },
   { label: 'Procedure Flow', path: '/user/procedure-flow', icon: ScrollText },
   { label: 'Edit Profile', path: '/user/edit-profile', icon: PencilLine },
 ]
@@ -27,6 +29,7 @@ const pageLabels = {
   '/user/dashboard': 'Dashboard',
   '/user/create-invoice': 'Create Invoice',
   '/user/my-invoices': 'My Invoices',
+  '/user/invoice-edit-requests': 'Invoice Edit Requests',
   '/user/procedure-flow': 'Procedure Flow',
   '/user/edit-profile': 'Edit Profile',
   '/user/dealer-registration': 'Dealer Registration',

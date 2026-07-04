@@ -51,13 +51,13 @@ export const officerApi = {
   // GET /api/v1/stage3/invoices/:originalInvoiceId/history
   getStage3History: (originalInvoiceId) => api.get(`/stage3/invoices/${originalInvoiceId}/history`),
 
-  // POST /api/v1/stage2/invoices/:originalInvoiceId/officers/:stage2OfficerId/edit
+  // POST /api/v1/stage2/invoices/:originalInvoiceId/officers/:stage2OfficerId/propose-edits
   editStage2Invoice: (originalInvoiceId, stage2OfficerId, payload) =>
-    api.post(`/stage2/invoices/${originalInvoiceId}/officers/${stage2OfficerId}/edit`, payload),
+    api.post(`/stage2/invoices/${originalInvoiceId}/officers/${stage2OfficerId}/propose-edits`, payload),
 
-  // POST /api/v1/stage3/invoices/:originalInvoiceId/officers/:stage3OfficerId/edit
+  // POST /api/v1/stage3/invoices/:originalInvoiceId/officers/:stage3OfficerId/propose-edits
   editStage3Invoice: (originalInvoiceId, stage3OfficerId, payload) =>
-    api.post(`/stage3/invoices/${originalInvoiceId}/officers/${stage3OfficerId}/edit`, payload),
+    api.post(`/stage3/invoices/${originalInvoiceId}/officers/${stage3OfficerId}/propose-edits`, payload),
 
   // PATCH /api/v1/stage3/invoices/:originalInvoiceId/officers/:stage3OfficerId/reject
   rejectStage3Invoice: (originalInvoiceId, stage3OfficerId, payload) =>
@@ -89,7 +89,7 @@ export const officerApi = {
   completeInvoice: (originalInvoiceId, officerId, payload) =>
     api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/complete`, payload),
 
-  // POST /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/edit
+  // POST /api/v1/stage1/invoices/:originalInvoiceId/officers/:officerId/propose-edits
   editInvoice: (originalInvoiceId, officerId, payload) =>
-    api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/edit`, payload),
+    api.post(`/stage1/invoices/${originalInvoiceId}/officers/${officerId}/propose-edits`, payload),
 }
