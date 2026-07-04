@@ -1,10 +1,18 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import OfficerCapacity from '../components/officer/OfficerCapacity'
 
 const OfficerLayout = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useApp()
+
+  // Only show the capacity card on the dashboard list pages —
+  // hide it once the officer drills into an invoice's detail/edit view.
+  const isDashboardRoute = /\/(officer|officer2|officer3)(\/dashboard)?\/?$/.test(
+    location.pathname
+  )
 
   const handleLogout = () => {
     logout()
@@ -139,6 +147,7 @@ const OfficerLayout = () => {
         </div>
 
         <main className="ol-main">
+          {isDashboardRoute && <OfficerCapacity officerId={user?.id} />}
           <Outlet />
         </main>
       </div>

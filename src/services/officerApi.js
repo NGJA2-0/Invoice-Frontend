@@ -15,11 +15,20 @@ export const officerApi = {
   // GET /api/v1/admin/officers/grouped
   getGrouped: () => api.get(`${BASE}/officers/grouped`),
 
+  // GET /api/v1/admin/officers/:id/capacity
+  getCapacity: (officerId) => api.get(`${BASE}/officers/${officerId}/capacity`),
+
   // PUT /api/v1/admin/officers/:id
   update: (id, payload) => api.put(`${BASE}/officers/${id}`, payload),
 
+  // PATCH /api/v1/admin/officers/:id/capacity
+  updateCapacity: (id, payload) => api.patch(`${BASE}/officers/${id}/capacity`, payload),
+
   // DELETE /api/v1/admin/officers/:id
   remove: (id) => api.delete(`${BASE}/officers/${id}`),
+
+  // PATCH /api/v1/admin/officers/transfer-slots
+  transferSlots: (payload) => api.patch(`${BASE}/officers/transfer-slots`, payload),
 
   // GET /api/v1/stage1/officers/:officerId/invoices
   getAssignedInvoices: (officerId) => api.get(`/stage1/officers/${officerId}/invoices`),

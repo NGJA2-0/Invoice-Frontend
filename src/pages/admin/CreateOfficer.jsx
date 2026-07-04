@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   UserPlus,
   ChevronDown,
@@ -9,17 +10,47 @@ import {
   Users2,
   Eye,
   EyeOff,
+  Gauge,
+  ArrowRightLeft,
 } from 'lucide-react'
 import { officerApi } from '../../services/officerApi'
 import { useApp } from '../../context/AppContext'
+import OfficerCapacitySlots from '../../components/admin/OfficerCapacitySlots'
+import UpdateCapacityModal from '../../components/admin/UpdateCapacityModal'
+import TransferSlotsModal from '../../components/admin/TransferSlotsModal'
 
 const STAGES = [
   { value: 1, label: 'Stage 1' },
   { value: 2, label: 'Stage 2' },
   { value: 3, label: 'Stage 3' },
 ]
+// New officers are provisioned with this many slots by default.
+const DEFAULT_OFFICER_CAPACITY = 10
 
 const stageLabel = (value) => STAGES.find((s) => s.value === value)?.label || `Stage ${value}`
+
+// Renders a dropdown list in a portal attached to document.body, positioned
+// with fixed coordinates below the trigger button. This keeps it from being
+// clipped/scrolled by parent containers with overflow-y-auto (e.g. modals).
+function FloatingMenu({ anchorRect, onClose, children }) {
+  if (!anchorRect) return null
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[200]" onClick={onClose} />
+      <ul
+        className="fixed z-[201] max-h-56 overflow-auto rounded-xl border border-white/40 bg-white/95 shadow-lg backdrop-blur-sm"
+        style={{
+          top: anchorRect.bottom + 4,
+          left: anchorRect.left,
+          width: anchorRect.width,
+        }}
+      >
+        {children}
+      </ul>
+    </>,
+    document.body
+  )
+}
 
 // ---------- Create / Edit Officer Modal ----------
 function OfficerFormModal({
@@ -37,7 +68,8 @@ function OfficerFormModal({
   const [email, setEmail] = useState(officer?.email || '')
   const [phone, setPhone] = useState(officer?.phone || '')
   const [stage, setStage] = useState(officer?.stage || null)
-  const [stageOpen, setStageOpen] = useState(false)
+  const [stageMenuRect, setStageMenuRect] = useState(null)
+  const stageButtonRef = useRef(null)
 
   const [username, setUsername] = useState(officer?.username || '')
   const [password, setPassword] = useState('')
@@ -47,7 +79,8 @@ function OfficerFormModal({
     ? admins.find((a) => a.id === officer.adminId) || null
     : null
   const [selectedAdmin, setSelectedAdmin] = useState(initialAdmin)
-  const [adminOpen, setAdminOpen] = useState(false)
+  const [adminMenuRect, setAdminMenuRect] = useState(null)
+  const adminButtonRef = useRef(null)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -83,10 +116,16 @@ function OfficerFormModal({
         password,
       }
       if (mode === 'create') {
-        await officerApi.create({
+        const created = await officerApi.create({
           ...payload,
           createdBy: currentUser?.id,
         })
+        const newOfficerId = created?.id || created?._id
+        if (newOfficerId) {
+          await officerApi.updateCapacity(newOfficerId, {
+            totalCapacity: DEFAULT_OFFICER_CAPACITY,
+          })
+        }
       } else {
         await officerApi.update(officer.id, {
           ...payload,
@@ -209,8 +248,13 @@ function OfficerFormModal({
           <div className="relative">
             <label className="mb-1.5 block text-xs font-semibold text-gray-600">Stage</label>
             <button
+              ref={stageButtonRef}
               type="button"
-              onClick={() => setStageOpen((o) => !o)}
+              onClick={() =>
+                setStageMenuRect((open) =>
+                  open ? null : stageButtonRef.current.getBoundingClientRect()
+                )
+              }
               className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20"
             >
               <span className={stage ? 'text-gray-900' : 'text-gray-400'}>
@@ -218,19 +262,17 @@ function OfficerFormModal({
               </span>
               <ChevronDown className="h-4 w-4 text-gray-400" />
             </button>
-            {stageOpen && (
-              <ul className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-white/40 bg-white/95 shadow-lg backdrop-blur-sm">
-                {STAGES.map((s) => (
-                  <li
-                    key={s.value}
-                    onClick={() => { setStage(s.value); setStageOpen(false) }}
-                    className="cursor-pointer px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100"
-                  >
-                    {s.label}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <FloatingMenu anchorRect={stageMenuRect} onClose={() => setStageMenuRect(null)}>
+              {STAGES.map((s) => (
+                <li
+                  key={s.value}
+                  onClick={() => { setStage(s.value); setStageMenuRect(null) }}
+                  className="cursor-pointer px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100"
+                >
+                  {s.label}
+                </li>
+              ))}
+            </FloatingMenu>
           </div>
 
           {/* Admin dropdown — super admin only, locked during edit */}
@@ -238,8 +280,14 @@ function OfficerFormModal({
             <div className="relative">
               <label className="mb-1.5 block text-xs font-semibold text-gray-600">Assign to Admin</label>
               <button
+                ref={adminButtonRef}
                 type="button"
-                onClick={() => mode === 'create' && setAdminOpen((o) => !o)}
+                onClick={() =>
+                  mode === 'create' &&
+                  setAdminMenuRect((open) =>
+                    open ? null : adminButtonRef.current.getBoundingClientRect()
+                  )
+                }
                 disabled={loadingAdmins || mode === 'edit'}
                 className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -252,22 +300,22 @@ function OfficerFormModal({
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
-              {mode === 'create' && adminOpen && (
-                <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-auto rounded-xl border border-white/40 bg-white/95 shadow-lg backdrop-blur-sm">
+              {mode === 'create' && (
+                <FloatingMenu anchorRect={adminMenuRect} onClose={() => setAdminMenuRect(null)}>
                   {admins.length === 0 ? (
                     <li className="px-4 py-2.5 text-sm text-gray-400">No admins found</li>
                   ) : (
                     admins.map((a) => (
                       <li
                         key={a.id}
-                        onClick={() => { setSelectedAdmin(a); setAdminOpen(false) }}
+                        onClick={() => { setSelectedAdmin(a); setAdminMenuRect(null) }}
                         className="cursor-pointer px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100"
                       >
                         {a.fullName}
                       </li>
                     ))
                   )}
-                </ul>
+                </FloatingMenu>
               )}
             </div>
           )}
@@ -298,31 +346,44 @@ function OfficerFormModal({
 }
 
 // ---------- Officer row ----------
-function OfficerRow({ officer, onEdit, onDelete }) {
+function OfficerRow({ officer, onEdit, onDelete, onUpdateCapacity }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex flex-col">
         <span className="text-sm font-semibold text-gray-900">{officer.name}</span>
         <span className="text-xs text-gray-500">{officer.email} · {officer.phone}</span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
           {stageLabel(officer.stage)}
         </span>
-        <button
-          onClick={() => onEdit(officer)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-          title="Edit officer"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => onDelete(officer)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-          title="Delete officer"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <OfficerCapacitySlots
+          totalCapacity={officer.totalCapacity ?? 0}
+          occupiedSlots={officer.occupiedSlots ?? 0}
+        />
+        <div className="ml-auto flex items-center gap-1 sm:ml-0">
+          <button
+            onClick={() => onUpdateCapacity(officer)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            title="Update capacity"
+          >
+            <Gauge className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onEdit(officer)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            title="Edit officer"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onDelete(officer)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+            title="Delete officer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -358,6 +419,12 @@ export default function CreateOfficer() {
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Capacity update modal
+  const [capacityTarget, setCapacityTarget] = useState(null)
+
+  // Transfer slots modal
+  const [transferModalOpen, setTransferModalOpen] = useState(false)
 
   useEffect(() => {
     if (!isSuperAdmin) return
@@ -418,6 +485,20 @@ export default function CreateOfficer() {
     setTimeout(() => setSuccessMsg(''), 3000)
   }
 
+  const handleCapacitySaved = async () => {
+    setCapacityTarget(null)
+    setSuccessMsg('Officer capacity updated successfully')
+    await fetchList()
+    setTimeout(() => setSuccessMsg(''), 3000)
+  }
+
+  const handleTransferSaved = async () => {
+    setTransferModalOpen(false)
+    setSuccessMsg('Slots transferred successfully')
+    await fetchList()
+    setTimeout(() => setSuccessMsg(''), 3000)
+  }
+
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
@@ -449,13 +530,22 @@ export default function CreateOfficer() {
             </p>
           </div>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700"
-        >
-          <UserPlus className="h-4 w-4" />
-          Create Officer
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setTransferModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            <ArrowRightLeft className="h-4 w-4" />
+            Transfer Slots
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700"
+          >
+            <UserPlus className="h-4 w-4" />
+            Create Officer
+          </button>
+        </div>
       </div>
 
       {successMsg && (
@@ -498,6 +588,7 @@ export default function CreateOfficer() {
                       officer={officer}
                       onEdit={openEditModal}
                       onDelete={setDeleteTarget}
+                      onUpdateCapacity={setCapacityTarget}
                     />
                   ))}
                 </div>
@@ -519,6 +610,7 @@ export default function CreateOfficer() {
                   officer={officer}
                   onEdit={openEditModal}
                   onDelete={setDeleteTarget}
+                  onUpdateCapacity={setCapacityTarget}
                 />
               ))}
             </div>
@@ -537,6 +629,24 @@ export default function CreateOfficer() {
           officer={editingOfficer}
           onClose={() => { setModalOpen(false); setEditingOfficer(null) }}
           onSaved={handleSaved}
+        />
+      )}
+
+      {/* Capacity update modal */}
+      {capacityTarget && (
+        <UpdateCapacityModal
+          officer={capacityTarget}
+          onClose={() => setCapacityTarget(null)}
+          onSaved={handleCapacitySaved}
+        />
+      )}
+
+      {/* Transfer slots modal */}
+      {transferModalOpen && (
+        <TransferSlotsModal
+          adminId={user?.id}
+          onClose={() => setTransferModalOpen(false)}
+          onSuccess={handleTransferSaved}
         />
       )}
 

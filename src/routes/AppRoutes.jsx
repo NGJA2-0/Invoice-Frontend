@@ -40,6 +40,7 @@ import LicenseRenewals from '../pages/admin/LicenseRenewals'
 import Admins from '../pages/admin/Admins'
 import AdminAssignedRegistrations from '../pages/admin/AdminAssignedRegistrations'
 import CreateOfficer from '../pages/admin/CreateOfficer'
+import EditRequests from '../pages/admin/EditRequests'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -109,6 +110,7 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="pending-registrations" element={<PendingRegistrations />} />
           <Route path="create-officer" element={<CreateOfficer />} />
+          <Route path="edit-requests" element={<EditRequests />} />
 
           {/* Super Admin only routes */}
           <Route
