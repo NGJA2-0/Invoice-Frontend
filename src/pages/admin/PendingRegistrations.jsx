@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 
 const PendingRegistrations = () => {
@@ -14,6 +14,8 @@ const PendingRegistrations = () => {
   const [rejectingId, setRejectingId] = useState(null)
   const [pageSize, setPageSize] = useState(10)
   const PAGE_SIZE_OPTIONS = [10, 15, 20]
+  // { type: 'approve' | 'reject', userId, businessName } | null
+  const [confirmDialog, setConfirmDialog] = useState(null)
 
   const loadRegistrations = async (p = 1, limit = pageSize) => {
     setIsLoading(true)
@@ -39,7 +41,7 @@ const PendingRegistrations = () => {
     setPageSize(Number(e.target.value))
   }
 
-  const handleApprove = async (userId) => {
+  const executeApprove = async (userId) => {
     setApprovingId(userId)
     try {
       await approvePendingUser(userId, 'Documents verified')
@@ -52,7 +54,7 @@ const PendingRegistrations = () => {
     }
   }
 
-  const handleReject = async (userId) => {
+  const executeReject = async (userId) => {
     setRejectingId(userId)
     try {
       await rejectPendingUser(userId, 'Registration rejected')
@@ -62,6 +64,27 @@ const PendingRegistrations = () => {
       pushToast({ title: 'Error', message: error.message || 'Failed to reject user.', tone: 'danger' })
     } finally {
       setRejectingId(null)
+    }
+  }
+
+  // Buttons no longer call the API directly — they open a confirmation
+  // dialog first. The API call only fires from handleConfirmDialog.
+  const openConfirmDialog = (type, reg) => {
+    setConfirmDialog({ type, userId: reg.id, businessName: reg.businessName })
+  }
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(null)
+  }
+
+  const handleConfirmDialog = async () => {
+    if (!confirmDialog) return
+    const { type, userId } = confirmDialog
+    setConfirmDialog(null)
+    if (type === 'approve') {
+      await executeApprove(userId)
+    } else {
+      await executeReject(userId)
     }
   }
 
@@ -121,7 +144,7 @@ const PendingRegistrations = () => {
               {reg.status === 'pending' ? (
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button
-                    onClick={() => handleReject(reg.id)}
+                    onClick={() => openConfirmDialog('reject', reg)}
                     disabled={approvingId === reg.id || rejectingId === reg.id}
                     className="flex items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
                   >
@@ -132,7 +155,7 @@ const PendingRegistrations = () => {
                     )}
                   </button>
                   <button
-                    onClick={() => handleApprove(reg.id)}
+                    onClick={() => openConfirmDialog('approve', reg)}
                     disabled={approvingId === reg.id || rejectingId === reg.id}
                     className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
                   >
@@ -166,6 +189,64 @@ const PendingRegistrations = () => {
             className="rounded-lg border border-ink-200 p-2 text-ink-500 hover:bg-ink-50 disabled:opacity-40 disabled:cursor-not-allowed">
             <ChevronRight className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {confirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4"
+          onClick={closeConfirmDialog}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white p-5 sm:p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                  confirmDialog.type === 'approve' ? 'bg-green-50' : 'bg-red-50'
+                }`}
+              >
+                <AlertTriangle
+                  className={`w-5 h-5 ${
+                    confirmDialog.type === 'approve' ? 'text-green-600' : 'text-red-600'
+                  }`}
+                />
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-ink-900">
+                  {confirmDialog.type === 'approve' ? 'Approve this user?' : 'Reject this user?'}
+                </p>
+                <p className="text-sm text-ink-500 mt-1 break-words">
+                  Are you sure you want to {confirmDialog.type} <span className="font-medium text-ink-700">{confirmDialog.businessName}</span>'s registration?
+                  This action cannot be changed once confirmed.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                onClick={closeConfirmDialog}
+                className="w-full sm:w-auto rounded-lg border border-ink-200 px-4 py-2 text-xs font-semibold text-ink-600 transition-all hover:bg-ink-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDialog}
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold text-white transition-all ${
+                  confirmDialog.type === 'approve'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {confirmDialog.type === 'approve' ? (
+                  <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
+                ) : (
+                  <><XCircle className="w-3.5 h-3.5" /> Reject</>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
