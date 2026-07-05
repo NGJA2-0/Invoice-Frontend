@@ -12,26 +12,32 @@ const PendingRegistrations = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [approvingId, setApprovingId] = useState(null)
   const [rejectingId, setRejectingId] = useState(null)
-  const LIMIT = 10
+  const [pageSize, setPageSize] = useState(10)
+  const PAGE_SIZE_OPTIONS = [10, 15, 20]
 
-  const loadRegistrations = async (p = 1) => {
+  const loadRegistrations = async (p = 1, limit = pageSize) => {
     setIsLoading(true)
     try {
-      const res = await refreshPendingUsers(p, LIMIT)
-      setRegistrations(res?.registrations || [])
+      const res = await refreshPendingUsers(p, limit)
+      setRegistrations(Array.isArray(res?.registrations) ? res.registrations : [])
       setTotalPages(res?.totalPages || 1)
       setTotal(res?.total || 0)
       setPage(p)
     } catch (error) {
       pushToast({ title: 'Error', message: 'Failed to load pending registrations.', tone: 'danger' })
+      setRegistrations([])
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    loadRegistrations(1)
-  }, [])
+    loadRegistrations(1, pageSize)
+  }, [pageSize])
+
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value))
+  }
 
   const handleApprove = async (userId) => {
     setApprovingId(userId)
@@ -61,8 +67,21 @@ const PendingRegistrations = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-ink-500">{total} pending registration{total !== 1 ? 's' : ''}</p>
+        <div className="flex items-center gap-2">
+          <label htmlFor="pageSize" className="text-xs text-ink-500 whitespace-nowrap">Rows per page</label>
+          <select
+            id="pageSize"
+            value={pageSize}
+            onChange={handlePageSizeChange}
+            className="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs text-ink-700 focus:outline-none focus:ring-2 focus:ring-azure-500"
+          >
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {isLoading ? (
@@ -76,13 +95,13 @@ const PendingRegistrations = () => {
       ) : (
         <div className="space-y-3">
           {registrations.map((reg) => (
-            <div key={reg.id} className="glass-card rounded-xl border p-5 space-y-3">
-              <div className="flex items-start justify-between gap-4">
+            <div key={reg.id} className="glass-card rounded-xl border p-4 sm:p-5 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div>
-                  <p className="font-semibold text-ink-900">{reg.businessName}</p>
+                  <p className="font-semibold text-ink-900 break-words">{reg.businessName}</p>
                   <p className="text-xs text-ink-500 mt-0.5">@{reg.username}</p>
                 </div>
-                <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-600">
+                <span className="self-start rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-600">
                   {reg.status}
                 </span>
               </div>
@@ -100,11 +119,11 @@ const PendingRegistrations = () => {
               </div>
 
               {reg.status === 'pending' ? (
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button
                     onClick={() => handleReject(reg.id)}
                     disabled={approvingId === reg.id || rejectingId === reg.id}
-                    className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
                   >
                     {rejectingId === reg.id ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Rejecting...</>
@@ -115,7 +134,7 @@ const PendingRegistrations = () => {
                   <button
                     onClick={() => handleApprove(reg.id)}
                     disabled={approvingId === reg.id || rejectingId === reg.id}
-                    className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
                   >
                     {approvingId === reg.id ? (
                       <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
@@ -137,13 +156,13 @@ const PendingRegistrations = () => {
       )}
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <button onClick={() => loadRegistrations(page - 1)} disabled={page === 1}
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <button onClick={() => loadRegistrations(page - 1, pageSize)} disabled={page === 1}
             className="rounded-lg border border-ink-200 p-2 text-ink-500 hover:bg-ink-50 disabled:opacity-40 disabled:cursor-not-allowed">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <span className="text-sm text-ink-600">Page {page} of {totalPages}</span>
-          <button onClick={() => loadRegistrations(page + 1)} disabled={page === totalPages}
+          <button onClick={() => loadRegistrations(page + 1, pageSize)} disabled={page === totalPages}
             className="rounded-lg border border-ink-200 p-2 text-ink-500 hover:bg-ink-50 disabled:opacity-40 disabled:cursor-not-allowed">
             <ChevronRight className="w-4 h-4" />
           </button>

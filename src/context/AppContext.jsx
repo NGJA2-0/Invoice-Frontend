@@ -187,16 +187,34 @@ export const AppProvider = ({ children }) => {
 
   const refreshPendingUsers = useCallback(async (page = 1, limit = 10) => {
     if (role === 'superadmin') {
-      const data = await api.get(`/admin/registrations/pending-users?page=${page}&limit=${limit}`)
-      return data
+      // raw: true keeps `pagination` as a sibling of `data` instead of
+      // letting parseResponse strip it away (same reason refreshInvoices uses raw: true)
+      const data = await api.get(`/admin/registrations/pending-users?page=${page}&limit=${limit}`, {
+        raw: true,
+      })
+      // Backend has returned this nested a couple of different ways during
+      // development, so check the likely shapes defensively rather than
+      // assuming data.data is always the array.
+      const list = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.data?.registrations)
+          ? data.data.registrations
+          : Array.isArray(data?.registrations)
+            ? data.registrations
+            : []
+      return {
+        registrations: list,
+        totalPages: data?.pagination?.totalPages || 1,
+        total: data?.pagination?.totalRecords || data?.pagination?.totalItems || list.length
+      }
     } else {
       const data = await api.get(`/admin/registrations/assigned?page=${page}&limit=${limit}`, {
         headers: { 'X-User-Id': user?.id }
       })
       return {
-        registrations: data?.registrations || [],
+        registrations: Array.isArray(data?.registrations) ? data.registrations : [],
         totalPages: data?.pagination?.totalPages || 1,
-        total: data?.pagination?.totalItems || data?.registrations?.length || 0
+        total: data?.pagination?.totalItems || (Array.isArray(data?.registrations) ? data.registrations.length : 0)
       }
     }
   }, [role, user?.id])
