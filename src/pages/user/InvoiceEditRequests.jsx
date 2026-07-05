@@ -216,10 +216,40 @@ const InvoiceEditRequests = () => {
           .ier-heading { font-size: 16px; }
           .ier-title { font-size: 13px; }
           .ier-card { padding: 12px; }
-          .ier-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
-          .ier-pagesize-wrap { justify-content: space-between; }
-          .ier-pagesize-select { flex: 1; }
-          .ier-pagination { gap: 8px; }
+
+          .ier-toolbar {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+          }
+          .ier-toolbar-count { font-size: 11.5px; }
+          .ier-pagesize-wrap {
+            justify-content: flex-end;
+            gap: 6px;
+          }
+          .ier-pagesize-label { font-size: 10.5px; }
+          .ier-pagesize-select {
+            padding: 5px 22px 5px 10px;
+            font-size: 11.5px;
+            border-radius: 999px;
+            background-size: 11px;
+            background-position: right 7px center;
+          }
+
+          .ier-pagination {
+            gap: 6px;
+            margin-top: 14px;
+            padding-top: 12px;
+          }
+          .ier-page-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+          }
+          .ier-page-indicator {
+            font-size: 11px;
+          }
         }
       `}</style>
 
