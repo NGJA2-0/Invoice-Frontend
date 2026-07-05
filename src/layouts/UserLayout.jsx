@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
-import TopNav from '../components/layout/TopNav'
+// import TopNav from '../components/layout/TopNav'
 import { useApp } from '../context/AppContext'
 import signupBg from '../assets/signup.jpg'
 

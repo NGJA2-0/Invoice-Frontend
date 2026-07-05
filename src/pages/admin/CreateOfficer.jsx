@@ -531,13 +531,15 @@ export default function CreateOfficer() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setTransferModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-          >
-            <ArrowRightLeft className="h-4 w-4" />
-            Transfer Slots
-          </button>
+          {!isSuperAdmin && (
+            <button
+              onClick={() => setTransferModalOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              Transfer Slots
+            </button>
+          )}
           <button
             onClick={openCreateModal}
             className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700"
