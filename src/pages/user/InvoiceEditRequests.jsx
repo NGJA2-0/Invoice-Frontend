@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GitCompare, ChevronRight, Inbox } from 'lucide-react'
+import { GitCompare, ChevronRight, ChevronLeft, Inbox } from 'lucide-react'
 import { userService } from '../../services/userService'
 import { useApp } from '../../context/AppContext'
 import InvoiceDetailHeader from '../../components/invoices/InvoiceDetailHeader'
+
+const PAGE_SIZE_OPTIONS = [10, 15, 20]
 
 const GOLD = '#9a7b3c'
 const LIGHT_GOLD = '#c9a96e'
@@ -16,20 +18,37 @@ const InvoiceEditRequests = () => {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
 
   useEffect(() => {
     if (!user?.id) return
     setLoading(true)
     setError(null)
     userService
-      .getActionableInvoices(user.id, { page: 1, pageSize: 50 })
+      .getActionableInvoices(user.id, { page, pageSize })
       .then((res) => {
-        const list = res?.data?.invoices || res?.invoices || []
+        const payload = res?.data || res || {}
+        const list = payload?.invoices || []
         setInvoices(list)
+        setTotalPages(payload?.totalPages || 1)
+        setTotal(payload?.total || list.length)
       })
       .catch((err) => setError(err?.message || 'Failed to load invoices'))
       .finally(() => setLoading(false))
-  }, [user?.id])
+  }, [user?.id, page, pageSize])
+
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value))
+    setPage(1) // reset to first page whenever page size changes
+  }
+
+  const goToPage = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages) return
+    setPage(nextPage)
+  }
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
@@ -99,6 +118,97 @@ const InvoiceEditRequests = () => {
         .ier-sub { font-size: 12px; color: #888; margin-top: 2px; }
         .ier-status-line { font-size: 13px; color: #888; padding: 6px 0; }
         .ier-status-line.error { color: #b91c1c; }
+
+        .ier-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        }
+        .ier-toolbar-count {
+          font-size: 12px;
+          color: #8a8a8a;
+        }
+        .ier-pagesize-wrap {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .ier-pagesize-label {
+          font-size: 11.5px;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          white-space: nowrap;
+        }
+        .ier-pagesize-select {
+          appearance: none;
+          -webkit-appearance: none;
+          background: #ffffff;
+          border: 1.5px solid ${RULE};
+          border-radius: 8px;
+          padding: 6px 28px 6px 12px;
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #1a1a1a;
+          cursor: pointer;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a7b3c' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          background-size: 13px;
+          transition: border-color 0.15s ease;
+        }
+        .ier-pagesize-select:hover,
+        .ier-pagesize-select:focus {
+          border-color: ${LIGHT_GOLD};
+          outline: none;
+        }
+
+        .ier-pagination {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-top: 18px;
+          padding-top: 16px;
+          border-top: 1px solid ${RULE};
+        }
+        .ier-page-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          width: 34px;
+          height: 34px;
+          border-radius: 9px;
+          border: 1.5px solid ${RULE};
+          background: #ffffff;
+          color: #1a1a1a;
+          cursor: pointer;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+          flex-shrink: 0;
+        }
+        .ier-page-btn:hover:not(:disabled) {
+          border-color: ${LIGHT_GOLD};
+          box-shadow: 0 4px 10px -4px rgba(154,123,60,0.35);
+        }
+        .ier-page-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+        .ier-page-indicator {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #374151;
+          white-space: nowrap;
+        }
+        .ier-page-indicator span {
+          color: ${GOLD};
+        }
+
         @media (max-width: 640px) {
           .ier-panel { border-radius: 14px; padding: 18px 16px 20px; }
         }
@@ -106,6 +216,40 @@ const InvoiceEditRequests = () => {
           .ier-heading { font-size: 16px; }
           .ier-title { font-size: 13px; }
           .ier-card { padding: 12px; }
+
+          .ier-toolbar {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+          }
+          .ier-toolbar-count { font-size: 11.5px; }
+          .ier-pagesize-wrap {
+            justify-content: flex-end;
+            gap: 6px;
+          }
+          .ier-pagesize-label { font-size: 10.5px; }
+          .ier-pagesize-select {
+            padding: 5px 22px 5px 10px;
+            font-size: 11.5px;
+            border-radius: 999px;
+            background-size: 11px;
+            background-position: right 7px center;
+          }
+
+          .ier-pagination {
+            gap: 6px;
+            margin-top: 14px;
+            padding-top: 12px;
+          }
+          .ier-page-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+          }
+          .ier-page-indicator {
+            font-size: 11px;
+          }
         }
       `}</style>
 
@@ -117,6 +261,24 @@ const InvoiceEditRequests = () => {
             Select an invoice to view any proposed edits submitted by an officer.
           </p>
         </div>
+
+        {!loading && !error && total > 0 && (
+          <div className="ier-toolbar">
+            <span className="ier-toolbar-count">{total} pending request{total === 1 ? '' : 's'}</span>
+            <div className="ier-pagesize-wrap">
+              <span className="ier-pagesize-label">Show</span>
+              <select
+                className="ier-pagesize-select"
+                value={pageSize}
+                onChange={handlePageSizeChange}
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {loading && <div className="ier-status-line">Loading invoices…</div>}
         {error && <div className="ier-status-line error">{error}</div>}
@@ -149,6 +311,30 @@ const InvoiceEditRequests = () => {
             </div>
           )
         })}
+
+        {!loading && !error && invoices.length > 0 && totalPages > 1 && (
+          <div className="ier-pagination">
+            <button
+              className="ier-page-btn"
+              onClick={() => goToPage(page - 1)}
+              disabled={page <= 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="ier-page-indicator">
+              Page <span>{page}</span> of {totalPages}
+            </span>
+            <button
+              className="ier-page-btn"
+              onClick={() => goToPage(page + 1)}
+              disabled={page >= totalPages}
+              aria-label="Next page"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
