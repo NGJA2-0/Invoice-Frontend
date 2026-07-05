@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react'
-import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
+
+const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 minutes
+
+// Module-level (outside the component) so the cache survives this
+// component unmounting/remounting as the admin navigates away and back,
+// but is naturally cleared on a full page reload.
+// Keyed by `${page}-${pageSize}` so each page/rows-per-page combo caches independently.
+const registrationsCache = new Map()
 
 const PendingRegistrations = () => {
   const { refreshPendingUsers, approvePendingUser, rejectPendingUser, pushToast, user } = useApp()
@@ -16,26 +24,77 @@ const PendingRegistrations = () => {
   const PAGE_SIZE_OPTIONS = [10, 15, 20]
   // { type: 'approve' | 'reject', userId, businessName } | null
   const [confirmDialog, setConfirmDialog] = useState(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const autoRefreshTimerRef = useRef(null)
 
-  const loadRegistrations = async (p = 1, limit = pageSize) => {
-    setIsLoading(true)
+  const applyResult = (res, p) => {
+    setRegistrations(Array.isArray(res?.registrations) ? res.registrations : [])
+    setTotalPages(res?.totalPages || 1)
+    setTotal(res?.total || 0)
+    setPage(p)
+    setLastUpdated(Date.now())
+  }
+
+  // forceRefresh=true bypasses (and refreshes) the cache — used for the
+  // manual refresh button, the 5-minute auto-refresh, and right after an
+  // approve/reject action since that action changes the underlying data.
+  const loadRegistrations = async (p = 1, limit = pageSize, forceRefresh = false) => {
+    const cacheKey = `${p}-${limit}`
+    const cached = registrationsCache.get(cacheKey)
+    const isCacheFresh = cached && Date.now() - cached.timestamp < CACHE_DURATION_MS
+
+    if (!forceRefresh && isCacheFresh) {
+      applyResult(cached.data, p)
+      return
+    }
+
+    // Manual/auto refresh of data already on screen shouldn't show the
+    // full-page spinner — only the small refresh-button spinner.
+    const isBackgroundRefresh = forceRefresh && registrations.length > 0
+    if (isBackgroundRefresh) {
+      setIsRefreshing(true)
+    } else {
+      setIsLoading(true)
+    }
+
     try {
       const res = await refreshPendingUsers(p, limit)
-      setRegistrations(Array.isArray(res?.registrations) ? res.registrations : [])
-      setTotalPages(res?.totalPages || 1)
-      setTotal(res?.total || 0)
-      setPage(p)
+      registrationsCache.set(cacheKey, { data: res, timestamp: Date.now() })
+      applyResult(res, p)
     } catch (error) {
       pushToast({ title: 'Error', message: 'Failed to load pending registrations.', tone: 'danger' })
-      setRegistrations([])
+      if (!isBackgroundRefresh) setRegistrations([])
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
+  }
+
+  // Invalidate every cached page/pageSize entry — used after an
+  // approve/reject, since we don't know which cached pages that record
+  // might have appeared on.
+  const invalidateCache = () => {
+    registrationsCache.clear()
+  }
+
+  const handleManualRefresh = () => {
+    loadRegistrations(page, pageSize, true)
   }
 
   useEffect(() => {
     loadRegistrations(1, pageSize)
   }, [pageSize])
+
+  // Auto-refresh every 5 minutes, restarting the timer whenever the page
+  // or pageSize changes so it always refreshes whatever is currently on screen.
+  useEffect(() => {
+    autoRefreshTimerRef.current = setInterval(() => {
+      loadRegistrations(page, pageSize, true)
+    }, CACHE_DURATION_MS)
+
+    return () => clearInterval(autoRefreshTimerRef.current)
+  }, [page, pageSize])
 
   const handlePageSizeChange = (e) => {
     setPageSize(Number(e.target.value))
@@ -46,7 +105,8 @@ const PendingRegistrations = () => {
     try {
       await approvePendingUser(userId, 'Documents verified')
       pushToast({ title: 'Approved', message: 'User registration approved successfully.', tone: 'success' })
-      loadRegistrations(page)
+      invalidateCache()
+      loadRegistrations(page, pageSize, true)
     } catch (error) {
       pushToast({ title: 'Error', message: error.message || 'Failed to approve user.', tone: 'danger' })
     } finally {
@@ -59,7 +119,8 @@ const PendingRegistrations = () => {
     try {
       await rejectPendingUser(userId, 'Registration rejected')
       pushToast({ title: 'Rejected', message: 'User registration rejected successfully.', tone: 'success' })
-      loadRegistrations(page)
+      invalidateCache()
+      loadRegistrations(page, pageSize, true)
     } catch (error) {
       pushToast({ title: 'Error', message: error.message || 'Failed to reject user.', tone: 'danger' })
     } finally {
@@ -91,8 +152,23 @@ const PendingRegistrations = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-ink-500">{total} pending registration{total !== 1 ? 's' : ''}</p>
-        <div className="flex items-center gap-2">
+        <div>
+          <p className="text-sm text-ink-500">{total} pending registration{total !== 1 ? 's' : ''}</p>
+          {lastUpdated && (
+            <p className="text-[11px] text-ink-400 mt-0.5">
+              Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleManualRefresh}
+            disabled={isLoading || isRefreshing}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 transition-all hover:bg-ink-50 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
           <label htmlFor="pageSize" className="text-xs text-ink-500 whitespace-nowrap">Rows per page</label>
           <select
             id="pageSize"
