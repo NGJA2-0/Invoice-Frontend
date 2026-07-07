@@ -64,4 +64,10 @@ export const adminService = {
     return response
   },
 
+  // Aggregate user counts (total/approved/rejected/pending) — superadmin only
+  getUserStats: async () => {
+    const response = await api.get('/admin/users/stats')
+    return response
+  },
+
 }

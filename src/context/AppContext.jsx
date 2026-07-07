@@ -62,6 +62,7 @@ export const AppProvider = ({ children }) => {
   const [userStatus, setUserStatus] = useState(user?.status || 'not_verified')
   const [registrations, setRegistrations] = useState([])
   const [officerCapacitySummary, setOfficerCapacitySummary] = useState([])
+  const [userStats, setUserStats] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [invoicePagination, setInvoicePagination] = useState({
     currentPage: 1,
@@ -199,6 +200,13 @@ export const AppProvider = ({ children }) => {
   const refreshOfficerCapacitySummary = useCallback(async () => {
     const data = await adminService.getOfficerCapacitySummary()
     setOfficerCapacitySummary(Array.isArray(data) ? data : [])
+    return data
+  }, [])
+
+  // Superadmin-only: aggregate user counts for dashboard stat cards
+  const refreshUserStats = useCallback(async () => {
+    const data = await adminService.getUserStats()
+    setUserStats(data || null)
     return data
   }, [])
 
@@ -445,6 +453,7 @@ export const AppProvider = ({ children }) => {
       userStatus,
       registrations,
       officerCapacitySummary,
+      userStats,
       invoices,
       invoicePagination,
       invoiceFilters,
@@ -476,6 +485,7 @@ export const AppProvider = ({ children }) => {
       refreshAdminData,
       refreshUsersSummary,
       refreshOfficerCapacitySummary,
+      refreshUserStats,
       submitRegistration,
       updateRegistrationStatus,
       updateProfile,
@@ -494,6 +504,7 @@ export const AppProvider = ({ children }) => {
       userStatus,
       registrations,
       officerCapacitySummary,
+      userStats,
       invoices,
       invoicePagination,
       invoiceFilters,
@@ -515,6 +526,7 @@ export const AppProvider = ({ children }) => {
         refreshAdminData()
         if (role === 'superadmin') {
           refreshOfficerCapacitySummary()
+          refreshUserStats()
         }
       } else if (role === 'officer') {
         refreshOfficerInvoices(user.id)

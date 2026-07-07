@@ -58,11 +58,27 @@ const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
 }
 
 const Dashboard = () => {
-  const { role, registrations, users, officerCapacitySummary, refreshAdminData, refreshOfficerCapacitySummary } = useApp()
-  const pending = registrations.filter((item) => item.status === 'pending')
-  const approved = users.filter((item) => item.status === 'approved')
-  const rejected = users.filter((item) => item.status === 'rejected')
+  const {
+    role,
+    registrations,
+    users,
+    officerCapacitySummary,
+    userStats,
+    refreshAdminData,
+    refreshOfficerCapacitySummary,
+    refreshUserStats,
+  } = useApp()
   const isSuperAdmin = role === 'superadmin'
+
+  // Non-superadmin admins keep the existing client-derived counts
+  const localPending = registrations.filter((item) => item.status === 'pending')
+  const localApproved = users.filter((item) => item.status === 'approved')
+  const localRejected = users.filter((item) => item.status === 'rejected')
+
+  const totalCount = isSuperAdmin ? userStats?.total ?? 0 : users.length
+  const pendingCount = isSuperAdmin ? userStats?.pending ?? 0 : localPending.length
+  const approvedCount = isSuperAdmin ? userStats?.approved ?? 0 : localApproved.length
+  const rejectedCount = isSuperAdmin ? userStats?.rejected ?? 0 : localRejected.length
 
   useEffect(() => {
     refreshAdminData()
@@ -71,16 +87,42 @@ const Dashboard = () => {
   useEffect(() => {
     if (isSuperAdmin) {
       refreshOfficerCapacitySummary()
+      refreshUserStats()
     }
-  }, [isSuperAdmin, refreshOfficerCapacitySummary])
+  }, [isSuperAdmin, refreshOfficerCapacitySummary, refreshUserStats])
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Pending" value={pending.length} note="Awaiting review" />
-        <StatCard label="Approved" value={approved.length} note="Active dealers" />
-        <StatCard label="Rejected" value={rejected.length} note="Requires follow up" />
-      </div>
+      {isSuperAdmin ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-2xl border border-azure-100 bg-gradient-to-br from-azure-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Total Users</p>
+            <p className="mt-3 text-3xl font-semibold text-ink-900">{totalCount}</p>
+            <p className="mt-2 text-xs text-ink-500">All registered</p>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Pending</p>
+            <p className="mt-3 text-3xl font-semibold text-ink-900">{pendingCount}</p>
+            <p className="mt-2 text-xs text-ink-500">Awaiting review</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Approved</p>
+            <p className="mt-3 text-3xl font-semibold text-ink-900">{approvedCount}</p>
+            <p className="mt-2 text-xs text-ink-500">Active dealers</p>
+          </div>
+          <div className="rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Rejected</p>
+            <p className="mt-3 text-3xl font-semibold text-ink-900">{rejectedCount}</p>
+            <p className="mt-2 text-xs text-ink-500">Requires follow up</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatCard label="Pending" value={pendingCount} note="Awaiting review" />
+          <StatCard label="Approved" value={approvedCount} note="Active dealers" />
+          <StatCard label="Rejected" value={rejectedCount} note="Requires follow up" />
+        </div>
+      )}
 
       {isSuperAdmin && (
         <div>
@@ -113,10 +155,10 @@ const Dashboard = () => {
               Latest submissions
             </h3>
           </div>
-          <Badge tone="info">{pending.length} Pending</Badge>
+          <Badge tone="info">{pendingCount} Pending</Badge>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {pending.map((item) => (
+          {localPending.map((item) => (
             <div key={item.id} className="glass-card rounded-2xl border px-5 py-4">
               <div className="flex items-center justify-between">
                 <div>
