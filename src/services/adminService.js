@@ -70,4 +70,11 @@ export const adminService = {
     return response
   },
 
+  // Aggregate user counts scoped to a specific admin's assigned registrations — plain admin only
+  getAdminUserStats: async (adminId) => {
+    if (!adminId) throw new Error('Admin ID is required')
+    const response = await api.get(`/admin/users/stats/${adminId}`)
+    return response
+  },
+
 }

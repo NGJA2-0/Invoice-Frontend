@@ -112,21 +112,39 @@ const Dashboard = () => {
     users,
     officerCapacitySummary,
     userStats,
+    adminUserStats,
     refreshAdminData,
     refreshOfficerCapacitySummary,
     refreshUserStats,
   } = useApp()
   const isSuperAdmin = role === 'superadmin'
+  const isAdmin = role === 'admin'
 
   // Non-superadmin admins keep the existing client-derived counts
   const localPending = registrations.filter((item) => item.status === 'pending')
   const localApproved = users.filter((item) => item.status === 'approved')
   const localRejected = users.filter((item) => item.status === 'rejected')
 
-  const totalCount = isSuperAdmin ? userStats?.total ?? 0 : users.length
-  const pendingCount = isSuperAdmin ? userStats?.pending ?? 0 : localPending.length
-  const approvedCount = isSuperAdmin ? userStats?.approved ?? 0 : localApproved.length
-  const rejectedCount = isSuperAdmin ? userStats?.rejected ?? 0 : localRejected.length
+  const totalCount = isSuperAdmin
+    ? userStats?.total ?? 0
+    : isAdmin
+      ? adminUserStats?.total ?? 0
+      : users.length
+  const pendingCount = isSuperAdmin
+    ? userStats?.pending ?? 0
+    : isAdmin
+      ? adminUserStats?.pending ?? 0
+      : localPending.length
+  const approvedCount = isSuperAdmin
+    ? userStats?.approved ?? 0
+    : isAdmin
+      ? adminUserStats?.approved ?? 0
+      : localApproved.length
+  const rejectedCount = isSuperAdmin
+    ? userStats?.rejected ?? 0
+    : isAdmin
+      ? adminUserStats?.rejected ?? 0
+      : localRejected.length
 
   useEffect(() => {
     refreshAdminData()

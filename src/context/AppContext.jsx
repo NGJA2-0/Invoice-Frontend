@@ -63,6 +63,7 @@ export const AppProvider = ({ children }) => {
   const [registrations, setRegistrations] = useState([])
   const [officerCapacitySummary, setOfficerCapacitySummary] = useState([])
   const [userStats, setUserStats] = useState(null)
+  const [adminUserStats, setAdminUserStats] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [invoicePagination, setInvoicePagination] = useState({
     currentPage: 1,
@@ -207,6 +208,14 @@ export const AppProvider = ({ children }) => {
   const refreshUserStats = useCallback(async () => {
     const data = await adminService.getUserStats()
     setUserStats(data || null)
+    return data
+  }, [])
+
+  // Plain admin-only: aggregate user counts scoped to that admin
+  const refreshAdminUserStats = useCallback(async (adminId) => {
+    if (!adminId) return
+    const data = await adminService.getAdminUserStats(adminId)
+    setAdminUserStats(data || null)
     return data
   }, [])
 
@@ -454,6 +463,7 @@ export const AppProvider = ({ children }) => {
       registrations,
       officerCapacitySummary,
       userStats,
+      adminUserStats,
       invoices,
       invoicePagination,
       invoiceFilters,
@@ -486,6 +496,7 @@ export const AppProvider = ({ children }) => {
       refreshUsersSummary,
       refreshOfficerCapacitySummary,
       refreshUserStats,
+      refreshAdminUserStats,
       submitRegistration,
       updateRegistrationStatus,
       updateProfile,
@@ -505,6 +516,7 @@ export const AppProvider = ({ children }) => {
       registrations,
       officerCapacitySummary,
       userStats,
+      adminUserStats,
       invoices,
       invoicePagination,
       invoiceFilters,
@@ -527,6 +539,8 @@ export const AppProvider = ({ children }) => {
         if (role === 'superadmin') {
           refreshOfficerCapacitySummary()
           refreshUserStats()
+        } else if (role === 'admin') {
+          refreshAdminUserStats(user.id)
         }
       } else if (role === 'officer') {
         refreshOfficerInvoices(user.id)
