@@ -58,4 +58,10 @@ export const adminService = {
     return response
   },
 
+  // Officer capacity per stage — superadmin only
+  getOfficerCapacitySummary: async () => {
+    const response = await api.get('/admin/officers/capacity-summary')
+    return response
+  },
+
 }

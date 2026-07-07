@@ -61,6 +61,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(readStoredUser)
   const [userStatus, setUserStatus] = useState(user?.status || 'not_verified')
   const [registrations, setRegistrations] = useState([])
+  const [officerCapacitySummary, setOfficerCapacitySummary] = useState([])
   const [invoices, setInvoices] = useState([])
   const [invoicePagination, setInvoicePagination] = useState({
     currentPage: 1,
@@ -192,6 +193,13 @@ export const AppProvider = ({ children }) => {
     })
 
     setRegistrations(normalizedRegistrations)
+  }, [])
+
+  // Superadmin-only: officer occupancy per verification stage
+  const refreshOfficerCapacitySummary = useCallback(async () => {
+    const data = await adminService.getOfficerCapacitySummary()
+    setOfficerCapacitySummary(Array.isArray(data) ? data : [])
+    return data
   }, [])
 
   const refreshUsersSummary = useCallback(async (options = {}) => {
@@ -436,6 +444,7 @@ export const AppProvider = ({ children }) => {
       user,
       userStatus,
       registrations,
+      officerCapacitySummary,
       invoices,
       invoicePagination,
       invoiceFilters,
@@ -466,6 +475,7 @@ export const AppProvider = ({ children }) => {
       refreshUserProfile,
       refreshAdminData,
       refreshUsersSummary,
+      refreshOfficerCapacitySummary,
       submitRegistration,
       updateRegistrationStatus,
       updateProfile,
@@ -483,6 +493,7 @@ export const AppProvider = ({ children }) => {
       user,
       userStatus,
       registrations,
+      officerCapacitySummary,
       invoices,
       invoicePagination,
       invoiceFilters,
@@ -502,6 +513,9 @@ export const AppProvider = ({ children }) => {
     if (user?.id) {
       if (role === 'admin' || role === 'superadmin') {
         refreshAdminData()
+        if (role === 'superadmin') {
+          refreshOfficerCapacitySummary()
+        }
       } else if (role === 'officer') {
         refreshOfficerInvoices(user.id)
       } else if (role === 'stage2officer') {

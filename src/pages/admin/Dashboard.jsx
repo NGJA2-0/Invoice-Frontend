@@ -4,15 +4,75 @@ import StatCard from '../../components/cards/StatCard'
 import Badge from '../../components/common/Badge'
 import { useApp } from '../../context/AppContext'
 
+const STAGE_META = {
+  1: { label: 'Stage 1', sub: 'Initial verification', gradient: 'from-azure-500 to-azure-700', bg: 'from-azure-50 to-white', ring: 'ring-azure-100', bar: 'bg-azure-500' },
+  2: { label: 'Stage 2', sub: 'Secondary review', gradient: 'from-violet-500 to-violet-700', bg: 'from-violet-50 to-white', ring: 'ring-violet-100', bar: 'bg-violet-500' },
+  3: { label: 'Stage 3', sub: 'Final approval', gradient: 'from-emerald-500 to-emerald-700', bg: 'from-emerald-50 to-white', ring: 'ring-emerald-100', bar: 'bg-emerald-500' },
+}
+
+const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
+  const meta = STAGE_META[stage] || { label: `Stage ${stage}`, sub: 'Officers', gradient: 'from-slate-500 to-slate-700', bg: 'from-slate-50 to-white', ring: 'ring-slate-100', bar: 'bg-slate-500' }
+  const available = Math.max(totalCapacity - occupiedSlots, 0)
+  const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] sm:p-6`}>
+      <div className={`pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
+      <div className="relative flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${meta.gradient} text-base font-bold text-white shadow-lg ring-4 ${meta.ring}`}>
+            {stage}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink-900">{meta.label}</p>
+            <p className="text-xs text-ink-500">{meta.sub}</p>
+          </div>
+        </div>
+        <span className="rounded-full bg-ink-900/5 px-2.5 py-1 text-[11px] font-medium text-ink-600">
+          {pct}% full
+        </span>
+      </div>
+
+      <div className="relative mt-5 flex items-end justify-between">
+        <div>
+          <p className="text-2xl font-semibold text-ink-900 sm:text-3xl">
+            {occupiedSlots}
+            <span className="text-sm font-normal text-ink-400"> / {totalCapacity}</span>
+          </p>
+          <p className="mt-1 text-xs text-ink-500">Officers assigned</p>
+        </div>
+        <div className="text-right">
+          <p className="text-lg font-semibold text-emerald-600">{available}</p>
+          <p className="text-xs text-ink-500">Available</p>
+        </div>
+      </div>
+
+      <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-ink-900/10">
+        <div
+          className={`h-full rounded-full ${meta.bar}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 const Dashboard = () => {
-  const { registrations, users, refreshAdminData } = useApp()
+  const { role, registrations, users, officerCapacitySummary, refreshAdminData, refreshOfficerCapacitySummary } = useApp()
   const pending = registrations.filter((item) => item.status === 'pending')
   const approved = users.filter((item) => item.status === 'approved')
   const rejected = users.filter((item) => item.status === 'rejected')
+  const isSuperAdmin = role === 'superadmin'
 
   useEffect(() => {
     refreshAdminData()
   }, [refreshAdminData])
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      refreshOfficerCapacitySummary()
+    }
+  }, [isSuperAdmin, refreshOfficerCapacitySummary])
 
   return (
     <div className="flex flex-col gap-6">
@@ -21,6 +81,27 @@ const Dashboard = () => {
         <StatCard label="Approved" value={approved.length} note="Active dealers" />
         <StatCard label="Rejected" value={rejected.length} note="Requires follow up" />
       </div>
+
+      {isSuperAdmin && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">
+            Officer Capacity
+          </p>
+          <h3 className="mt-1 mb-4 text-xl font-semibold text-ink-900">
+            Stage-wise availability
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {officerCapacitySummary.map((item) => (
+              <OfficerCapacityCard
+                key={item.stage}
+                stage={item.stage}
+                totalCapacity={item.totalCapacity}
+                occupiedSlots={item.occupiedSlots}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="surface-card rounded-2xl p-6">
         <div className="flex items-start justify-between">
