@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 
 const STATUS_OPTIONS = [
@@ -38,6 +39,7 @@ const emptyData = { users: [], total: 0, page: 1, limit: 10, totalPages: 1 }
 
 const Users = () => {
   const { refreshUsersSummary } = useApp()
+  const navigate = useNavigate()
 
   const [status, setStatus] = useState('')
   const [limit, setLimit] = useState(10)
@@ -144,6 +146,10 @@ const Users = () => {
     loadUsers(page, limit, status, { force: true })
   }
 
+  const handleRowClick = (userId) => {
+    navigate(`/admin/users/${userId}`)
+  }
+
   const formatLastUpdated = () => {
     if (!lastUpdated) return ''
     const seconds = Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000))
@@ -236,7 +242,11 @@ const Users = () => {
             </thead>
             <tbody className="divide-y divide-ink-100">
               {displayData.users.map((user) => (
-                <tr key={user.id} className="transition hover:bg-ink-50/50">
+                <tr
+                  key={user.id}
+                  onClick={() => handleRowClick(user.id)}
+                  className="cursor-pointer transition hover:bg-ink-50/50"
+                >
                   <td className="px-6 py-4 text-sm font-semibold text-ink-900">
                     {user.fullName}
                   </td>
@@ -279,7 +289,11 @@ const Users = () => {
         {/* Mobile card list */}
         <div className="divide-y divide-ink-100 md:hidden">
           {displayData.users.map((user) => (
-            <div key={user.id} className="flex flex-col gap-3 px-5 py-4">
+            <div
+              key={user.id}
+              onClick={() => handleRowClick(user.id)}
+              className="flex cursor-pointer flex-col gap-3 px-5 py-4 transition hover:bg-ink-50/50"
+            >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-ink-900">{user.fullName}</p>
                 <span

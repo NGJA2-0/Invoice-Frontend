@@ -43,6 +43,7 @@ import Admins from '../pages/admin/Admins'
 import AdminAssignedRegistrations from '../pages/admin/AdminAssignedRegistrations'
 import CreateOfficer from '../pages/admin/CreateOfficer'
 import EditRequests from '../pages/admin/EditRequests'
+import UserProfile from '../pages/admin/UserProfile'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -146,6 +147,14 @@ const AppRoutes = () => {
             element={
               <SuperAdminRoute>
                 <Users />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="users/:userId"
+            element={
+              <SuperAdminRoute>
+                <UserProfile />
               </SuperAdminRoute>
             }
           />

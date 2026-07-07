@@ -41,6 +41,13 @@ export const adminService = {
     return response
   },
 
+  // Full profile for a single user, shown on the user detail screen
+  getUserProfile: async (userId) => {
+    if (!userId) throw new Error('User ID is required')
+    const response = await api.get(`/users/${userId}`)
+    return response
+  },
+
   approveDealer: async (userId, data) => {
     const response = await api.put(`/admin/dealers/${userId}/approve`, data)
     return response
