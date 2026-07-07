@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw, Building2, Hash, Fingerprint, Mail, Phone, CalendarDays, Users } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 
 const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 minutes
@@ -151,35 +151,46 @@ const PendingRegistrations = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-ink-500">{total} pending registration{total !== 1 ? 's' : ''}</p>
-          {lastUpdated && (
-            <p className="text-[11px] text-ink-400 mt-0.5">
-              Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-ink-100 bg-gradient-to-r from-azure-50/50 via-white to-white px-4 py-3.5 sm:px-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-azure-600 text-white shadow-sm shadow-azure-200">
+            <Users className="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <p className="text-lg font-bold leading-tight text-ink-900">
+              {total} <span className="text-sm font-medium text-ink-500">pending registration{total !== 1 ? 's' : ''}</span>
             </p>
-          )}
+            {lastUpdated && (
+              <p className="flex items-center gap-1.5 text-[11px] text-ink-400 mt-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={handleManualRefresh}
             disabled={isLoading || isRefreshing}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink-600 transition-all hover:bg-ink-50 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3.5 py-2 text-xs font-semibold text-ink-600 shadow-sm transition-all hover:border-azure-300 hover:text-azure-600 hover:shadow disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </button>
-          <label htmlFor="pageSize" className="text-xs text-ink-500 whitespace-nowrap">Rows per page</label>
-          <select
-            id="pageSize"
-            value={pageSize}
-            onChange={handlePageSizeChange}
-            className="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs text-ink-700 focus:outline-none focus:ring-2 focus:ring-azure-500"
-          >
-            {PAGE_SIZE_OPTIONS.map((size) => (
-              <option key={size} value={size}>{size}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-1.5 shadow-sm">
+            <label htmlFor="pageSize" className="text-xs font-medium text-ink-500 whitespace-nowrap">Rows</label>
+            <select
+              id="pageSize"
+              value={pageSize}
+              onChange={handlePageSizeChange}
+              className="rounded-lg bg-transparent px-1 py-0.5 text-xs font-semibold text-ink-700 focus:outline-none"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -193,64 +204,117 @@ const PendingRegistrations = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {registrations.map((reg) => (
-            <div key={reg.id} className="glass-card rounded-xl border p-4 sm:p-5 space-y-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                <div>
-                  <p className="font-semibold text-ink-900 break-words">{reg.businessName}</p>
-                  <p className="text-xs text-ink-500 mt-0.5">@{reg.username}</p>
-                </div>
-                <span className="self-start rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-600">
-                  {reg.status}
-                </span>
-              </div>
+          {registrations.map((reg) => {
+            const statusStyles = {
+              pending: { bar: 'bg-amber-400', badge: 'bg-amber-50 border-amber-200 text-amber-600', dot: 'bg-amber-500' },
+              approved: { bar: 'bg-green-500', badge: 'bg-green-50 border-green-200 text-green-600', dot: 'bg-green-500' },
+              rejected: { bar: 'bg-red-500', badge: 'bg-red-50 border-red-200 text-red-600', dot: 'bg-red-500' },
+            }
+            const s = statusStyles[reg.status] || statusStyles.pending
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                <div><span className="text-ink-400">Address: </span><span className="text-ink-700">{reg.businessAddress}</span></div>
-                <div><span className="text-ink-400">File No: </span><span className="text-ink-700">{reg.gemDealerFileNo}</span></div>
-                <div><span className="text-ink-400">NIC/BRC: </span><span className="text-ink-700">{reg.nicOrBrc}</span></div>
-                <div><span className="text-ink-400">Email: </span><span className="text-ink-700">{reg.email || '—'}</span></div>
-                <div>
-                  <span className="text-ink-400">Mobile: </span>
-                  <span className="text-ink-700">{reg.mobileNumbers?.join(', ')}</span>
-                </div>
-                <div><span className="text-ink-400">Registered: </span><span className="text-ink-700">{new Date(reg.registeredAt).toISOString().slice(0, 10)}</span></div>
-              </div>
+            return (
+            <div key={reg.id} className="relative overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+              <div className={`absolute inset-y-0 left-0 w-1.5 ${s.bar}`} />
 
-              {reg.status === 'pending' ? (
-                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <button
-                    onClick={() => openConfirmDialog('reject', reg)}
-                    disabled={approvingId === reg.id || rejectingId === reg.id}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
-                  >
-                    {rejectingId === reg.id ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Rejecting...</>
-                    ) : (
-                      <><XCircle className="w-3.5 h-3.5" /> Reject</>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => openConfirmDialog('approve', reg)}
-                    disabled={approvingId === reg.id || rejectingId === reg.id}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
-                  >
-                    {approvingId === reg.id ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
-                    ) : (
-                      <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex justify-end">
-                  <span className="text-sm font-medium text-ink-500 bg-ink-50 px-4 py-2 rounded-lg border border-ink-100">
-                    Registration {reg.status}
+              <div className="p-4 sm:p-5 pl-5 sm:pl-6 space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-azure-50 text-azure-600 font-bold text-sm ring-1 ring-azure-100">
+                      {reg.businessName?.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink-900 break-words leading-tight">{reg.businessName}</p>
+                      <p className="text-xs text-ink-500 mt-0.5">@{reg.username}</p>
+                    </div>
+                  </div>
+                  <span className={`inline-flex items-center gap-1.5 self-start rounded-full border px-3 py-1 text-xs font-semibold ${s.badge}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                    {reg.status}
                   </span>
                 </div>
-              )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="flex items-start gap-2 rounded-lg bg-ink-50/60 px-3 py-2">
+                    <Building2 className="w-3.5 h-3.5 text-azure-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-400">Address</p>
+                      <p className="text-sm font-semibold text-ink-700 break-words">{reg.businessAddress}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg bg-ink-50/60 px-3 py-2">
+                    <Hash className="w-3.5 h-3.5 text-azure-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-400">File No</p>
+                      <p className="text-sm font-semibold text-ink-700 break-words">{reg.gemDealerFileNo}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg bg-ink-50/60 px-3 py-2">
+                    <Fingerprint className="w-3.5 h-3.5 text-azure-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-400">NIC/BRC</p>
+                      <p className="text-sm font-semibold text-ink-700 break-words">{reg.nicOrBrc}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg bg-ink-50/60 px-3 py-2">
+                    <Mail className="w-3.5 h-3.5 text-azure-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-400">Email</p>
+                      <p className="text-sm font-semibold text-ink-700 break-words">{reg.email || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg bg-ink-50/60 px-3 py-2">
+                    <Phone className="w-3.5 h-3.5 text-azure-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-400">Mobile</p>
+                      <p className="text-sm font-semibold text-ink-700 break-words">{reg.mobileNumbers?.join(', ')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg bg-ink-50/60 px-3 py-2">
+                    <CalendarDays className="w-3.5 h-3.5 text-azure-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-ink-400">Registered</p>
+                      <p className="text-sm font-semibold text-ink-700">{new Date(reg.registeredAt).toISOString().slice(0, 10)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {reg.status === 'pending' ? (
+                  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-1">
+                    <button
+                      onClick={() => openConfirmDialog('reject', reg)}
+                      disabled={approvingId === reg.id || rejectingId === reg.id}
+                      className="flex items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
+                    >
+                      {rejectingId === reg.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Rejecting...</>
+                      ) : (
+                        <><XCircle className="w-3.5 h-3.5" /> Reject</>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => openConfirmDialog('approve', reg)}
+                      disabled={approvingId === reg.id || rejectingId === reg.id}
+                      className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto"
+                    >
+                      {approvingId === reg.id ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Approving...</>
+                      ) : (
+                        <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex justify-end pt-1">
+                    <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg border ${s.badge}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                      Registration {reg.status}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
