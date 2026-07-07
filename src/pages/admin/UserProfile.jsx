@@ -220,7 +220,7 @@ const UserProfile = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="glass-card rounded-2xl border px-6 py-6">
+      <div className="glass-card rounded-2xl border border-slate-100 bg-gradient-to-br from-sky-100 to-white px-6 py-6 shadow-sm shadow-slate-100">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <button
