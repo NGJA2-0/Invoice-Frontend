@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Coins, FileCheck, FileCheck2, FileEdit, LayoutGrid, ListChecks, Layers, Menu, RefreshCw, ShieldCheck, ShieldX, Users, Package, UserCog, UsersRound } from 'lucide-react'
+import { Bell, Coins, FileCheck, FileCheck2, FileEdit, LayoutGrid, ListChecks, Layers, Menu, RefreshCw, Users, Package, UserCog, UsersRound } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Breadcrumbs from '../components/layout/Breadcrumbs'
 import Sidebar from '../components/layout/Sidebar'
@@ -19,8 +19,6 @@ const adminNavItems = [
 
 // Super admin exclusive nav items
 const superAdminNavItems = [
-  { label: 'Approved Dealers', path: '/admin/approved-dealers', icon: ShieldCheck },
-  { label: 'Rejected Dealers', path: '/admin/rejected-dealers', icon: ShieldX },
   {
     label: 'Invoice Management',
     path: '/admin/invoice-management',
@@ -40,8 +38,6 @@ const pageLabels = {
   '/admin/pending-registrations': 'Pending Registrations',
   '/admin/create-officer': 'Officer Management',
   '/admin/edit-requests': 'Edit Requests',
-  '/admin/approved-dealers': 'Approved Dealers',
-  '/admin/rejected-dealers': 'Rejected Dealers',
   '/admin/invoice-management': 'Invoice Management',
   '/admin/users': 'Users',
   '/admin/currencies': 'Currencies',

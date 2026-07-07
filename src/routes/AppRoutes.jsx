@@ -12,10 +12,8 @@ import Stage3EditInvoice from '../pages/officer3/EditInvoice'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
-import ApprovedDealers from '../pages/admin/ApprovedDealers'
 import InvoiceManagement from '../pages/admin/InvoiceManagement'
 import PendingRegistrations from '../pages/admin/PendingRegistrations'
-import RejectedDealers from '../pages/admin/RejectedDealers'
 import Users from '../pages/admin/Users'
 import Currencies from '../pages/admin/Currencies'
 import CurrencyDetail from '../pages/admin/CurrencyDetail'
@@ -118,22 +116,6 @@ const AppRoutes = () => {
           <Route path="edit-requests" element={<EditRequests />} />
 
           {/* Super Admin only routes */}
-          <Route
-            path="approved-dealers"
-            element={
-              <SuperAdminRoute>
-                <ApprovedDealers />
-              </SuperAdminRoute>
-            }
-          />
-          <Route
-            path="rejected-dealers"
-            element={
-              <SuperAdminRoute>
-                <RejectedDealers />
-              </SuperAdminRoute>
-            }
-          />
           <Route
             path="invoice-management"
             element={

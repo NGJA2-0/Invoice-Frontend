@@ -58,13 +58,4 @@ export const adminService = {
     return response
   },
 
-  getApprovedDealers: async () => {
-    const response = await api.get('/admin/dealers/approved')
-    return response || []
-  },
-
-  getRejectedDealers: async () => {
-    const response = await api.get('/admin/dealers/rejected')
-    return response || []
-  },
 }
