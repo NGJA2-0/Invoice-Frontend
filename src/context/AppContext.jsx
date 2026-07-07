@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { api } from '../services/api'
 import { officerApi } from '../services/officerApi'
+import { adminService } from '../services/adminService'
 
 const AppContext = createContext(null)
 
@@ -74,6 +75,14 @@ export const AppProvider = ({ children }) => {
     sort: 'date_desc',
   })
   const [users, setUsers] = useState([])
+  const [usersSummary, setUsersSummary] = useState([])
+  const [usersSummaryPagination, setUsersSummaryPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  })
+  const [usersSummaryFilters, setUsersSummaryFilters] = useState({ status: undefined })
   const [officerInvoices, setOfficerInvoices] = useState([])
   const [stage2OfficerInvoices, setStage2OfficerInvoices] = useState([])
   const [stage3OfficerInvoices, setStage3OfficerInvoices] = useState([])
@@ -183,6 +192,22 @@ export const AppProvider = ({ children }) => {
     })
 
     setRegistrations(normalizedRegistrations)
+  }, [])
+
+  const refreshUsersSummary = useCallback(async (options = {}) => {
+    const { page = 1, limit = 10, status } = options
+    const data = await adminService.getUsersSummary({ page, limit, status })
+
+    const list = Array.isArray(data?.users) ? data.users : []
+    setUsersSummary(list)
+    setUsersSummaryPagination({
+      page: data?.page || page,
+      limit: data?.limit || limit,
+      total: data?.total || 0,
+      totalPages: data?.totalPages || 1,
+    })
+    setUsersSummaryFilters({ status })
+    return data
   }, [])
 
   const refreshPendingUsers = useCallback(async (page = 1, limit = 10) => {
@@ -415,6 +440,9 @@ export const AppProvider = ({ children }) => {
       invoicePagination,
       invoiceFilters,
       users,
+      usersSummary,
+      usersSummaryPagination,
+      usersSummaryFilters,
       officerInvoices,
       stage2OfficerInvoices,
       stage3OfficerInvoices,
@@ -437,6 +465,7 @@ export const AppProvider = ({ children }) => {
       refreshStage3OfficerInvoices,
       refreshUserProfile,
       refreshAdminData,
+      refreshUsersSummary,
       submitRegistration,
       updateRegistrationStatus,
       updateProfile,
@@ -458,6 +487,9 @@ export const AppProvider = ({ children }) => {
       invoicePagination,
       invoiceFilters,
       users,
+      usersSummary,
+      usersSummaryPagination,
+      usersSummaryFilters,
       officerInvoices,
       stage2OfficerInvoices,
       stage3OfficerInvoices,

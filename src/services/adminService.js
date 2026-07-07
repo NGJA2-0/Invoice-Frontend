@@ -30,6 +30,17 @@ export const adminService = {
     return response
   },
 
+  // Paginated + filterable users summary for the admin Users table.
+  // status is optional: 'pending' | 'approved' | 'rejected'
+  getUsersSummary: async ({ page = 1, limit = 10, status } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    const response = await api.get(`/admin/users/summary?${params.toString()}`)
+    return response
+  },
+
   approveDealer: async (userId, data) => {
     const response = await api.put(`/admin/dealers/${userId}/approve`, data)
     return response
