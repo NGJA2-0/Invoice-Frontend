@@ -1,13 +1,14 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { FileCheck, Users } from 'lucide-react'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import StatCard from '../../components/cards/StatCard'
 import Badge from '../../components/common/Badge'
 import { useApp } from '../../context/AppContext'
 
 const STAGE_META = {
-  1: { label: 'Stage 1', sub: 'Initial verification', gradient: 'from-azure-500 to-azure-700', bg: 'from-azure-50 to-white', ring: 'ring-azure-100', bar: 'bg-azure-500' },
-  2: { label: 'Stage 2', sub: 'Secondary review', gradient: 'from-violet-500 to-violet-700', bg: 'from-violet-50 to-white', ring: 'ring-violet-100', bar: 'bg-violet-500' },
-  3: { label: 'Stage 3', sub: 'Final approval', gradient: 'from-emerald-500 to-emerald-700', bg: 'from-emerald-50 to-white', ring: 'ring-emerald-100', bar: 'bg-emerald-500' },
+  1: { label: 'Stage 1', sub: 'Initial verification', gradient: 'from-azure-500 to-azure-700', bg: 'from-azure-50 to-white', ring: 'ring-azure-100', bar: 'bg-azure-500', hex: '#3b82f6' },
+  2: { label: 'Stage 2', sub: 'Secondary review', gradient: 'from-violet-500 to-violet-700', bg: 'from-violet-50 to-white', ring: 'ring-violet-100', bar: 'bg-violet-500', hex: '#8b5cf6' },
+  3: { label: 'Stage 3', sub: 'Final approval', gradient: 'from-emerald-500 to-emerald-700', bg: 'from-emerald-50 to-white', ring: 'ring-emerald-100', bar: 'bg-emerald-500', hex: '#10b981' },
 }
 
 const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
@@ -16,7 +17,54 @@ const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
   const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] sm:p-6`}>
+    <div className={`relative overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} px-4 py-2.5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}>
+      <div className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
+      <div className="relative flex items-center gap-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.gradient} text-sm font-bold text-white shadow-md ring-4 ${meta.ring}`}>
+            {stage}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-ink-900">{meta.label}</p>
+            <div className="mt-1 h-1.5 w-24 max-w-full overflow-hidden rounded-full bg-ink-900/10">
+              <div
+                className={`h-full rounded-full ${meta.bar} transition-all duration-500`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="ml-auto flex flex-shrink-0 items-center gap-3">
+          <span className="rounded-full bg-ink-900/5 px-2 py-0.5 text-[10px] font-medium text-ink-600">
+            {pct}% full
+          </span>
+          <div className="flex items-center gap-3 border-l border-ink-900/5 pl-3">
+            <div className="text-center">
+              <p className="text-lg font-semibold text-ink-900">
+                {occupiedSlots}
+                <span className="text-[11px] font-normal text-ink-400">/{totalCapacity}</span>
+              </p>
+              <p className="text-[10px] text-ink-500">Assigned</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-emerald-600">{available}</p>
+              <p className="text-[10px] text-ink-500">Available</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots }) => {
+  const meta = STAGE_META[stage] || { label: `Stage ${stage}`, sub: 'Officers', gradient: 'from-slate-500 to-slate-700', bg: 'from-slate-50 to-white', ring: 'ring-slate-100', bar: 'bg-slate-500' }
+  const available = Math.max(totalCapacity - occupiedSlots, 0)
+  const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]`}>
       <div className={`pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -49,7 +97,7 @@ const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
 
       <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-ink-900/10">
         <div
-          className={`h-full rounded-full ${meta.bar}`}
+          className={`h-full rounded-full ${meta.bar} transition-all duration-500`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -90,6 +138,28 @@ const Dashboard = () => {
       refreshUserStats()
     }
   }, [isSuperAdmin, refreshOfficerCapacitySummary, refreshUserStats])
+
+  // Pie-chart selection: null means "show all 3 stage cards"
+  const [selectedStage, setSelectedStage] = useState(null)
+
+  const pieData = officerCapacitySummary.map((item) => ({
+    name: (STAGE_META[item.stage] || {}).label || `Stage ${item.stage}`,
+    value: item.occupiedSlots,
+    stage: item.stage,
+  }))
+
+  const totalOfficersAssigned = officerCapacitySummary.reduce(
+    (sum, item) => sum + (item.occupiedSlots || 0),
+    0,
+  )
+
+  const visibleCapacityCards = selectedStage
+    ? officerCapacitySummary.filter((item) => item.stage === selectedStage)
+    : officerCapacitySummary
+
+  const handleSliceClick = (stage) => {
+    setSelectedStage((prev) => (prev === stage ? null : stage))
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -132,15 +202,108 @@ const Dashboard = () => {
           <h3 className="mt-1 mb-4 text-xl font-semibold text-ink-900">
             Stage-wise availability
           </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {officerCapacitySummary.map((item) => (
-              <OfficerCapacityCard
-                key={item.stage}
-                stage={item.stage}
-                totalCapacity={item.totalCapacity}
-                occupiedSlots={item.occupiedSlots}
-              />
-            ))}
+
+          <div className="lg:flex lg:items-center lg:gap-6">
+            {/* Donut chart — large screens only */}
+            <div className="hidden lg:flex lg:w-[38%] lg:flex-shrink-0">
+              <div className="relative flex w-full flex-col items-center justify-center rounded-2xl p-4">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={58}
+                      outerRadius={90}
+                      paddingAngle={4}
+                      stroke="none"
+                      cursor="pointer"
+                      onClick={(entry) => handleSliceClick(entry.stage)}
+                    >
+                      {pieData.map((entry) => (
+                        <Cell
+                          key={entry.stage}
+                          fill={(STAGE_META[entry.stage] || {}).hex || '#94a3b8'}
+                          opacity={selectedStage && selectedStage !== entry.stage ? 0.25 : 1}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value, name) => [`${value} officers assigned`, name]}
+                      contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
+                      position={{ x: undefined, y: -10 }}
+                      wrapperStyle={{ zIndex: 20 }}
+                      cursor={false}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                <div className="pointer-events-none absolute top-4 flex h-[200px] w-full flex-col items-center justify-center">
+                  <p className="text-2xl font-semibold text-ink-900">{totalOfficersAssigned}</p>
+                  <p className="text-xs text-ink-500">Officers assigned</p>
+                </div>
+
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  {pieData.map((entry) => (
+                    <button
+                      key={entry.stage}
+                      type="button"
+                      onClick={() => handleSliceClick(entry.stage)}
+                      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                        selectedStage === entry.stage
+                          ? 'bg-ink-900/5 text-ink-900'
+                          : 'text-ink-500 hover:text-ink-800'
+                      }`}
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: (STAGE_META[entry.stage] || {}).hex || '#94a3b8' }}
+                      />
+                      {entry.name}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedStage && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStage(null)}
+                    className="mt-2 text-xs font-medium text-azure-600 hover:underline"
+                  >
+                    Show all stages
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Stage cards */}
+            <div
+              className={`mt-4 grid gap-3 lg:mt-0 lg:flex-1 lg:content-start ${
+                selectedStage
+                  ? 'grid-cols-1'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-1'
+              }`}
+            >
+              {visibleCapacityCards.map((item) =>
+                selectedStage ? (
+                  <OfficerCapacityCardDetailed
+                    key={item.stage}
+                    stage={item.stage}
+                    totalCapacity={item.totalCapacity}
+                    occupiedSlots={item.occupiedSlots}
+                  />
+                ) : (
+                  <OfficerCapacityCard
+                    key={item.stage}
+                    stage={item.stage}
+                    totalCapacity={item.totalCapacity}
+                    occupiedSlots={item.occupiedSlots}
+                  />
+                ),
+              )}
+            </div>
           </div>
         </div>
       )}
