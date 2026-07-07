@@ -161,11 +161,11 @@ const Users = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="glass-card rounded-2xl border px-6 py-6">
+      <div className="glass-card rounded-2xl border border-slate-100 bg-gradient-to-br from-sky-100 to-white px-6 py-6 shadow-sm shadow-slate-100">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-xl font-semibold text-ink-900">Users</h3>
-            <p className="mt-2 text-sm text-ink-600">
+            <h3 className="text-xl font-semibold text-slate-800">Users</h3>
+            <p className="mt-2 text-sm text-slate-500">
               Manage NGJA export system users.
             </p>
           </div>
@@ -174,7 +174,7 @@ const Users = () => {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="rounded-xl border border-ink-100 bg-white/70 px-3 py-2 text-sm font-medium text-ink-700 shadow-sm outline-none transition focus:border-ink-300 focus:ring-2 focus:ring-ink-100"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm outline-none transition hover:border-violet-200 focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -186,7 +186,7 @@ const Users = () => {
             <select
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
-              className="rounded-xl border border-ink-100 bg-white/70 px-3 py-2 text-sm font-medium text-ink-700 shadow-sm outline-none transition focus:border-ink-300 focus:ring-2 focus:ring-ink-100"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm outline-none transition hover:border-violet-200 focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
             >
               {LIMIT_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -199,7 +199,7 @@ const Users = () => {
               type="button"
               onClick={handleManualRefresh}
               disabled={loading || refreshing}
-              className="inline-flex items-center gap-2 rounded-xl border border-ink-100 bg-white/70 px-3 py-2 text-sm font-medium text-ink-700 shadow-sm transition hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-violet-100 bg-violet-50/60 px-3 py-2 text-sm font-medium text-violet-700 shadow-sm transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -220,43 +220,43 @@ const Users = () => {
         </div>
       </div>
 
-      <div className="surface-card overflow-hidden rounded-2xl border">
+      <div className="surface-card overflow-hidden rounded-2xl border border-slate-100 shadow-sm shadow-slate-100">
         {/* Desktop / tablet table */}
         <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full divide-y divide-ink-100">
-            <thead className="bg-ink-50/60">
+            <thead className="bg-violet-50/40">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-ink-500">
-                  Full Name
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-ink-500">
-                  NIC
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-ink-500">
-                  Mobile Numbers
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-ink-500">
-                  Status
-                </th>
+                <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Full Name
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                NIC
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Mobile Numbers
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Status
+              </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-100">
+            <tbody className="divide-y divide-slate-100">
               {displayData.users.map((user) => (
                 <tr
                   key={user.id}
                   onClick={() => handleRowClick(user.id)}
-                  className="cursor-pointer transition hover:bg-ink-50/50"
+                  className="cursor-pointer transition hover:bg-violet-50/40"
                 >
-                  <td className="px-6 py-4 text-sm font-semibold text-ink-900">
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-800">
                     {user.fullName}
                   </td>
-                  <td className="px-6 py-4 text-sm text-ink-600">{user.nic}</td>
-                  <td className="px-6 py-4 text-sm text-ink-600">
+                  <td className="px-6 py-4 text-sm text-slate-500">{user.nic}</td>
+                  <td className="px-6 py-4 text-sm text-slate-500">
                     <div className="flex flex-wrap gap-1.5">
                       {(user.mobileNumbers || []).map((num) => (
                         <span
                           key={num}
-                          className="rounded-lg bg-ink-50 px-2 py-1 text-xs font-medium text-ink-700"
+                          className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600"
                         >
                           {num}
                         </span>
@@ -277,7 +277,7 @@ const Users = () => {
 
               {!loading && displayData.users.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-sm text-ink-500">
+                  <td colSpan={4} className="px-6 py-10 text-center text-sm text-slate-400">
                     No users found.
                   </td>
                 </tr>
@@ -287,15 +287,15 @@ const Users = () => {
         </div>
 
         {/* Mobile card list */}
-        <div className="divide-y divide-ink-100 md:hidden">
+        <div className="divide-y divide-slate-100 md:hidden">
           {displayData.users.map((user) => (
             <div
               key={user.id}
               onClick={() => handleRowClick(user.id)}
-              className="flex cursor-pointer flex-col gap-3 px-5 py-4 transition hover:bg-ink-50/50"
+              className="flex cursor-pointer flex-col gap-3 px-5 py-4 transition hover:bg-violet-50/40"
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-ink-900">{user.fullName}</p>
+                <p className="text-sm font-semibold text-slate-800">{user.fullName}</p>
                 <span
                   className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                     STATUS_STYLES[user.status] || 'bg-ink-50 text-ink-600 ring-1 ring-ink-100'
@@ -304,12 +304,12 @@ const Users = () => {
                   {formatStatusLabel(user.status)}
                 </span>
               </div>
-              <p className="text-xs text-ink-500">NIC: {user.nic}</p>
+              <p className="text-xs text-slate-400">NIC: {user.nic}</p>
               <div className="flex flex-wrap gap-1.5">
                 {(user.mobileNumbers || []).map((num) => (
                   <span
                     key={num}
-                    className="rounded-lg bg-ink-50 px-2 py-1 text-xs font-medium text-ink-700"
+                    className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600"
                   >
                     {num}
                   </span>
@@ -319,17 +319,17 @@ const Users = () => {
           ))}
 
           {!loading && displayData.users.length === 0 && (
-            <p className="px-5 py-10 text-center text-sm text-ink-500">No users found.</p>
+            <p className="px-5 py-10 text-center text-sm text-slate-400">No users found.</p>
           )}
         </div>
 
         {loading && (
-          <div className="px-6 py-10 text-center text-sm text-ink-500">Loading users…</div>
+          <div className="px-6 py-10 text-center text-sm text-slate-400">Loading users…</div>
         )}
 
         {/* Pagination */}
-        <div className="flex flex-col gap-3 border-t border-ink-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-ink-500">
+        <div className="flex flex-col gap-3 border-t border-slate-100 bg-violet-50/20 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-400">
             Page {displayData.page} of {displayData.totalPages} · {displayData.total} users
           </p>
           <div className="flex items-center gap-2">
@@ -337,7 +337,7 @@ const Users = () => {
               type="button"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className="rounded-lg border border-ink-100 px-3 py-1.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-violet-200 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Previous
             </button>
@@ -345,7 +345,7 @@ const Users = () => {
               type="button"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= displayData.totalPages}
-              className="rounded-lg border border-ink-100 px-3 py-1.5 text-sm font-medium text-ink-700 transition hover:bg-ink-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-violet-200 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
             </button>
