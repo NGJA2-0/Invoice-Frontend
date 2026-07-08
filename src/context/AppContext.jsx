@@ -164,35 +164,25 @@ export const AppProvider = ({ children }) => {
   }, [])
 
   const refreshAdminData = useCallback(async () => {
-    const [usersData, pendingData] = await Promise.all([
-      api.get('/admin/users'),
-      api.get('/admin/registrations/pending'),
-    ])
+    const pendingData = await api.get('/admin/registrations/pending')
 
-    const normalizedUsers = usersData || []
-    setUsers(normalizedUsers)
-
-    const userMap = new Map(normalizedUsers.map((item) => [item.id, item]))
-    const normalizedRegistrations = (Array.isArray(pendingData) ? pendingData : []).map((item) => {
-      const profile = userMap.get(item.userId) || {}
-      return {
-        id: item.id,
-        userId: item.userId,
-        dealerName: profile.fullName || 'Dealer',
-        nic: profile.nic || 'N/A',
-        submittedDate: item.submittedAt
-          ? new Date(item.submittedAt).toISOString().slice(0, 10)
-          : 'N/A',
-        status: item.status,
-        documents: {
-          gemDealer: item.gemDealerLicense,
-          jewellery: item.jewelleryLicense,
-          customs: item.customsExporterLicense,
-        },
-        tin: item.tin,
-        vat: item.vat,
-      }
-    })
+    const normalizedRegistrations = (Array.isArray(pendingData) ? pendingData : []).map((item) => ({
+      id: item.id,
+      userId: item.userId,
+      dealerName: item.fullName || 'Dealer',
+      nic: item.nic || 'N/A',
+      submittedDate: item.submittedAt
+        ? new Date(item.submittedAt).toISOString().slice(0, 10)
+        : 'N/A',
+      status: item.status,
+      documents: {
+        gemDealer: item.gemDealerLicense,
+        jewellery: item.jewelleryLicense,
+        customs: item.customsExporterLicense,
+      },
+      tin: item.tin,
+      vat: item.vat,
+    }))
 
     setRegistrations(normalizedRegistrations)
   }, [])
