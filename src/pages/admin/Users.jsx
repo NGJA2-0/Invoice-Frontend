@@ -245,6 +245,12 @@ const Users = () => {
                 Mobile Numbers
               </th>
               <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Gem Dealer File No
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Assigned Admin
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
                 Status
               </th>
               </tr>
@@ -263,14 +269,17 @@ const Users = () => {
                   <td className="px-6 py-4 text-sm text-slate-500">
                     <div className="flex flex-wrap gap-1.5">
                       {(user.mobileNumbers || []).map((num) => (
-                        <span
-                          key={num}
-                          className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600"
-                        >
-                          {num}
-                        </span>
+                        <span key={num}>{num}</span>
                       ))}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600">
+                      {user.gemDealerFileNo || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-500">
+                    {user.assignedAdminName || 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -286,7 +295,7 @@ const Users = () => {
 
               {!loading && displayData.users.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                     No users found.
                   </td>
                 </tr>
@@ -316,14 +325,18 @@ const Users = () => {
               <p className="text-xs text-slate-400">NIC: {user.nic}</p>
               <div className="flex flex-wrap gap-1.5">
                 {(user.mobileNumbers || []).map((num) => (
-                  <span
-                    key={num}
-                    className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600"
-                  >
-                    {num}
-                  </span>
+                  <span key={num} className="text-xs text-slate-500">{num}</span>
                 ))}
               </div>
+              <p className="text-xs text-slate-400">
+                Gem Dealer File No:{' '}
+                <span className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600">
+                  {user.gemDealerFileNo || 'N/A'}
+                </span>
+              </p>
+              <p className="text-xs text-slate-400">
+                Assigned Admin: {user.assignedAdminName || 'N/A'}
+              </p>
             </div>
           ))}
 
