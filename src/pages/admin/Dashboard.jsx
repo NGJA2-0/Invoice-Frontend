@@ -12,13 +12,16 @@ const STAGE_META = {
   3: { label: 'Stage 3', sub: 'Final approval', gradient: 'from-emerald-500 to-emerald-700', bg: 'from-emerald-50 to-white', ring: 'ring-emerald-100', bar: 'bg-emerald-500', hex: '#10b981' },
 }
 
-const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
+const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots, onClick }) => {
   const meta = STAGE_META[stage] || { label: `Stage ${stage}`, sub: 'Officers', gradient: 'from-slate-500 to-slate-700', bg: 'from-slate-50 to-white', ring: 'ring-slate-100', bar: 'bg-slate-500' }
   const available = Math.max(totalCapacity - occupiedSlots, 0)
   const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
 
   return (
-    <div className={`relative inline-block w-fit overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} px-4 py-1.5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}>
+    <div
+      onClick={onClick}
+      className={`relative inline-block w-fit cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} px-4 py-1.5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}
+    >
       <div className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
       <div className="relative flex items-center gap-6">
         <div className="flex min-w-0 items-center gap-3">
@@ -59,13 +62,16 @@ const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
     </div>
   )
 }
-const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots }) => {
+const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots, onClick }) => {
   const meta = STAGE_META[stage] || { label: `Stage ${stage}`, sub: 'Officers', gradient: 'from-slate-500 to-slate-700', bg: 'from-slate-50 to-white', ring: 'ring-slate-100', bar: 'bg-slate-500' }
   const available = Math.max(totalCapacity - occupiedSlots, 0)
   const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
 
   return (
-    <div className={`relative mx-auto w-[92%] overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]`}>
+    <div
+      onClick={onClick}
+      className={`relative mx-auto w-[92%] cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}
+    >
       <div className={`pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -318,6 +324,7 @@ const Dashboard = () => {
                   stage={item.stage}
                   totalCapacity={item.totalCapacity}
                   occupiedSlots={item.occupiedSlots}
+                  onClick={() => navigate('/admin/create-officer')}
                 />
               ))}
             </div>
@@ -336,6 +343,7 @@ const Dashboard = () => {
                     stage={item.stage}
                     totalCapacity={item.totalCapacity}
                     occupiedSlots={item.occupiedSlots}
+                    onClick={() => navigate('/admin/create-officer')}
                   />
                 ) : (
                   <OfficerCapacityCard
@@ -343,6 +351,7 @@ const Dashboard = () => {
                     stage={item.stage}
                     totalCapacity={item.totalCapacity}
                     occupiedSlots={item.occupiedSlots}
+                    onClick={() => navigate('/admin/create-officer')}
                   />
                 ),
               )}
