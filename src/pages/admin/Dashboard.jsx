@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FileCheck, Users } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import StatCard from '../../components/cards/StatCard'
@@ -117,6 +118,7 @@ const Dashboard = () => {
     refreshOfficerCapacitySummary,
     refreshUserStats,
   } = useApp()
+  const navigate = useNavigate()
   const isSuperAdmin = role === 'superadmin'
   const isAdmin = role === 'admin'
 
@@ -183,22 +185,34 @@ const Dashboard = () => {
     <div className="flex flex-col gap-6">
       {isSuperAdmin ? (
         <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-azure-100 bg-gradient-to-br from-azure-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: '' } })}
+            className="cursor-pointer rounded-2xl border border-azure-100 bg-gradient-to-br from-azure-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Total Users</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{totalCount}</p>
             <p className="mt-2 text-xs text-ink-500">All registered</p>
           </div>
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: 'pending' } })}
+            className="cursor-pointer rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Pending</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{pendingCount}</p>
             <p className="mt-2 text-xs text-ink-500">Awaiting review</p>
           </div>
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: 'approved' } })}
+            className="cursor-pointer rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Approved</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{approvedCount}</p>
             <p className="mt-2 text-xs text-ink-500">Active dealers</p>
           </div>
-          <div className="rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: 'rejected' } })}
+            className="cursor-pointer rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Rejected</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{rejectedCount}</p>
             <p className="mt-2 text-xs text-ink-500">Requires follow up</p>

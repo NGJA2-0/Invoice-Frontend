@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 
 const STATUS_OPTIONS = [
@@ -40,8 +40,11 @@ const emptyData = { users: [], total: 0, page: 1, limit: 10, totalPages: 1 }
 const Users = () => {
   const { refreshUsersSummary } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const [status, setStatus] = useState('')
+  // Seed the initial filter from a dashboard card click (e.g. { status: 'approved' }).
+  // Falls back to '' (All statuses) for normal, non-navigated visits.
+  const [status, setStatus] = useState(() => location.state?.status ?? '')
   const [limit, setLimit] = useState(10)
   const [page, setPage] = useState(1)
 
@@ -108,6 +111,12 @@ const Users = () => {
     },
     [refreshUsersSummary, scheduleAutoRefresh],
   )
+
+  // Land the user at the top of the page on navigation (e.g. clicking a
+  // dashboard card), instead of keeping the Dashboard's scroll position.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   // On mount: if we already have a fresh cached entry for the current
   // page/limit/status (e.g. user came back from another tab), show it
