@@ -48,7 +48,7 @@ export default function Admins() {
   const [error, setError] = useState(null)
 
   // Modal state
-  const [modal, setModal] = useState(null) // null | 'create' | 'edit' | 'delete' | 'capacity'
+  const [modal, setModal] = useState(null) // null | 'create' | 'edit' | 'delete' | 'capacity' | 'blocked'
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [showPassword, setShowPassword] = useState(false)
@@ -148,6 +148,15 @@ export default function Admins() {
 
   const toggleStatus = async (admin) => {
     const next = admin.status === 'active' ? 'inactive' : 'active'
+
+    // Guard: an admin currently holding assigned registration slots
+    // cannot be deactivated until those slots are freed up.
+    if (next === 'inactive' && admin.occupiedSlots > 0) {
+      setSelected(admin)
+      setModal('blocked')
+      return
+    }
+
     try {
       await api.patch(`${BASE}/${admin.id}/status`, { status: next })
       await fetchAdmins()
@@ -194,8 +203,8 @@ export default function Admins() {
         </button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-border">
+      {/* Table (md and up) */}
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-muted-foreground">
             <tr>
@@ -287,6 +296,86 @@ export default function Admins() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Card list (mobile only) */}
+      <div className="md:hidden flex flex-col gap-3">
+        {admins.map(admin => (
+          <div
+            key={admin.id}
+            onClick={() => navigate(`/admin/admins/${admin.id}/registrations`, { state: { fullName: admin.fullName, username: admin.username } })}
+            className="rounded-xl border border-border bg-white p-4 flex flex-col gap-3 active:bg-muted/30 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium truncate">{admin.fullName}</p>
+                <p className="text-xs text-muted-foreground truncate">{admin.username}</p>
+                <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  admin.role === 'superadmin'
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {admin.role}
+                </span>
+                <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  admin.status === 'active'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {admin.status}
+                </span>
+              </div>
+            </div>
+
+            {admin.role === 'admin' && (
+              <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+                <CapacitySlots
+                  total={admin.totalCapacity}
+                  occupied={admin.occupiedSlots}
+                />
+                <button
+                  onClick={(e) => { e.stopPropagation(); openCapacity(admin) }}
+                  title="Edit capacity"
+                  className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                >
+                  <Settings2 size={16} />
+                </button>
+              </div>
+            )}
+
+            {admin.role !== 'superadmin' && (
+              <div
+                className="flex items-center justify-end gap-4 border-t border-border pt-3"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => toggleStatus(admin)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {admin.status === 'active'
+                    ? <ToggleRight size={18} className="text-green-600" />
+                    : <ToggleLeft size={18} />}
+                  {admin.status === 'active' ? 'Deactivate' : 'Activate'}
+                </button>
+                <button
+                  onClick={() => openEdit(admin)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Pencil size={14} /> Edit
+                </button>
+                <button
+                  onClick={() => openDelete(admin)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Modals */}
@@ -390,6 +479,41 @@ export default function Admins() {
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {submitting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === 'blocked' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 sm:p-6 shadow-xl flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                <ToggleLeft size={18} className="text-amber-600" />
+              </span>
+              <h3 className="text-base font-semibold">Cannot Deactivate Admin</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{selected?.fullName}</span>{' '}
+              currently has{' '}
+              <span className="font-medium text-foreground">
+                {selected?.occupiedSlots} occupied slot{selected?.occupiedSlots === 1 ? '' : 's'}
+              </span>{' '}
+              (assigned registrations still in progress). An admin with active
+              assignments cannot be deactivated, since doing so would leave
+              those registrations without an assigned reviewer.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Reassign or resolve the pending registrations for this admin
+              first, then try deactivating again.
+            </p>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                onClick={closeModal}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                Got it
               </button>
             </div>
           </div>
