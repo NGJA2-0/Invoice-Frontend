@@ -162,12 +162,12 @@ const Dashboard = () => {
 
   const pieData = officerCapacitySummary.map((item) => ({
     name: (STAGE_META[item.stage] || {}).label || `Stage ${item.stage}`,
-    value: item.occupiedSlots,
+    value: item.totalCapacity,
     stage: item.stage,
   }))
 
-  const totalOfficersAssigned = officerCapacitySummary.reduce(
-    (sum, item) => sum + (item.occupiedSlots || 0),
+  const totalSlots = officerCapacitySummary.reduce(
+    (sum, item) => sum + (item.totalCapacity || 0),
     0,
   )
 
@@ -249,7 +249,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value, name) => [`${value} officers assigned`, name]}
+                      formatter={(value, name) => [`${value} total slots`, name]}
                       contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
                       position={{ x: undefined, y: -10 }}
                       wrapperStyle={{ zIndex: 20 }}
@@ -259,8 +259,8 @@ const Dashboard = () => {
                 </ResponsiveContainer>
 
                 <div className="pointer-events-none absolute top-4 flex h-[200px] w-full flex-col items-center justify-center">
-                  <p className="text-2xl font-semibold text-ink-900">{totalOfficersAssigned}</p>
-                  <p className="text-xs text-ink-500">Officers assigned</p>
+                  <p className="text-2xl font-semibold text-ink-900">{totalSlots}</p>
+                  <p className="text-xs text-ink-500">Total slots</p>
                 </div>
 
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
