@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { api } from '../services/api'
 import { officerApi } from '../services/officerApi'
+import { adminService } from '../services/adminService'
 
 const AppContext = createContext(null)
 
@@ -60,6 +61,9 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(readStoredUser)
   const [userStatus, setUserStatus] = useState(user?.status || 'not_verified')
   const [registrations, setRegistrations] = useState([])
+  const [officerCapacitySummary, setOfficerCapacitySummary] = useState([])
+  const [userStats, setUserStats] = useState(null)
+  const [adminUserStats, setAdminUserStats] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [invoicePagination, setInvoicePagination] = useState({
     currentPage: 1,
@@ -74,6 +78,14 @@ export const AppProvider = ({ children }) => {
     sort: 'date_desc',
   })
   const [users, setUsers] = useState([])
+  const [usersSummary, setUsersSummary] = useState([])
+  const [usersSummaryPagination, setUsersSummaryPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  })
+  const [usersSummaryFilters, setUsersSummaryFilters] = useState({ status: undefined })
   const [officerInvoices, setOfficerInvoices] = useState([])
   const [stage2OfficerInvoices, setStage2OfficerInvoices] = useState([])
   const [stage3OfficerInvoices, setStage3OfficerInvoices] = useState([])
@@ -183,6 +195,44 @@ export const AppProvider = ({ children }) => {
     })
 
     setRegistrations(normalizedRegistrations)
+  }, [])
+
+  // Superadmin-only: officer occupancy per verification stage
+  const refreshOfficerCapacitySummary = useCallback(async () => {
+    const data = await adminService.getOfficerCapacitySummary()
+    setOfficerCapacitySummary(Array.isArray(data) ? data : [])
+    return data
+  }, [])
+
+  // Superadmin-only: aggregate user counts for dashboard stat cards
+  const refreshUserStats = useCallback(async () => {
+    const data = await adminService.getUserStats()
+    setUserStats(data || null)
+    return data
+  }, [])
+
+  // Plain admin-only: aggregate user counts scoped to that admin
+  const refreshAdminUserStats = useCallback(async (adminId) => {
+    if (!adminId) return
+    const data = await adminService.getAdminUserStats(adminId)
+    setAdminUserStats(data || null)
+    return data
+  }, [])
+
+  const refreshUsersSummary = useCallback(async (options = {}) => {
+    const { page = 1, limit = 10, status } = options
+    const data = await adminService.getUsersSummary({ page, limit, status })
+
+    const list = Array.isArray(data?.users) ? data.users : []
+    setUsersSummary(list)
+    setUsersSummaryPagination({
+      page: data?.page || page,
+      limit: data?.limit || limit,
+      total: data?.total || 0,
+      totalPages: data?.totalPages || 1,
+    })
+    setUsersSummaryFilters({ status })
+    return data
   }, [])
 
   const refreshPendingUsers = useCallback(async (page = 1, limit = 10) => {
@@ -411,10 +461,16 @@ export const AppProvider = ({ children }) => {
       user,
       userStatus,
       registrations,
+      officerCapacitySummary,
+      userStats,
+      adminUserStats,
       invoices,
       invoicePagination,
       invoiceFilters,
       users,
+      usersSummary,
+      usersSummaryPagination,
+      usersSummaryFilters,
       officerInvoices,
       stage2OfficerInvoices,
       stage3OfficerInvoices,
@@ -437,6 +493,10 @@ export const AppProvider = ({ children }) => {
       refreshStage3OfficerInvoices,
       refreshUserProfile,
       refreshAdminData,
+      refreshUsersSummary,
+      refreshOfficerCapacitySummary,
+      refreshUserStats,
+      refreshAdminUserStats,
       submitRegistration,
       updateRegistrationStatus,
       updateProfile,
@@ -454,10 +514,16 @@ export const AppProvider = ({ children }) => {
       user,
       userStatus,
       registrations,
+      officerCapacitySummary,
+      userStats,
+      adminUserStats,
       invoices,
       invoicePagination,
       invoiceFilters,
       users,
+      usersSummary,
+      usersSummaryPagination,
+      usersSummaryFilters,
       officerInvoices,
       stage2OfficerInvoices,
       stage3OfficerInvoices,
@@ -470,6 +536,12 @@ export const AppProvider = ({ children }) => {
     if (user?.id) {
       if (role === 'admin' || role === 'superadmin') {
         refreshAdminData()
+        if (role === 'superadmin') {
+          refreshOfficerCapacitySummary()
+          refreshUserStats()
+        } else if (role === 'admin') {
+          refreshAdminUserStats(user.id)
+        }
       } else if (role === 'officer') {
         refreshOfficerInvoices(user.id)
       } else if (role === 'stage2officer') {

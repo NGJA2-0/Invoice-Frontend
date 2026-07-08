@@ -30,6 +30,24 @@ export const adminService = {
     return response
   },
 
+  // Paginated + filterable users summary for the admin Users table.
+  // status is optional: 'pending' | 'approved' | 'rejected'
+  getUsersSummary: async ({ page = 1, limit = 10, status } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    const response = await api.get(`/admin/users/summary?${params.toString()}`)
+    return response
+  },
+
+  // Full profile for a single user, shown on the user detail screen
+  getUserProfile: async (userId) => {
+    if (!userId) throw new Error('User ID is required')
+    const response = await api.get(`/users/${userId}`)
+    return response
+  },
+
   approveDealer: async (userId, data) => {
     const response = await api.put(`/admin/dealers/${userId}/approve`, data)
     return response
@@ -40,13 +58,23 @@ export const adminService = {
     return response
   },
 
-  getApprovedDealers: async () => {
-    const response = await api.get('/admin/dealers/approved')
-    return response || []
+  // Officer capacity per stage — superadmin only
+  getOfficerCapacitySummary: async () => {
+    const response = await api.get('/admin/officers/capacity-summary')
+    return response
   },
 
-  getRejectedDealers: async () => {
-    const response = await api.get('/admin/dealers/rejected')
-    return response || []
+  // Aggregate user counts (total/approved/rejected/pending) — superadmin only
+  getUserStats: async () => {
+    const response = await api.get('/admin/users/stats')
+    return response
   },
+
+  // Aggregate user counts scoped to a specific admin's assigned registrations — plain admin only
+  getAdminUserStats: async (adminId) => {
+    if (!adminId) throw new Error('Admin ID is required')
+    const response = await api.get(`/admin/users/stats/${adminId}`)
+    return response
+  },
+
 }

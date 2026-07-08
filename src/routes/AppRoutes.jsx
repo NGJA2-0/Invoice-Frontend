@@ -12,10 +12,8 @@ import Stage3EditInvoice from '../pages/officer3/EditInvoice'
 import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import AdminDashboard from '../pages/admin/Dashboard'
-import ApprovedDealers from '../pages/admin/ApprovedDealers'
 import InvoiceManagement from '../pages/admin/InvoiceManagement'
 import PendingRegistrations from '../pages/admin/PendingRegistrations'
-import RejectedDealers from '../pages/admin/RejectedDealers'
 import Users from '../pages/admin/Users'
 import Currencies from '../pages/admin/Currencies'
 import CurrencyDetail from '../pages/admin/CurrencyDetail'
@@ -43,6 +41,7 @@ import Admins from '../pages/admin/Admins'
 import AdminAssignedRegistrations from '../pages/admin/AdminAssignedRegistrations'
 import CreateOfficer from '../pages/admin/CreateOfficer'
 import EditRequests from '../pages/admin/EditRequests'
+import UserProfile from '../pages/admin/UserProfile'
 
 // Guard component: redirects to /admin/dashboard if the user is not a super admin
 const SuperAdminRoute = ({ children }) => {
@@ -118,22 +117,6 @@ const AppRoutes = () => {
 
           {/* Super Admin only routes */}
           <Route
-            path="approved-dealers"
-            element={
-              <SuperAdminRoute>
-                <ApprovedDealers />
-              </SuperAdminRoute>
-            }
-          />
-          <Route
-            path="rejected-dealers"
-            element={
-              <SuperAdminRoute>
-                <RejectedDealers />
-              </SuperAdminRoute>
-            }
-          />
-          <Route
             path="invoice-management"
             element={
               <SuperAdminRoute>
@@ -146,6 +129,14 @@ const AppRoutes = () => {
             element={
               <SuperAdminRoute>
                 <Users />
+              </SuperAdminRoute>
+            }
+          />
+          <Route
+            path="users/:userId"
+            element={
+              <SuperAdminRoute>
+                <UserProfile />
               </SuperAdminRoute>
             }
           />
