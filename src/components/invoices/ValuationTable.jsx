@@ -389,7 +389,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     if (!isValuationTable) return
     currencyApi.getAllPublic()
       .then((res) => {
-        const list = res?.data ?? []
+        const list = Array.isArray(res) ? res : (res?.data ?? [])
         const codes = list.map((c) => c.currencyCode).filter(Boolean)
         setCurrencyCodes(codes)
         setCurrencyList(list)
@@ -402,7 +402,8 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     setCurrencyLoading(true)
     currencyApi.getByCode(selectedCurrency)
       .then((res) => {
-        const rate = res?.exchangeRate
+        const payload = res?.data || res
+        const rate = payload?.exchangeRate
         if (rate !== undefined && rate !== null) {
           setValue(`invoiceData.exchangeRateSection.exchangeRate`, Number(rate), {
             shouldValidate: false,
