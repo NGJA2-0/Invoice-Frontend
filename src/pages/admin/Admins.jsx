@@ -171,6 +171,21 @@ export default function Admins() {
       setFormError('Enter a whole number of 0 or more.')
       return
     }
+
+    // New capacity must leave room for the slots this admin is already
+    // occupying — shrinking to or below that number would strand active
+    // assignments, so block the request client-side before it reaches the API.
+    const occupied = selected?.occupiedSlots ?? 0
+    if (parsed <= occupied) {
+      setFormError(
+        `New capacity must be greater than the ${occupied} slot${occupied === 1 ? '' : 's'} ` +
+        `currently occupied by ${selected?.fullName || 'this admin'}. ` +
+        `Enter a value of ${occupied + 1} or more, or reassign some of their ` +
+        `registrations first to free up slots.`
+      )
+      return
+    }
+
     setSubmitting(true)
     setFormError(null)
     try {
