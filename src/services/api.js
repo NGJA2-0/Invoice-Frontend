@@ -79,7 +79,10 @@ const request = async (path, options = {}) => {
       ...(fetchOptions.headers || {}),
     },
   })
-  handle401(response)
+  // Only auto-logout if we actually sent a token — a 401 on an
+  // unauthenticated call (e.g. login endpoints) is just bad credentials
+  // and should propagate as a normal error so the UI can show a message.
+  if (token) handle401(response)
   return raw ? parseResponseRaw(response) : parseResponse(response)
 }
 
@@ -94,7 +97,8 @@ const requestForm = async (path, formData, options = {}) => {
       ...(options.headers || {}),
     },
   })
-  handle401(response)
+  // Same rule: only auto-logout when a token was sent with the request
+  if (token) handle401(response)
   return parseResponse(response)
 }
 

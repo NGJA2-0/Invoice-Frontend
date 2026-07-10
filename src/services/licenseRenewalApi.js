@@ -1,11 +1,9 @@
-import { api, fetchWithFallback, API_BASE_URL } from './api'
+import { api } from './api'
 
-// Admin-only license renewal management — routes unchanged, no JWT needed here
+// Admin-only license renewal management — all routes under /admin/**, unchanged URLs
 export const licenseRenewalApi = {
-  getPending: async () => {
-    const res = await fetchWithFallback(`${API_BASE_URL}/admin/license-renewals/pending`)
-    return res.json()
-  },
+  // Bearer token is injected automatically by api.get
+  getPending: () => api.get('/admin/license-renewals/pending'),
   approve: (id) => api.put(`/admin/license-renewals/${id}/approve`),
   reject:  (id) => api.put(`/admin/license-renewals/${id}/reject`),
 }

@@ -12,7 +12,8 @@ export default function LicenseRenewals() {
     setLoading(true)
     try {
       const res = await licenseRenewalApi.getPending()
-      setRenewals(res.data ?? [])
+      // api.get auto-unwraps payload.data — res is already the renewals array (or the raw payload)
+      setRenewals(Array.isArray(res) ? res : (res?.data ?? []))
     } finally {
       setLoading(false)
     }
