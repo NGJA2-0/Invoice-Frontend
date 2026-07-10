@@ -31,11 +31,11 @@ export const currencyApi = {
   // ── New public endpoints (used by the valuation form) ───────────────────
 
   /**
-   * GET /api/v1/admin/currencies
+   * GET /api/v1/currencies
    * Returns { data: [{ currencyCode, exchangeRate }, ...] }
    * Used to populate the currency dropdown on form load.
    */
-  getAllPublic: () => getRaw(BASE),
+  getAllPublic: () => getRaw('/currencies'),
 
   /**
    * GET /api/v1/currencies/:code
