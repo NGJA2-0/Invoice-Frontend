@@ -47,61 +47,59 @@ const parseResponseRaw = async (response) => {
   return payload ?? null
 }
 
-const getStoredUserId = () => {
+const getStoredToken = () => {
   try {
     const raw = localStorage.getItem('ngja_user')
     if (!raw) return null
     const parsed = JSON.parse(raw)
-    return parsed?.id || null
+    return parsed?.token || null
   } catch {
     return null
   }
 }
 
-const request = async (path, options = {}) => {
-  if (path.includes('categories')) {
-    console.trace(`🔴 API CALL: ${path}`) // prints full call stack
+// If the server responds with 401 (expired / invalid token), clear the
+// session and redirect to the login page so the user gets a fresh token.
+const handle401 = (response) => {
+  if (response.status === 401) {
+    localStorage.removeItem('ngja_user')
+    localStorage.removeItem('ngja_role')
+    window.location.href = '/login'
   }
-  const userId = getStoredUserId()
+}
+
+const request = async (path, options = {}) => {
+  const token = getStoredToken()
   const { raw, ...fetchOptions } = options
   const response = await fetchWithFallback(buildUrl(path), {
     ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',
-      ...(userId ? { 'X-User-Id': userId } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(fetchOptions.headers || {}),
     },
   })
+  handle401(response)
   return raw ? parseResponseRaw(response) : parseResponse(response)
 }
 
 const requestForm = async (path, formData, options = {}) => {
+  const token = getStoredToken()
   const response = await fetchWithFallback(buildUrl(path), {
     method: 'POST',
     body: formData,
     ...options,
-  })
-  return parseResponse(response)
-}
-
-const requestWithUserIdHeader = async (path, body, userId) => {
-  const response = await fetchWithFallback(buildUrl(path), {
-    method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'X-User-Id': String(userId),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
     },
-    body: JSON.stringify(body),
   })
+  handle401(response)
   return parseResponse(response)
 }
 
 export const api = {
   get: (path, options = {}) => request(path, { method: 'GET', ...options }),
-  submitLicenseRenewal: (userId, body) => {
-    if (!userId) throw new Error('User ID is required for license renewal')
-    return requestWithUserIdHeader('/license-renewals/submit', body, userId)
-  },
   post: (path, body, options = {}) =>
     request(path, { method: 'POST', body: JSON.stringify(body), ...options }),
   put: (path, body) =>
