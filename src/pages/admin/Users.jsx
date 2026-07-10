@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 
 const STATUS_OPTIONS = [
@@ -40,8 +40,11 @@ const emptyData = { users: [], total: 0, page: 1, limit: 10, totalPages: 1 }
 const Users = () => {
   const { refreshUsersSummary } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const [status, setStatus] = useState('')
+  // Seed the initial filter from a dashboard card click (e.g. { status: 'approved' }).
+  // Falls back to '' (All statuses) for normal, non-navigated visits.
+  const [status, setStatus] = useState(() => location.state?.status ?? '')
   const [limit, setLimit] = useState(10)
   const [page, setPage] = useState(1)
 
@@ -108,6 +111,12 @@ const Users = () => {
     },
     [refreshUsersSummary, scheduleAutoRefresh],
   )
+
+  // Land the user at the top of the page on navigation (e.g. clicking a
+  // dashboard card), instead of keeping the Dashboard's scroll position.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   // On mount: if we already have a fresh cached entry for the current
   // page/limit/status (e.g. user came back from another tab), show it
@@ -236,6 +245,12 @@ const Users = () => {
                 Mobile Numbers
               </th>
               <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Gem Dealer File No
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
+                Assigned Admin
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider text-black">
                 Status
               </th>
               </tr>
@@ -254,14 +269,17 @@ const Users = () => {
                   <td className="px-6 py-4 text-sm text-slate-500">
                     <div className="flex flex-wrap gap-1.5">
                       {(user.mobileNumbers || []).map((num) => (
-                        <span
-                          key={num}
-                          className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600"
-                        >
-                          {num}
-                        </span>
+                        <span key={num}>{num}</span>
                       ))}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600">
+                      {user.gemDealerFileNo || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-500">
+                    {user.assignedAdminName || 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -277,7 +295,7 @@ const Users = () => {
 
               {!loading && displayData.users.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                     No users found.
                   </td>
                 </tr>
@@ -307,14 +325,18 @@ const Users = () => {
               <p className="text-xs text-slate-400">NIC: {user.nic}</p>
               <div className="flex flex-wrap gap-1.5">
                 {(user.mobileNumbers || []).map((num) => (
-                  <span
-                    key={num}
-                    className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600"
-                  >
-                    {num}
-                  </span>
+                  <span key={num} className="text-xs text-slate-500">{num}</span>
                 ))}
               </div>
+              <p className="text-xs text-slate-400">
+                Gem Dealer File No:{' '}
+                <span className="rounded-lg bg-violet-50 px-2 py-1 text-xs font-medium text-violet-600">
+                  {user.gemDealerFileNo || 'N/A'}
+                </span>
+              </p>
+              <p className="text-xs text-slate-400">
+                Assigned Admin: {user.assignedAdminName || 'N/A'}
+              </p>
             </div>
           ))}
 

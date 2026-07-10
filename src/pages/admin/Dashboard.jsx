@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FileCheck, Users } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import StatCard from '../../components/cards/StatCard'
@@ -11,13 +12,16 @@ const STAGE_META = {
   3: { label: 'Stage 3', sub: 'Final approval', gradient: 'from-emerald-500 to-emerald-700', bg: 'from-emerald-50 to-white', ring: 'ring-emerald-100', bar: 'bg-emerald-500', hex: '#10b981' },
 }
 
-const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
+const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots, onClick }) => {
   const meta = STAGE_META[stage] || { label: `Stage ${stage}`, sub: 'Officers', gradient: 'from-slate-500 to-slate-700', bg: 'from-slate-50 to-white', ring: 'ring-slate-100', bar: 'bg-slate-500' }
   const available = Math.max(totalCapacity - occupiedSlots, 0)
   const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
 
   return (
-    <div className={`relative inline-block w-fit overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} px-4 py-1.5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}>
+    <div
+      onClick={onClick}
+      className={`relative inline-block w-fit cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} px-4 py-1.5 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}
+    >
       <div className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
       <div className="relative flex items-center gap-6">
         <div className="flex min-w-0 items-center gap-3">
@@ -58,13 +62,16 @@ const OfficerCapacityCard = ({ stage, totalCapacity, occupiedSlots }) => {
     </div>
   )
 }
-const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots }) => {
+const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots, onClick }) => {
   const meta = STAGE_META[stage] || { label: `Stage ${stage}`, sub: 'Officers', gradient: 'from-slate-500 to-slate-700', bg: 'from-slate-50 to-white', ring: 'ring-slate-100', bar: 'bg-slate-500' }
   const available = Math.max(totalCapacity - occupiedSlots, 0)
   const pct = totalCapacity > 0 ? Math.min(Math.round((occupiedSlots / totalCapacity) * 100), 100) : 0
 
   return (
-    <div className={`relative mx-auto w-[92%] overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]`}>
+    <div
+      onClick={onClick}
+      className={`relative mx-auto w-[92%] cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br ${meta.bg} p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]`}
+    >
       <div className={`pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br ${meta.gradient} opacity-10 blur-2xl`} />
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -117,6 +124,7 @@ const Dashboard = () => {
     refreshOfficerCapacitySummary,
     refreshUserStats,
   } = useApp()
+  const navigate = useNavigate()
   const isSuperAdmin = role === 'superadmin'
   const isAdmin = role === 'admin'
 
@@ -162,12 +170,12 @@ const Dashboard = () => {
 
   const pieData = officerCapacitySummary.map((item) => ({
     name: (STAGE_META[item.stage] || {}).label || `Stage ${item.stage}`,
-    value: item.occupiedSlots,
+    value: item.totalCapacity,
     stage: item.stage,
   }))
 
-  const totalOfficersAssigned = officerCapacitySummary.reduce(
-    (sum, item) => sum + (item.occupiedSlots || 0),
+  const totalSlots = officerCapacitySummary.reduce(
+    (sum, item) => sum + (item.totalCapacity || 0),
     0,
   )
 
@@ -183,22 +191,34 @@ const Dashboard = () => {
     <div className="flex flex-col gap-6">
       {isSuperAdmin ? (
         <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-azure-100 bg-gradient-to-br from-azure-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: '' } })}
+            className="cursor-pointer rounded-2xl border border-azure-100 bg-gradient-to-br from-azure-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Total Users</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{totalCount}</p>
             <p className="mt-2 text-xs text-ink-500">All registered</p>
           </div>
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: 'pending' } })}
+            className="cursor-pointer rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Pending</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{pendingCount}</p>
             <p className="mt-2 text-xs text-ink-500">Awaiting review</p>
           </div>
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: 'approved' } })}
+            className="cursor-pointer rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Approved</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{approvedCount}</p>
             <p className="mt-2 text-xs text-ink-500">Active dealers</p>
           </div>
-          <div className="rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div
+            onClick={() => navigate('/admin/users', { state: { status: 'rejected' } })}
+            className="cursor-pointer rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">Rejected</p>
             <p className="mt-3 text-3xl font-semibold text-ink-900">{rejectedCount}</p>
             <p className="mt-2 text-xs text-ink-500">Requires follow up</p>
@@ -249,7 +269,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value, name) => [`${value} officers assigned`, name]}
+                      formatter={(value, name) => [`${value} total slots`, name]}
                       contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
                       position={{ x: undefined, y: -10 }}
                       wrapperStyle={{ zIndex: 20 }}
@@ -259,8 +279,8 @@ const Dashboard = () => {
                 </ResponsiveContainer>
 
                 <div className="pointer-events-none absolute top-4 flex h-[200px] w-full flex-col items-center justify-center">
-                  <p className="text-2xl font-semibold text-ink-900">{totalOfficersAssigned}</p>
-                  <p className="text-xs text-ink-500">Officers assigned</p>
+                  <p className="text-2xl font-semibold text-ink-900">{totalSlots}</p>
+                  <p className="text-xs text-ink-500">Total slots</p>
                 </div>
 
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -304,6 +324,7 @@ const Dashboard = () => {
                   stage={item.stage}
                   totalCapacity={item.totalCapacity}
                   occupiedSlots={item.occupiedSlots}
+                  onClick={() => navigate('/admin/create-officer')}
                 />
               ))}
             </div>
@@ -322,6 +343,7 @@ const Dashboard = () => {
                     stage={item.stage}
                     totalCapacity={item.totalCapacity}
                     occupiedSlots={item.occupiedSlots}
+                    onClick={() => navigate('/admin/create-officer')}
                   />
                 ) : (
                   <OfficerCapacityCard
@@ -329,6 +351,7 @@ const Dashboard = () => {
                     stage={item.stage}
                     totalCapacity={item.totalCapacity}
                     occupiedSlots={item.occupiedSlots}
+                    onClick={() => navigate('/admin/create-officer')}
                   />
                 ),
               )}

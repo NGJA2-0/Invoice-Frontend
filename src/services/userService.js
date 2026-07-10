@@ -1,16 +1,14 @@
 import { api } from './api'
 
 export const userService = {
-  getProfile: async (userId) => {
-    const response = await api.get(`/users/${userId}`)
+  getProfile: async () => {
+    const response = await api.get('/users/me')
     return response
   },
 
-   // GET /api/v1/invoices/:id
-  getInvoiceById: async (invoiceId, userId) => {
-    const response = await api.get(`/invoices/${invoiceId}`, {
-      headers: { 'X-User-Id': userId },
-    })
+  // GET /api/v1/invoices/:id
+  getInvoiceById: async (invoiceId) => {
+    const response = await api.get(`/invoices/${invoiceId}`)
     return response
   },
 
@@ -18,42 +16,40 @@ export const userService = {
 
   // GET /api/v1/:stage/invoices/:originalInvoiceId/users/:userId/proposed-edits
   // returns { originalData, proposedData }
+  // Note: officer-facing route — userId still required in URL (officer workflow unchanged)
   getProposedEdits: async (stage, originalInvoiceId, userId) => {
     const response = await api.get(
       `/${stage}/invoices/${originalInvoiceId}/users/${userId}/proposed-edits`,
-      { headers: { 'X-User-Id': userId } },
     )
     return response
   },
 
   // POST /api/v1/:stage/invoices/:originalInvoiceId/users/:userId/review-edits
   // body: { approved: boolean, rejectionReason: string }
+  // Note: officer-facing route — userId still required in URL (officer workflow unchanged)
   reviewProposedEdits: async (stage, originalInvoiceId, userId, { approved, rejectionReason }) => {
     const response = await api.post(
       `/${stage}/invoices/${originalInvoiceId}/users/${userId}/review-edits`,
       { approved, rejectionReason },
-      { headers: { 'X-User-Id': userId } },
     )
     return response
   },
 
   // POST /api/v1/invoices/:id/pdf — returns { data: <invoiceData>, meta, sections }
   // matching exactly what InvoicePreview expects as its `preview` prop.
-  // api.post() auto-attaches X-User-Id and unwraps payload.data for us.
   getInvoicePdfData: async (invoiceId) => {
     const response = await api.post(`/invoices/${invoiceId}/pdf`)
     return response
   },
 
-  updateProfile: async (userId, data) => {
-    const response = await api.put(`/users/${userId}`, data)
+  updateProfile: async (data) => {
+    const response = await api.put('/users/me', data)
     return response
   },
 
-  // POST /api/v1/users/edit-requests — regulated fields, requires admin approval
-  // api.post() automatically attaches X-User-Id from localStorage via request()
+  // POST /api/v1/users/me/edit-requests — regulated fields, requires admin approval
   submitEditRequest: async (data) => {
-    const response = await api.post('/users/edit-requests', data)
+    const response = await api.post('/users/me/edit-requests', data)
     return response
   },
 
@@ -63,82 +59,68 @@ export const userService = {
     return Array.isArray(response?.data) ? response.data : []
   },
 
-  // PUT /api/v1/users/details — partial update, only send changed fields
-  // api.put() automatically attaches X-User-Id from localStorage via request()
+  // PUT /api/v1/users/me/details — partial update, only send changed fields
   updateUserDetails: async (data) => {
-    const response = await api.put('/users/details', data)
+    const response = await api.put('/users/me/details', data)
     return response
   },
 
-  getInvoices: async (userId, { page = 1, pageSize = 10, status, sort = 'date_desc' } = {}) => {
+  getInvoices: async ({ page = 1, pageSize = 10, status, sort = 'date_desc' } = {}) => {
     const params = new URLSearchParams()
     params.set('page', page)
     params.set('pageSize', pageSize)
     if (status) params.set('status', status)
     if (sort) params.set('sort', sort)
 
-    const response = await api.get(
-      `/invoices/user/${userId}?${params.toString()}`,
-      { headers: { 'X-User-Id': userId } }
-    )
+    const response = await api.get(`/invoices/my-invoices?${params.toString()}`)
     return response
   },
 
-  getFavorites: async (userId, { page, pageSize } = {}) => {
+  getFavorites: async ({ page, pageSize } = {}) => {
     const params = new URLSearchParams()
     if (page) params.set('page', page)
     if (pageSize) params.set('pageSize', pageSize)
     const query = params.toString()
 
     const response = await api.get(
-      `/invoices/favorites/${userId}${query ? `?${query}` : ''}`,
+      `/invoices/favorites${query ? `?${query}` : ''}`,
       { raw: true }
     )
     return response
   },
 
-  removeFavorite: async (invoiceId, userId) => {
-    const response = await api.delete(
-      `/invoices/favorites/${invoiceId}?userId=${userId}`
-    )
+  removeFavorite: async (invoiceId) => {
+    const response = await api.delete(`/invoices/favorites/${invoiceId}`)
     return response
   },
 
-  addFavorite: async (userId, invoiceId) => {
-    const response = await api.post('/invoices/favorites', {
-      userId,
-      invoiceId,
-    })
+  addFavorite: async (invoiceId) => {
+    const response = await api.post('/invoices/favorites', { invoiceId })
     return response
   },
 
-  // GET /api/v1/invoices/total — returns { totalInvoices, xUserID }
-  // api.get() automatically attaches X-User-Id from localStorage via request()
-  getTotalInvoices: async (userId) => {
-    const response = await api.get('/invoices/total', {
-      headers: { 'X-User-Id': userId },
-    })
+  // GET /api/v1/invoices/total
+  getTotalInvoices: async () => {
+    const response = await api.get('/invoices/total')
     return response
   },
 
-  // GET /api/v1/invoices/status-count?status=<status> — returns { status, totalInvoices, xUserID }
-  getInvoiceCountByStatus: async (userId, status) => {
-    const response = await api.get(`/invoices/status-count?status=${status}`, {
-      headers: { 'X-User-Id': userId },
-    })
+  // GET /api/v1/invoices/status-count?status=<status>
+  getInvoiceCountByStatus: async (status) => {
+    const response = await api.get(`/invoices/status-count?status=${status}`)
     return response
   },
 
-  // GET /api/v1/invoices/user/:userId/actionable
+  // GET /api/v1/invoices/my-invoices/actionable
   // returns { total, page, pageSize, totalPages, invoices: [...] }
-  getActionableInvoices: async (userId, { page = 1, pageSize = 10 } = {}) => {
+  getActionableInvoices: async ({ page = 1, pageSize = 10 } = {}) => {
     const params = new URLSearchParams()
     params.set('page', page)
     params.set('pageSize', pageSize)
 
     const response = await api.get(
-      `/invoices/user/${userId}/actionable?${params.toString()}`,
-      { headers: { 'X-User-Id': userId }, raw: true },
+      `/invoices/my-invoices/actionable?${params.toString()}`,
+      { raw: true },
     )
     return response
   },

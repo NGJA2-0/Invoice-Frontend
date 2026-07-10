@@ -25,11 +25,6 @@ export const adminService = {
     return response
   },
 
-  getAllUsers: async () => {
-    const response = await api.get('/admin/users')
-    return response
-  },
-
   // Paginated + filterable users summary for the admin Users table.
   // status is optional: 'pending' | 'approved' | 'rejected'
   getUsersSummary: async ({ page = 1, limit = 10, status } = {}) => {

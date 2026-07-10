@@ -71,10 +71,9 @@ export const invoiceService = {
     return response
   },
 
-  submitInvoice: async (invoiceId, userId) => {
-    const response = await api.post(`/invoices/${invoiceId}/submit`, {}, {
-      headers: { 'X-User-Id': String(userId) },
-    })
+  // JWT Bearer is injected automatically by api.post()
+  submitInvoice: async (invoiceId) => {
+    const response = await api.post(`/invoices/${invoiceId}/submit`, {})
     return response
   },
 
@@ -88,18 +87,19 @@ export const invoiceService = {
     return response
   },
 
-  getByUser: async (userId) => {
-    const response = await api.get(`/users/${userId}/invoices`)
+  // GET /api/v1/users/me/invoices
+  getByUser: async () => {
+    const response = await api.get('/users/me/invoices')
     return response
   },
 
-  getDraftInvoices: async (userId, { page = 1, pageSize = 10 } = {}) => {
+  // GET /api/v1/invoices/my-invoices?status=draft&page=…&pageSize=…
+  getDraftInvoices: async ({ page = 1, pageSize = 10 } = {}) => {
     const params = new URLSearchParams()
     params.set('status', 'draft')
     params.set('page', page)
     params.set('pageSize', pageSize)
-    const response = await api.get(`/invoices/user/${userId}?${params.toString()}`, {
-      headers: { 'X-User-Id': String(userId) },
+    const response = await api.get(`/invoices/my-invoices?${params.toString()}`, {
       raw: true,
     })
     return response
@@ -110,8 +110,9 @@ export const invoiceService = {
     return response
   },
 
-  getBusinessProfile: async (userId) => {
-    const response = await api.get(`/users/${userId}/business-profile`)
+  // GET /api/v1/users/me/business-profile
+  getBusinessProfile: async () => {
+    const response = await api.get('/users/me/business-profile')
     return response
   },
 }

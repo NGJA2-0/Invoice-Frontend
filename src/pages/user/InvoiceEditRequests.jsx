@@ -24,11 +24,10 @@ const InvoiceEditRequests = () => {
   const [total, setTotal] = useState(0)
 
   useEffect(() => {
-    if (!user?.id) return
     setLoading(true)
     setError(null)
     userService
-      .getActionableInvoices(user.id, { page, pageSize })
+      .getActionableInvoices({ page, pageSize })
       .then((res) => {
         const payload = res?.data || res || {}
         const list = payload?.invoices || []
@@ -38,7 +37,7 @@ const InvoiceEditRequests = () => {
       })
       .catch((err) => setError(err?.message || 'Failed to load invoices'))
       .finally(() => setLoading(false))
-  }, [user?.id, page, pageSize])
+  }, [page, pageSize])
 
   const handlePageSizeChange = (e) => {
     setPageSize(Number(e.target.value))

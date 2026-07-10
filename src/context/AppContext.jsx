@@ -102,8 +102,7 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
   }, [])
 
-  const refreshInvoices = useCallback(async (userId, options = {}) => {
-    if (!userId) return
+  const refreshInvoices = useCallback(async (_userId, options = {}) => {
     const {
       page = 1,
       pageSize = 10,
@@ -117,8 +116,8 @@ export const AppProvider = ({ children }) => {
     if (status) params.set('status', status)
     if (sort) params.set('sort', sort)
 
-    const data = await api.get(`/invoices/user/${userId}?${params.toString()}`, {
-      headers: { 'X-User-Id': userId },
+    // Identity comes from the JWT Bearer token — no userId in URL
+    const data = await api.get(`/invoices/my-invoices?${params.toString()}`, {
       raw: true,
     })
 
@@ -152,11 +151,11 @@ export const AppProvider = ({ children }) => {
     return list
   }, [])
 
-  const refreshUserProfile = useCallback(async (userId) => {
-    if (!userId) return
-    const profile = await api.get(`/users/${userId}`)
+  const refreshUserProfile = useCallback(async () => {
+    // Identity comes from the JWT Bearer token — no userId needed
+    const profile = await api.get('/users/me')
     setUser((prev) => {
-      const merged = { ...profile, licenseWarning: prev?.licenseWarning || profile.licenseWarning }
+      const merged = { ...profile, licenseWarning: prev?.licenseWarning || profile.licenseWarning, token: prev?.token }
       localStorage.setItem(USER_KEY, JSON.stringify(merged))
       return merged
     })
@@ -164,35 +163,25 @@ export const AppProvider = ({ children }) => {
   }, [])
 
   const refreshAdminData = useCallback(async () => {
-    const [usersData, pendingData] = await Promise.all([
-      api.get('/admin/users'),
-      api.get('/admin/registrations/pending'),
-    ])
+    const pendingData = await api.get('/admin/registrations/pending')
 
-    const normalizedUsers = usersData || []
-    setUsers(normalizedUsers)
-
-    const userMap = new Map(normalizedUsers.map((item) => [item.id, item]))
-    const normalizedRegistrations = (Array.isArray(pendingData) ? pendingData : []).map((item) => {
-      const profile = userMap.get(item.userId) || {}
-      return {
-        id: item.id,
-        userId: item.userId,
-        dealerName: profile.fullName || 'Dealer',
-        nic: profile.nic || 'N/A',
-        submittedDate: item.submittedAt
-          ? new Date(item.submittedAt).toISOString().slice(0, 10)
-          : 'N/A',
-        status: item.status,
-        documents: {
-          gemDealer: item.gemDealerLicense,
-          jewellery: item.jewelleryLicense,
-          customs: item.customsExporterLicense,
-        },
-        tin: item.tin,
-        vat: item.vat,
-      }
-    })
+    const normalizedRegistrations = (Array.isArray(pendingData) ? pendingData : []).map((item) => ({
+      id: item.id,
+      userId: item.userId,
+      dealerName: item.fullName || 'Dealer',
+      nic: item.nic || 'N/A',
+      submittedDate: item.submittedAt
+        ? new Date(item.submittedAt).toISOString().slice(0, 10)
+        : 'N/A',
+      status: item.status,
+      documents: {
+        gemDealer: item.gemDealerLicense,
+        jewellery: item.jewelleryLicense,
+        customs: item.customsExporterLicense,
+      },
+      tin: item.tin,
+      vat: item.vat,
+    }))
 
     setRegistrations(normalizedRegistrations)
   }, [])
@@ -298,18 +287,22 @@ export const AppProvider = ({ children }) => {
     const data = await api.post('/auth/user-login', { username, password })
     setRole('user')
     localStorage.setItem(ROLE_KEY, 'user')
-    // Persist licenseWarning alongside the user data so UI can read it
+    // Store token alongside user data so Bearer auth works on subsequent requests
     storeUser(data)
-    if (data.id) {
-      await refreshUserProfile(data.id)
-      // After refreshUserProfile overwrites the stored user, re-apply licenseWarning
-      if (data.licenseWarning) {
-        setUser((prev) => prev ? { ...prev, licenseWarning: data.licenseWarning } : prev)
-      }
+    if (data.token) {
+      // refreshUserProfile/refreshInvoices read the token from ngja_user in localStorage
+      await refreshUserProfile()
+      // After refreshUserProfile overwrites the stored user, re-apply token + licenseWarning
+      setUser((prev) => {
+        const next = { ...prev, token: data.token }
+        if (data.licenseWarning) next.licenseWarning = data.licenseWarning
+        localStorage.setItem(USER_KEY, JSON.stringify(next))
+        return next
+      })
     } else {
       setUserStatus(data.status || 'not_verified')
     }
-    await refreshInvoices(data.id)
+    await refreshInvoices()
     return data
   }
 
@@ -384,17 +377,17 @@ export const AppProvider = ({ children }) => {
   }
 
   const submitLicenseRenewal = async ({ newLicenseId, submittedExpiryDate }) => {
-    if (!user?.id) throw new Error('User not authenticated')
-    const data = await api.submitLicenseRenewal(user.id, {
+    // Identity is read from the JWT Bearer token — no userId needed
+    const data = await api.post('/license-renewals/submit', {
       newLicenseId,
       submittedExpiryDate,
     })
     return data
   }
 
-  const submitRegistration = async ({ userId, tin, vat, documents }) => {
+  const submitRegistration = async ({ tin, vat, documents }) => {
+    // userId removed — backend reads identity from JWT Bearer token
     const formData = new FormData()
-    formData.append('userId', userId)
     if (tin) formData.append('tin', tin)
     if (vat) formData.append('vat', vat)
     formData.append('gemDealerLicense', documents.gemDealer)
@@ -403,19 +396,19 @@ export const AppProvider = ({ children }) => {
 
     const verification = await api.postForm('/verifications/submit', formData)
     setUserStatus(verification.status || 'pending')
-    await refreshUserProfile(userId)
+    await refreshUserProfile()
     return verification
   }
 
-  const updateProfile = async (userId, payload) => {
-    await api.put('/users/details', payload)
-    await refreshUserProfile(userId)
+  const updateProfile = async (_userId, payload) => {
+    await api.put('/users/me/details', payload)
+    await refreshUserProfile()
   }
 
   // Submits a regulated-field edit request (tin, stockValueId/Name, gemDealerFileNo).
   // On success the account is locked pending admin review, so we log the user out.
   const submitEditRequest = async (payload) => {
-    const data = await api.post('/users/edit-requests', payload)
+    const data = await api.post('/users/me/edit-requests', payload)
     logout()
     return data
   }
@@ -549,8 +542,8 @@ export const AppProvider = ({ children }) => {
       } else if (role === 'stage3officer') {
         refreshStage3OfficerInvoices(user.id)
       } else {
-        refreshUserProfile(user.id)
-        refreshInvoices(user.id)
+        refreshUserProfile()
+        refreshInvoices()
       }
     }
   }, [user?.id, role])

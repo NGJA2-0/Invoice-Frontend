@@ -72,9 +72,8 @@ const Dashboard = () => {
   useEffect(() => {
     let active = true
     const loadTotalInvoices = async () => {
-      if (!user?.id) return
       try {
-        const data = await userService.getTotalInvoices(user.id)
+        const data = await userService.getTotalInvoices()
         if (active) setTotalInvoices(data?.totalInvoices ?? 0)
       } catch {
         if (active) setTotalInvoices(invoices.length)
@@ -82,14 +81,13 @@ const Dashboard = () => {
     }
     loadTotalInvoices()
     return () => { active = false }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
     let active = true
     const loadApprovedCount = async () => {
-      if (!user?.id) return
       try {
-        const data = await userService.getInvoiceCountByStatus(user.id, 'completed')
+        const data = await userService.getInvoiceCountByStatus('completed')
         if (active) setApprovedCount(data?.totalInvoices ?? 0)
       } catch {
         if (active) setApprovedCount(approvedInvoices.length)
@@ -97,17 +95,16 @@ const Dashboard = () => {
     }
     loadApprovedCount()
     return () => { active = false }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
     let active = true
     const loadStageCounts = async () => {
-      if (!user?.id) return
       try {
         const [stage1, stage2, stage3] = await Promise.all([
-          userService.getInvoiceCountByStatus(user.id, 'stage1_in_progress'),
-          userService.getInvoiceCountByStatus(user.id, 'stage2_in_progress'),
-          userService.getInvoiceCountByStatus(user.id, 'stage3_in_progress'),
+          userService.getInvoiceCountByStatus('stage1_in_progress'),
+          userService.getInvoiceCountByStatus('stage2_in_progress'),
+          userService.getInvoiceCountByStatus('stage3_in_progress'),
         ])
         if (active) {
           setStageCounts({
@@ -122,17 +119,13 @@ const Dashboard = () => {
     }
     loadStageCounts()
     return () => { active = false }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
     let active = true
     const loadFavourites = async () => {
-      if (!user?.id) {
-        setFavouritesLoading(false)
-        return
-      }
       try {
-        const data = await userService.getFavorites(user.id, { pageSize: 3 })
+        const data = await userService.getFavorites({ pageSize: 3 })
         if (active) setFavourites(normalizeFavouriteRows(data).slice(0, 3))
       } catch {
         if (active) setFavourites([])
@@ -142,7 +135,7 @@ const Dashboard = () => {
     }
     loadFavourites()
     return () => { active = false }
-  }, [user?.id])
+  }, [])
 
   return (
     <div className="flex flex-col gap-6">
