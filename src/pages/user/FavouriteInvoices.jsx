@@ -63,12 +63,10 @@ const FavouriteInvoices = () => {
   useEffect(() => {
     let active = true
     const load = async () => {
-      if (user?.id) {
-        const data = await userService.getFavorites(user.id, { pageSize })
-        if (active) {
-          setRows(normalizeRows(data))
-          setPagination(normalizePagination(data))
-        }
+      const data = await userService.getFavorites({ pageSize })
+      if (active) {
+        setRows(normalizeRows(data))
+        setPagination(normalizePagination(data))
       }
       if (active) {
         setLoading(false)
@@ -78,7 +76,7 @@ const FavouriteInvoices = () => {
     return () => {
       active = false
     }
-  }, [user?.id, pageSize])
+  }, [pageSize])
 
   const handlePageSizeChange = (nextSize) => {
     setPageSize(nextSize)
@@ -306,7 +304,7 @@ const FavouriteInvoices = () => {
                   variant="ghost"
                   disabled={!pagination.hasPreviousPage}
                   onClick={async () => {
-                    const data = await userService.getFavorites(user.id, {
+                    const data = await userService.getFavorites({
                       pageSize,
                       page: pagination.currentPage - 1,
                     })
@@ -321,7 +319,7 @@ const FavouriteInvoices = () => {
                   variant="ghost"
                   disabled={!pagination.hasNextPage}
                   onClick={async () => {
-                    const data = await userService.getFavorites(user.id, {
+                    const data = await userService.getFavorites({
                       pageSize,
                       page: pagination.currentPage + 1,
                     })
