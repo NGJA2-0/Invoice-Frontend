@@ -27,9 +27,8 @@ export default function AdminAssignedRegistrations() {
     try {
       setLoading(true)
       setError(null)
-      const res = await api.get(`${BASE}?page=${pageNum}&limit=10`, {
-        headers: { 'X-User-Id': adminId },
-      })
+      // Admin identity is derived from the JWT Bearer token \u2014 injected automatically by api.get
+      const res = await api.get(`${BASE}?page=${pageNum}&limit=10`)
       setRegistrations(res?.registrations || [])
       setSlotInfo(res?.slotInfo || null)
       setPagination(res?.pagination || null)

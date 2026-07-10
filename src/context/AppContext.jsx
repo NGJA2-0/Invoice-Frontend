@@ -247,9 +247,7 @@ export const AppProvider = ({ children }) => {
         total: data?.pagination?.totalRecords || data?.pagination?.totalItems || list.length
       }
     } else {
-      const data = await api.get(`/admin/registrations/assigned?page=${page}&limit=${limit}`, {
-        headers: { 'X-User-Id': user?.id }
-      })
+      const data = await api.get(`/admin/registrations/assigned?page=${page}&limit=${limit}`)
       return {
         registrations: Array.isArray(data?.registrations) ? data.registrations : [],
         totalPages: data?.pagination?.totalPages || 1,
@@ -259,22 +257,20 @@ export const AppProvider = ({ children }) => {
   }, [role, user?.id])
 
   const approvePendingUser = useCallback(async (userId, approvalNotes = '') => {
-    if (!user?.id) return
+    // Admin identity is derived from the JWT Bearer token — no approvedBy field needed
     const data = await api.put(`/admin/registrations/${userId}/approve`, {
-      approvedBy: user.id,
       approvalNotes,
     })
     return data
-  }, [user?.id])
+  }, [])
 
   const rejectPendingUser = useCallback(async (userId, rejectionNotes = '') => {
-    if (!user?.id) return
+    // Admin identity is derived from the JWT Bearer token — no rejectedBy field needed
     const data = await api.put(`/admin/registrations/${userId}/reject`, {
-      rejectedBy: user.id,
       rejectionNotes,
     })
     return data
-  }, [user?.id])
+  }, [])
 
   // Verify username
   const verifyUsername = async (username) => {
@@ -312,6 +308,7 @@ export const AppProvider = ({ children }) => {
     const nextRole = data.role || 'admin'
     setRole(nextRole)
     localStorage.setItem(ROLE_KEY, nextRole)
+    // Store token so Bearer auth works on all subsequent admin API calls
     storeUser(data)
     setUserStatus('verified')
     await refreshAdminData()
@@ -414,11 +411,9 @@ export const AppProvider = ({ children }) => {
   }
 
   const updateRegistrationStatus = async (userId, status) => {
-    if (!user?.id) return
     const action = status === 'approved' ? 'approve' : 'reject'
-    await api.put(`/admin/dealers/${userId}/${action}`, {
-      reviewedBy: user.id,
-    })
+    // Admin identity is derived from the JWT Bearer token — no reviewedBy field needed
+    await api.put(`/admin/dealers/${userId}/${action}`, {})
     await refreshAdminData()
   }
 

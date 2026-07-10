@@ -7,8 +7,8 @@ export const adminService = {
   },
 
   // Fetches pending "data edit request" submissions (tin / stockValue / gemDealerFileNo changes).
-  // Backend auto-scopes results by the caller's X-User-Id (added automatically by api.get),
-  // so admins only see requests assigned to them while super admins see everything.
+  // Backend auto-scopes results by the caller's identity from the JWT Bearer token —
+  // admins only see requests assigned to them while super admins see everything.
   getEditRequests: async (page = 1, limit = 10) => {
     const params = new URLSearchParams({ page, limit })
     const response = await api.get(`/admin/edit-requests?${params.toString()}`)
