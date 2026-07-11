@@ -78,4 +78,17 @@ export const adminService = {
     return response
   },
 
+  // Full invoice list across all dealers, paginated + filterable by status — superadmin only
+  // raw: true keeps `pagination` as a sibling of `data` instead of getting stripped by parseResponse
+  getSuperAdminInvoices: async ({ page = 1, limit = 10, status } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    const response = await api.get(`/super-admin/invoices?${params.toString()}`, {
+      raw: true,
+    })
+    return response
+  },
+
 }
