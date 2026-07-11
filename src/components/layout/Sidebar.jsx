@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { X } from 'lucide-react'
 
-const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
+const Sidebar = ({ title, subtitle, items, isOpen, onClose, forceOverlay = false }) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -14,10 +14,10 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
 
   return (
     <>
-      {/* ── Mobile modal overlay — only renders on mobile when open ── */}
+      {/* ── Modal overlay — mobile-only by default, or all breakpoints when forceOverlay is set ── */}
       {isOpen && (
         <div
-          className="md:hidden"
+          className={forceOverlay ? '' : 'md:hidden'}
           style={{
             position: 'fixed',
             inset: 0,
@@ -116,7 +116,8 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
         </div>
       )}
 
-      {/* ── Desktop sidebar — always visible, hidden on mobile via CSS ── */}
+      {/* ── Desktop sidebar — always visible, hidden on mobile via CSS. Skipped entirely when forceOverlay is set. ── */}
+      {!forceOverlay && (
       <aside className="ul-sidebar hidden md:flex flex-col gap-8 border-r border-white/60 bg-white/70 backdrop-blur-xl px-6 py-8">
         <div>
           <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8922a]">
@@ -168,6 +169,7 @@ const Sidebar = ({ title, subtitle, items, isOpen, onClose }) => {
           })}
         </nav>
       </aside>
+      )}
     </>
   )
 }

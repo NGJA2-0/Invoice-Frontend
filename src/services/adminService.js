@@ -39,7 +39,7 @@ export const adminService = {
   // Full profile for a single user, shown on the user detail screen
   getUserProfile: async (userId) => {
     if (!userId) throw new Error('User ID is required')
-    const response = await api.get(`/users/${userId}`)
+    const response = await api.get(`/super-admin/users/${userId}`)
     return response
   },
 
@@ -69,6 +69,39 @@ export const adminService = {
   getAdminUserStats: async (adminId) => {
     if (!adminId) throw new Error('Admin ID is required')
     const response = await api.get(`/admin/users/stats/${adminId}`)
+    return response
+  },
+
+  // 3 most recent invoices system-wide, for the dashboard "Latest invoices" widget — superadmin only
+  getLatestInvoices: async () => {
+    const response = await api.get('/admin/invoices/latest')
+    return response
+  },
+
+  // Admin slot usage (occupied/remaining) for the dashboard gauge — superadmin only
+  getAdminSlotsSummary: async () => {
+    const response = await api.get('/super-admin/admin-slots')
+    return response
+  },
+
+  // Full invoice list across all dealers, paginated + filterable by status — superadmin only
+  // raw: true keeps `pagination` as a sibling of `data` instead of getting stripped by parseResponse
+  getSuperAdminInvoices: async ({ page = 1, limit = 10, status } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    const response = await api.get(`/super-admin/invoices?${params.toString()}`, {
+      raw: true,
+    })
+    return response
+  },
+
+  // Full user profile (business details, contact info, assigned admin) for the
+  // "created by" click-through modal on Invoice Management — superadmin only
+  getUserDetailsById: async (userId) => {
+    if (!userId) throw new Error('User ID is required')
+    const response = await api.get(`/admin/users/${userId}`)
     return response
   },
 

@@ -62,6 +62,7 @@ export const AppProvider = ({ children }) => {
   const [userStatus, setUserStatus] = useState(user?.status || 'not_verified')
   const [registrations, setRegistrations] = useState([])
   const [officerCapacitySummary, setOfficerCapacitySummary] = useState([])
+  const [adminSlotsSummary, setAdminSlotsSummary] = useState(null)
   const [userStats, setUserStats] = useState(null)
   const [adminUserStats, setAdminUserStats] = useState(null)
   const [invoices, setInvoices] = useState([])
@@ -187,6 +188,13 @@ export const AppProvider = ({ children }) => {
   const refreshOfficerCapacitySummary = useCallback(async () => {
     const data = await adminService.getOfficerCapacitySummary()
     setOfficerCapacitySummary(Array.isArray(data) ? data : [])
+    return data
+  }, [])
+
+  // Superadmin-only: admin slot usage (occupied/remaining) for the dashboard gauge
+  const refreshAdminSlotsSummary = useCallback(async () => {
+    const data = await adminService.getAdminSlotsSummary()
+    setAdminSlotsSummary(data || null)
     return data
   }, [])
 
@@ -447,6 +455,7 @@ export const AppProvider = ({ children }) => {
       userStatus,
       registrations,
       officerCapacitySummary,
+      adminSlotsSummary,
       userStats,
       adminUserStats,
       invoices,
@@ -480,6 +489,7 @@ export const AppProvider = ({ children }) => {
       refreshAdminData,
       refreshUsersSummary,
       refreshOfficerCapacitySummary,
+      refreshAdminSlotsSummary,
       refreshUserStats,
       refreshAdminUserStats,
       submitRegistration,
@@ -500,6 +510,7 @@ export const AppProvider = ({ children }) => {
       userStatus,
       registrations,
       officerCapacitySummary,
+      adminSlotsSummary,
       userStats,
       adminUserStats,
       invoices,
@@ -523,6 +534,7 @@ export const AppProvider = ({ children }) => {
         refreshAdminData()
         if (role === 'superadmin') {
           refreshOfficerCapacitySummary()
+          refreshAdminSlotsSummary()
           refreshUserStats()
         } else if (role === 'admin') {
           refreshAdminUserStats(user.id)

@@ -72,7 +72,7 @@ const SECTIONS = [
         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     ),
-    fields: ['isApproved', 'assignedAdminId', 'registeredAt', 'createdAt', 'updatedAt'],
+    fields: ['isApproved', 'assignedAdmin', 'registeredAt', 'createdAt', 'updatedAt'],
   },
 ]
 
@@ -93,7 +93,7 @@ const FIELD_LABELS = {
   email: 'Email',
   registeredAt: 'Registered At',
   isApproved: 'Approved',
-  assignedAdminId: 'Assigned Admin ID',
+  assignedAdmin: 'Assigned Admin',
   createdAt: 'Created At',
   updatedAt: 'Updated At',
 }
@@ -121,6 +121,8 @@ const getInitials = (name = '') =>
     .join('') || '?'
 
 const FieldValue = ({ fieldKey, value }) => {
+  const navigate = useNavigate()
+
   if (value === null || value === undefined || value === '') {
     return <span className="text-sm text-ink-400">—</span>
   }
@@ -138,6 +140,28 @@ const FieldValue = ({ fieldKey, value }) => {
           </span>
         ))}
       </div>
+    )
+  }
+
+  if (typeof value === 'object') {
+    const label = value.fullName || value.username || value.name || '—'
+
+    if (fieldKey === 'assignedAdmin') {
+      return (
+        <button
+          type="button"
+          onClick={() => navigate('/admin/admins')}
+          className="rounded-lg bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700 ring-1 ring-indigo-200 transition hover:bg-indigo-100"
+        >
+          {label}
+        </button>
+      )
+    }
+
+    return (
+      <span className="text-sm font-medium text-ink-900">
+        {label}
+      </span>
     )
   }
 
