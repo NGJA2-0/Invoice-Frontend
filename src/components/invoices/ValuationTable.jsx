@@ -498,6 +498,46 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     })
   }, [fields.length])
 
+  // ── Row completeness check ──────────────────────────────────────────────
+  const isFieldFilled = (val) => {
+    if (val === undefined || val === null) return false
+    if (typeof val === 'number') return !Number.isNaN(val)
+    if (typeof val === 'string') return val.trim() !== ''
+    return true
+  }
+
+  // Returns the first column that's missing a value in the given item,
+  // skipping itemNo and any auto-computed/readOnly columns.
+  const getIncompleteColumn = (item, columns) => {
+    for (const col of columns) {
+      if (col.key === 'itemNo') continue
+      if (col.readOnly || col.dataType === 'computed') continue
+      if (!isFieldFilled(item?.[col.key])) return col
+    }
+    return null
+  }
+
+  // Checks the last row already in the table. Returns true (and shows a
+  // toast) if it's OK to add a new row.
+  const canAddNewItem = () => {
+    const currentItems = watch(itemsPath) || []
+    if (currentItems.length === 0) return true
+    const lastIndex = currentItems.length - 1
+    const lastItem = currentItems[lastIndex]
+    const missingCol = getIncompleteColumn(lastItem, tableConfig.columns)
+    if (missingCol) {
+      if (typeof pushToast === 'function') {
+        pushToast({
+          title: 'Incomplete item',
+          message: `Please fill "${missingCol.label}" in Item ${lastIndex + 1} before adding a new item.`,
+          tone: 'danger',
+        })
+      }
+      return false
+    }
+    return true
+  }
+
   const addItem = () => {
     if (isValuationTable && !selectedCurrency) {
       if (typeof pushToast === 'function') {
@@ -520,6 +560,9 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       return
     }
 
+    // NEW: don't allow a new blank row until the last one is fully filled
+    if (!canAddNewItem()) return
+
     const defaultItem = {}
     tableConfig.columns.forEach((col) => {
       if (col.dataType === 'number' || col.dataType === 'computed' || col.readOnly) {
@@ -533,6 +576,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     defaultItem.isDone = false
     append(defaultItem)
   }
+
 
   const findColumnKey = (pattern, excludePattern) =>
     tableConfig.columns.find((col) => pattern.test(col.key) && !excludePattern?.test(col.key))?.key
@@ -1127,8 +1171,11 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
               }
               return
             }
+
+            // NEW: block adding another item until the last one is complete
+            if (!canAddNewItem()) return
+
             if (isMobile) {
-              // build empty item for modal
               const defaultItem = {}
               tableConfig.columns.forEach((col) => {
                 if (col.dataType === 'number' || col.dataType === 'computed' || col.readOnly) {

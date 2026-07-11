@@ -228,16 +228,44 @@ const CreateInvoice = () => {
     for (const section of templateConfig?.sections || []) {
       if (HIDDEN_SECTION_KEYS.includes(section.key)) continue
 
+      const DEFAULT_VALUATION_COLUMNS = [
+        { key: 'itemNo', label: 'Item No' },
+        { key: 'itemType', label: 'Item Type' },
+        { key: 'description', label: 'Description of Goods' },
+        { key: 'noOfPcs', label: 'No of Pcs' },
+        { key: 'unitType', label: 'Unit Type' },
+        { key: 'weight', label: 'Weight' },
+        { key: 'weightUnit', label: 'Weight Unit' },
+        { key: 'ratePer', label: 'Rate Per' },
+        { key: 'rateUnit', label: 'Rate Unit' },
+        { key: 'amount', label: 'Amount', readOnly: true },
+      ]
+
+      const isValueMissing = (val) => {
+        if (val === undefined || val === null) return true
+        if (typeof val === 'number') return Number.isNaN(val)
+        if (typeof val === 'string') return val.trim() === ''
+        return false
+      }
+
+
       if (section.table || section.key === 'valuationTable' || section.sectionType === 'table') {
         const tableKey = section.table?.key || 'valuationItems'
         const items = invoiceData?.[section.key]?.[tableKey] || []
-        if (!items.length) return showMissingToast(), false
-        for (const item of items) {
-          for (const col of section.table?.columns || []) {
+        if (!items.length) return showMissingToast(`${section.label} — at least one item`), false
+
+        const columns =
+          section.table?.columns ||
+          (section.key === 'valuationTable' ? DEFAULT_VALUATION_COLUMNS : [])
+
+        for (let rowIndex = 0; rowIndex < items.length; rowIndex++) {
+          const item = items[rowIndex]
+          for (const col of columns) {
             if (col.readOnly || col.dataType === 'computed' || col.key === 'itemNo') continue
             const val = item?.[col.key]
-            if (val === undefined || val === null || val === '')
-              return showMissingToast(`${col.label} (row ${items.indexOf(item) + 1} in ${section.label})`), false
+            if (isValueMissing(val)) {
+              return showMissingToast(`${col.label} (Item ${rowIndex + 1} in ${section.label})`), false
+            }
           }
         }
         continue
