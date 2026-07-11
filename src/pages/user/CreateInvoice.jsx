@@ -158,11 +158,11 @@ const CreateInvoice = () => {
     return false
   }
 
-  const validateFormComplete = () => {
+  const validateFormComplete = (action = 'viewing the preview') => {
     const showMissingToast = () => {
       pushToast({
         title: 'Incomplete form',
-        message: 'Some fields are missing. Please fill all required fields before viewing the preview.',
+        message: `Some fields are missing. Please fill all required fields before ${action}.`,
         tone: 'danger',
       })
     }
@@ -442,7 +442,7 @@ const CreateInvoice = () => {
 
   const handlePreview = async () => {
     if (!formReady || !ensureTemplate3NiDetails()) return
-    if (!validateFormComplete()) return
+    if (!validateFormComplete('viewing the preview')) return
     try {
       const data = await invoiceService.preview(buildPayload('draft'))
       setPreview(data)
@@ -462,7 +462,7 @@ const CreateInvoice = () => {
 
   const handleSave = async (status) => {
     if (!ensureTemplate3NiDetails()) return false
-    if (!validateFormComplete()) return false
+    if (!validateFormComplete(status === 'draft' ? 'saving as draft' : 'submitting the invoice')) return false
     if (!user?.id) {
       pushToast({
         title: 'Missing user profile',
