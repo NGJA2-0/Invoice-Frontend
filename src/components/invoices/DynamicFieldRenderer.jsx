@@ -103,13 +103,22 @@ const DynamicFieldRenderer = ({ sectionKey, field, register, watch, control, set
 
   // Handle date fields
   if (field.dataType === 'date') {
+    const todayStr = new Date().toISOString().split('T')[0]
     return (
       <Input
         label={label}
         type="date"
         placeholder={field.placeholder || field.label}
         readOnly={field.readOnly}
-        {...register(name, registerOptions)}
+        min={todayStr}
+        {...register(name, {
+          ...registerOptions,
+          required: field.required ? `${field.label} is required` : false,
+          validate: (val) => {
+            if (!val) return field.required ? `${field.label} is required` : true
+            return val >= todayStr || `${field.label} cannot be in the past`
+          },
+        })}
       />
     )
   }

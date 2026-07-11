@@ -174,6 +174,14 @@ const CreateInvoice = () => {
 
     if (!invoiceData?.exchangeRateSection?.selectedCurrency) return showMissingToast(), false
 
+    const invDate = invoiceData?.invoiceMeta?.invoiceDate
+    const todayStr = new Date().toISOString().split('T')[0]
+    if (!invDate) return showMissingToast(), false
+    if (invDate < todayStr) {
+      pushToast({ title: 'Invalid invoice date', message: 'Invoice date cannot be in the past. Please select today or a future date.', tone: 'danger' })
+      return false
+    }
+
     const HIDDEN_SECTION_KEYS = ['exchangeRateSection', 'cifSummary', 'senderInfo']
     const SKIP_FIELDS = new Set([
       'invoiceMeta.exportType',
@@ -454,6 +462,7 @@ const CreateInvoice = () => {
 
   const handleSave = async (status) => {
     if (!ensureTemplate3NiDetails()) return false
+    if (!validateFormComplete()) return false
     if (!user?.id) {
       pushToast({
         title: 'Missing user profile',
