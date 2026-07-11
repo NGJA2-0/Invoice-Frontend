@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useOutletContext } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import { adminService } from '../../services/adminService'
 import UserDetailsModal from '../../components/admin/UserDetailsModal'
 
@@ -284,6 +286,7 @@ const StatusDropdown = ({ value, onChange }) => {
 }
 
 const InvoiceManagement = () => {
+  const { sidebarOpen, setSidebarOpen } = useOutletContext() ?? {}
   const [invoices, setInvoices] = useState([])
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -343,11 +346,23 @@ const InvoiceManagement = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="glass-card rounded-2xl border px-6 py-6">
-        <h3 className="text-xl font-semibold text-ink-900">Invoice Management</h3>
-        <p className="mt-2 text-sm text-ink-600">
-          Monitor export invoices submitted by dealers across every stage of review.
-        </p>
+      <div className="glass-card flex items-start gap-4 rounded-2xl border px-6 py-6">
+        {!sidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen?.(true)}
+            aria-label="Open sidebar"
+            className="hidden h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-600 shadow-sm transition hover:bg-ink-50 hover:text-ink-900 md:flex"
+          >
+            <Menu size={17} />
+          </button>
+        )}
+        <div>
+          <h3 className="text-xl font-semibold text-ink-900">Invoice Management</h3>
+          <p className="mt-2 text-sm text-ink-600">
+            Monitor export invoices submitted by dealers across every stage of review.
+          </p>
+        </div>
       </div>
 
       {/* Filters */}

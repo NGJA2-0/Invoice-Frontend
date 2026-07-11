@@ -72,14 +72,24 @@ const AdminLayout = () => {
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Invoice Management gets a collapsed-by-default sidebar that opens as an
+  // overlay on top of the content, on every breakpoint — every other admin
+  // page keeps the normal always-visible desktop sidebar untouched.
+  const isInvoiceManagementPage = location.pathname === '/admin/invoice-management'
+
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[280px_1fr] bg-page-gradient">
+    <div
+      className={`grid min-h-screen grid-cols-1 bg-page-gradient ${
+        isInvoiceManagementPage ? '' : 'md:grid-cols-[280px_1fr]'
+      }`}
+    >
       <Sidebar
         title="NGJA Export"
         subtitle={isSuperAdmin ? 'Super Admin Console' : 'Admin Console'}
         items={navItems}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        forceOverlay={isInvoiceManagementPage}
       />
       <main className="flex flex-col gap-6 p-4 sm:p-6">
         <Breadcrumbs
@@ -96,7 +106,7 @@ const AdminLayout = () => {
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
         />
         <section className="page-shell">
-          <Outlet />
+          <Outlet context={{ sidebarOpen, setSidebarOpen, isInvoiceManagementPage }} />
         </section>
       </main>
     </div>
