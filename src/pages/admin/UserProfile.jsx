@@ -72,7 +72,7 @@ const SECTIONS = [
         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     ),
-    fields: ['isApproved', 'assignedAdminId', 'registeredAt', 'createdAt', 'updatedAt'],
+    fields: ['isApproved', 'assignedAdmin', 'registeredAt', 'createdAt', 'updatedAt'],
   },
 ]
 
@@ -93,7 +93,7 @@ const FIELD_LABELS = {
   email: 'Email',
   registeredAt: 'Registered At',
   isApproved: 'Approved',
-  assignedAdminId: 'Assigned Admin ID',
+  assignedAdmin: 'Assigned Admin',
   createdAt: 'Created At',
   updatedAt: 'Updated At',
 }
@@ -138,6 +138,14 @@ const FieldValue = ({ fieldKey, value }) => {
           </span>
         ))}
       </div>
+    )
+  }
+
+  if (typeof value === 'object') {
+    return (
+      <span className="text-sm font-medium text-ink-900">
+        {value.fullName || value.username || value.name || '—'}
+      </span>
     )
   }
 
