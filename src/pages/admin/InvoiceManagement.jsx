@@ -220,8 +220,7 @@ const StatusDropdown = ({ value, onChange }) => {
 
             <div
               ref={panelRef}
-              className="fixed z-50 w-[760px] max-w-[85vw] overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-2xl shadow-ink-900/10 ring-1 ring-black/5"
-              style={{ top: coords.top, left: coords.left }}
+              className="fixed left-1/2 top-1/2 z-50 w-[760px] max-w-[85vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-2xl shadow-ink-900/10 ring-1 ring-black/5"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-ink-100 bg-gradient-to-r from-ink-50/80 to-transparent px-5 py-3.5">
@@ -346,7 +345,7 @@ const InvoiceManagement = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="glass-card flex items-start gap-4 rounded-2xl border px-6 py-6">
+      <div className="glass-card flex items-start gap-4 rounded-2xl border border-sky-300 bg-gradient-to-r from-sky-200 to-white px-6 py-6">
         {!sidebarOpen && (
           <button
             type="button"
@@ -366,7 +365,7 @@ const InvoiceManagement = () => {
       </div>
 
       {/* Filters */}
-      <div className="glass-card relative z-20 flex flex-col gap-4 rounded-2xl border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="glass-card relative z-20 flex flex-col gap-4 rounded-2xl border border-sky-300 bg-gradient-to-r from-sky-200 to-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="status-filter" className="text-xs font-medium uppercase tracking-wide text-ink-500">
             Status
@@ -441,7 +440,7 @@ const InvoiceManagement = () => {
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[900px] border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-ink-200 bg-gradient-to-r from-slate-500 via-slate-300 to-white text-sm uppercase tracking-wider text-ink-900 shadow-sm">
+                  <tr className="border-b border-sky-300 bg-gradient-to-r from-sky-200 to-white text-sm uppercase tracking-wider text-ink-900 shadow-sm">
                     <th className="px-6 py-4 font-bold">Invoice</th>
                     <th className="px-6 py-4 font-bold">Company</th>
                     <th className="px-6 py-4 font-bold">Export type</th>
