@@ -72,4 +72,10 @@ export const adminService = {
     return response
   },
 
+  // 3 most recent invoices system-wide, for the dashboard "Latest invoices" widget — superadmin only
+  getLatestInvoices: async () => {
+    const response = await api.get('/admin/invoices/latest')
+    return response
+  },
+
 }
