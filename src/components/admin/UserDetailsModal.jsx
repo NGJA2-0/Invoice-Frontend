@@ -117,8 +117,8 @@ const UserDetailsModal = ({ userId, onClose }) => {
       {/* Panel */}
       <div
         ref={panelRef}
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-2xl shadow-ink-900/20 ring-1 ring-black/5"
-      >
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-2xl shadow-ink-900/20 ring-1 ring-black/5 lg:max-w-6xl"
+        >
         {/* Close button */}
         <button
           type="button"
@@ -149,7 +149,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
           user && (
             <div className="max-h-[85vh] overflow-y-auto">
               {/* Header */}
-              <div className="bg-gradient-to-br from-ink-50 to-transparent px-6 py-6 sm:px-8 sm:py-7">
+              <div className="bg-gradient-to-br from-sky-50 via-amber-50/40 to-white px-6 py-6 sm:px-8 sm:py-7 lg:px-10">
                 <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                   <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-ink-900 text-lg font-semibold text-white">
                     {getInitials(user.fullName || user.username)}
@@ -169,70 +169,70 @@ const UserDetailsModal = ({ userId, onClose }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-7 px-6 py-6 sm:px-8">
+              <div className="flex flex-col gap-7 px-6 py-6 sm:px-8 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:gap-y-6 lg:px-10">
                 {/* Identity */}
-                <div>
-                  <SectionTitle>Identity</SectionTitle>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="NIC" value={user.nic} />
-                    <Field label="NIC / BRC" value={user.nicOrBrc} />
-                    <Field label="TIN" value={user.tin} />
-                    <Field label="Gem Dealer File No." value={user.gemDealerFileNo} />
-                  </div>
+                <div className="lg:rounded-2xl lg:border lg:border-sky-100 lg:bg-sky-50/50 lg:p-5">
+                    <SectionTitle>Identity</SectionTitle>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Field label="NIC" value={user.nic} />
+                        <Field label="NIC / BRC" value={user.nicOrBrc} />
+                        <Field label="TIN" value={user.tin} />
+                        <Field label="Gem Dealer File No." value={user.gemDealerFileNo} />
+                    </div>
                 </div>
 
                 {/* Business */}
-                <div className="border-t border-ink-100 pt-6">
-                  <SectionTitle>Business</SectionTitle>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="Business Name" value={user.businessName} />
-                    <Field label="Stock Value" value={user.stockValueName} />
-                    <div className="sm:col-span-2">
-                      <Field label="Business Address" value={user.businessAddress} />
+                <div className="border-t border-ink-100 pt-6 lg:border-t-0 lg:pt-0 lg:rounded-2xl lg:border lg:border-amber-100 lg:bg-amber-50/50 lg:p-5">
+                    <SectionTitle>Business</SectionTitle>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Field label="Business Name" value={user.businessName} />
+                        <Field label="Stock Value" value={user.stockValueName} />
+                        <div className="sm:col-span-2">
+                        <Field label="Business Address" value={user.businessAddress} />
+                        </div>      
                     </div>
-                  </div>
                 </div>
 
                 {/* Contact */}
-                <div className="border-t border-ink-100 pt-6">
-                  <SectionTitle>Contact</SectionTitle>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="Email" value={user.email} />
-                    <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-ink-400">Mobile Numbers</p>
-                      {user.mobileNumbers?.length ? (
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          {user.mobileNumbers.map((num) => (
-                            <span
-                              key={num}
-                              className="rounded-lg bg-ink-50 px-2 py-1 text-xs font-medium text-ink-700 ring-1 ring-inset ring-ink-200"
-                            >
-                              {num}
-                            </span>
-                          ))}
+                <div className="border-t border-ink-100 pt-6 lg:border-t-0 lg:pt-0 lg:rounded-2xl lg:border lg:border-emerald-100 lg:bg-emerald-50/50 lg:p-5">
+                    <SectionTitle>Contact</SectionTitle>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Field label="Email" value={user.email} />
+                        <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-ink-400">Mobile Numbers</p>
+                        {user.mobileNumbers?.length ? (
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                            {user.mobileNumbers.map((num) => (
+                                <span
+                                key={num}
+                                className="rounded-lg bg-ink-50 px-2 py-1 text-xs font-medium text-ink-700 ring-1 ring-inset ring-ink-200"
+                                >
+                                {num}
+                                </span>
+                            ))}
+                            </div>
+                        ) : (
+                            <p className="mt-0.5 text-sm font-medium text-ink-800">N/A</p>
+                        )}
                         </div>
-                      ) : (
-                        <p className="mt-0.5 text-sm font-medium text-ink-800">N/A</p>
-                      )}
-                    </div>
                   </div>
                 </div>
 
                 {/* Timeline */}
-                <div className="border-t border-ink-100 pt-6">
-                  <SectionTitle>Timeline</SectionTitle>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <Field label="Registered" value={formatDate(user.registeredAt)} />
-                    <Field label="Approved" value={formatDate(user.approvedAt)} />
-                    <Field label="License Expiry" value={formatDate(user.licenseExpiryDate)} />
-                  </div>
+                <div className="border-t border-ink-100 pt-6 lg:border-t-0 lg:pt-0 lg:rounded-2xl lg:border lg:border-rose-100 lg:bg-rose-50/50 lg:p-5">
+                    <SectionTitle>Timeline</SectionTitle>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <Field label="Registered" value={formatDate(user.registeredAt)} />
+                        <Field label="Approved" value={formatDate(user.approvedAt)} />
+                        <Field label="License Expiry" value={formatDate(user.licenseExpiryDate)} />
+                    </div>
                 </div>
 
                 {/* Assigned Admin */}
-                <div className="border-t border-ink-100 pt-6">
-                  <SectionTitle>Assigned Admin</SectionTitle>
+                <div className="border-t border-ink-100 pt-6 lg:col-span-2">
+                    <SectionTitle>Assigned Admin</SectionTitle>
                   {user.assignedAdmin ? (
-                    <div className="flex flex-col gap-4 rounded-xl bg-ink-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-4 rounded-xl bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-4 ring-1 ring-indigo-100 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-ink-700 ring-1 ring-ink-200">
                           {getInitials(user.assignedAdmin.fullName || user.assignedAdmin.username)}
