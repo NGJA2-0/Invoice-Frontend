@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FileCheck, ArrowRight } from 'lucide-react'
 import { adminService } from '../../services/adminService'
 
@@ -35,9 +36,14 @@ const formatDate = (isoString) => {
 // Superadmin-only widget: shows the most recent invoices raised across the
 // whole system (not scoped to a single dealer or admin).
 const LatestInvoices = () => {
+  const navigate = useNavigate()
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const goToInvoiceManagement = (invoiceNumber) => {
+    navigate('/admin/invoice-management', invoiceNumber ? { state: { invoiceNumber } } : undefined)
+  }
 
   useEffect(() => {
     let mounted = true
@@ -70,6 +76,7 @@ const LatestInvoices = () => {
         </div>
         <button
           type="button"
+          onClick={() => goToInvoiceManagement()}
           className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-ink-100 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 shadow-sm transition hover:bg-ink-900/5 hover:text-ink-900"
         >
           View all
@@ -105,7 +112,8 @@ const LatestInvoices = () => {
             return (
               <div
                 key={invoice.invoiceNumber}
-                className="glass-card rounded-2xl border px-5 py-4"
+                onClick={() => goToInvoiceManagement(invoice.invoiceNumber)}
+                className="glass-card cursor-pointer rounded-2xl border px-5 py-4 transition hover:shadow-[0_4px_16px_rgba(15,23,42,0.08)]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
