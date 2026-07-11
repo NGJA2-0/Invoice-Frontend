@@ -159,24 +159,33 @@ const CreateInvoice = () => {
   }
 
   const validateFormComplete = (action = 'viewing the preview') => {
-    const showMissingToast = () => {
+    const showMissingToast = (fieldLabel) => {
       pushToast({
         title: 'Incomplete form',
-        message: `Some fields are missing. Please fill all required fields before ${action}.`,
+        message: fieldLabel
+          ? `"${fieldLabel}" is required. Please fill it before ${action}.`
+          : `Some fields are missing. Please fill all required fields before ${action}.`,
         tone: 'danger',
       })
     }
 
-    if (!category) return showMissingToast(), false
-    if (subCategories.length > 0 && !subCategory) return showMissingToast(), false
+    if (!category) {
+      showMissingToast('Category')
+      return false
+    }
+    if (subCategories.length > 0 && !subCategory) return showMissingToast('Sub-Category'), false
 
     const invoiceData = getValues('invoiceData')
 
-    if (!invoiceData?.exchangeRateSection?.selectedCurrency) return showMissingToast(), false
+    if (!invoiceData?.exchangeRateSection?.selectedCurrency) {
+      showMissingToast('Currency (in Valuation Table)')
+      return false
+    }
 
     const invDate = invoiceData?.invoiceMeta?.invoiceDate
     const todayStr = new Date().toISOString().split('T')[0]
-    if (!invDate) return showMissingToast(), false
+
+    if (!invDate) return showMissingToast('Invoice Date'), false
     if (invDate < todayStr) {
       pushToast({ title: 'Invalid invoice date', message: 'Invoice date cannot be in the past. Please select today or a future date.', tone: 'danger' })
       return false
@@ -203,7 +212,8 @@ const CreateInvoice = () => {
           for (const col of section.table?.columns || []) {
             if (col.readOnly || col.dataType === 'computed' || col.key === 'itemNo') continue
             const val = item?.[col.key]
-            if (val === undefined || val === null || val === '') return showMissingToast(), false
+            if (val === undefined || val === null || val === '')
+              return showMissingToast(`${col.label} (row ${items.indexOf(item) + 1} in ${section.label})`), false
           }
         }
         continue
@@ -220,7 +230,7 @@ const CreateInvoice = () => {
         if (SKIP_FIELDS.has(`${section.key}.${field.key}`)) continue
         if (!field.required) continue
         const val = invoiceData?.[section.key]?.[field.key]
-        if (val === undefined || val === null || val === '') return showMissingToast(), false
+        if (val === undefined || val === null || val === '') return showMissingToast(`${field.label} (${section.label})`), false
       }
     }
 
@@ -441,8 +451,13 @@ const CreateInvoice = () => {
   }
 
   const handlePreview = async () => {
+    console.log("Preview clicked");
+
     if (!formReady || !ensureTemplate3NiDetails()) return
+    console.log("Calling validation");
+
     if (!validateFormComplete('viewing the preview')) return
+    console.log("Validation passed");
     try {
       const data = await invoiceService.preview(buildPayload('draft'))
       setPreview(data)
