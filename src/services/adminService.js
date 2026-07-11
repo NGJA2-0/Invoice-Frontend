@@ -91,4 +91,12 @@ export const adminService = {
     return response
   },
 
+  // Full user profile (business details, contact info, assigned admin) for the
+  // "created by" click-through modal on Invoice Management — superadmin only
+  getUserDetailsById: async (userId) => {
+    if (!userId) throw new Error('User ID is required')
+    const response = await api.get(`/admin/users/${userId}`)
+    return response
+  },
+
 }

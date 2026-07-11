@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { adminService } from '../../services/adminService'
+import UserDetailsModal from '../../components/admin/UserDetailsModal'
 
 const STATUS_GROUPS = [
   {
@@ -297,6 +298,7 @@ const InvoiceManagement = () => {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedUserId, setSelectedUserId] = useState(null)
 
   const loadInvoices = useCallback(async () => {
     setLoading(true)
@@ -451,7 +453,19 @@ const InvoiceManagement = () => {
                       <td className="px-6 py-4">
                         <StatusBadge status={invoice.status} />
                       </td>
-                      <td className="px-6 py-4 text-ink-700">{invoice.createdBy?.name || 'N/A'}</td>
+                      <td className="px-6 py-4">
+                        {invoice.createdBy?.id ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserId(invoice.createdBy.id)}
+                            className="font-medium text-ink-700 underline decoration-ink-300 decoration-1 underline-offset-2 transition hover:text-ink-900 hover:decoration-ink-500"
+                          >
+                            {invoice.createdBy?.name || 'N/A'}
+                          </button>
+                        ) : (
+                          <span className="text-ink-700">{invoice.createdBy?.name || 'N/A'}</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-ink-600">{formatDate(invoice.createdAt)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-ink-600">{formatDate(invoice.updatedAt)}</td>
                       <td className="px-6 py-4 text-right font-semibold text-ink-900">
@@ -481,7 +495,17 @@ const InvoiceManagement = () => {
                   <div className="grid grid-cols-2 gap-3 rounded-xl bg-ink-50/60 p-3 text-xs">
                     <div>
                       <p className="text-ink-400">Created by</p>
-                      <p className="mt-0.5 font-medium text-ink-700">{invoice.createdBy?.name || 'N/A'}</p>
+                      {invoice.createdBy?.id ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedUserId(invoice.createdBy.id)}
+                          className="mt-0.5 font-medium text-ink-700 underline decoration-ink-300 decoration-1 underline-offset-2"
+                        >
+                          {invoice.createdBy?.name || 'N/A'}
+                        </button>
+                      ) : (
+                        <p className="mt-0.5 font-medium text-ink-700">{invoice.createdBy?.name || 'N/A'}</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-ink-400">CIF (LKR)</p>
@@ -530,6 +554,10 @@ const InvoiceManagement = () => {
           </div>
         )}
       </div>
+
+      {selectedUserId && (
+        <UserDetailsModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+      )}
     </div>
   )
 }
