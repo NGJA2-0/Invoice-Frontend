@@ -115,7 +115,7 @@ const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots, onCl
 
 // Superadmin-only: horizontal gauge showing admin slot occupancy,
 // with a red warning banner once remaining slots drop below 5.
-const AdminSlotsGauge = ({ occupiedSlots, remainingSlots, totalAdmins, totalSlots }) => {
+const AdminSlotsGauge = ({ occupiedSlots, remainingSlots, totalAdmins, totalSlots, navigate }) => {
   const pct = totalSlots > 0 ? Math.min(Math.round((occupiedSlots / totalSlots) * 100), 100) : 0
   const isLow = remainingSlots < 5
 
@@ -129,7 +129,10 @@ const AdminSlotsGauge = ({ occupiedSlots, remainingSlots, totalAdmins, totalSlot
       </h3>
 
       <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="relative flex-1 overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br from-azure-50 via-white to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] lg:max-w-[50%]">
+        <div
+          onClick={() => navigate('/admin/admins')}
+          className="relative flex-1 cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br from-azure-50 via-white to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)] lg:max-w-[50%]"
+        >
           <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-azure-500 to-azure-700 opacity-10 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-gradient-to-br from-azure-400 to-azure-600 opacity-[0.06] blur-2xl" />
 
@@ -167,7 +170,10 @@ const AdminSlotsGauge = ({ occupiedSlots, remainingSlots, totalAdmins, totalSlot
           )}
         </div>
 
-        <div className="relative flex flex-1 overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br from-slate-50 via-white to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+        <div
+          onClick={() => navigate('/admin/admins')}
+          className="relative flex flex-1 cursor-pointer overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br from-slate-50 via-white to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_6px_24px_rgba(15,23,42,0.1)]"
+        >
           <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 opacity-[0.08] blur-2xl" />
           <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-gradient-to-br from-azure-400 to-azure-600 opacity-[0.06] blur-2xl" />
 
@@ -464,6 +470,7 @@ const Dashboard = () => {
           remainingSlots={adminSlotsSummary.remainingSlots}
           totalAdmins={adminSlotsSummary.totalAdmins}
           totalSlots={adminSlotsSummary.totalSlots}
+          navigate={navigate}
         />
       )}
 
