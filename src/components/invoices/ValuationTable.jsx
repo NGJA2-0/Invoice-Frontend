@@ -1225,13 +1225,13 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                   <td className="px-4 py-3 font-semibold text-ink-700">Freight</td>
                   {showOtherCurrency && (
                     <td className="px-4 py-3" data-label={selectedCurrency}>
-                      <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freightOther`, { valueAsNumber: true })} />
+                      <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.freightOther`, { valueAsNumber: true, min: 0 })} />
                     </td>
                   )}
                   <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={freightOtherUsd.toFixed(2)} readOnly />
-                      : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true })} />}
+                      : <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true , min: 0 })} />}
                   </td>
                   <td className="px-4 py-3" data-label="LKR">
                     <Input type="number" value={(showOtherCurrency ? freightOtherLkr : freightLkr).toFixed(2)} readOnly />
@@ -1241,13 +1241,13 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                   <td className="px-4 py-3 font-semibold text-ink-700">Insurance</td>
                   {showOtherCurrency && (
                     <td className="px-4 py-3" data-label={selectedCurrency}>
-                      <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insuranceOther`, { valueAsNumber: true })} />
+                      <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.insuranceOther`, { valueAsNumber: true, min: 0 })} />
                     </td>
                   )}
                   <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={insuranceOtherUsd.toFixed(2)} readOnly />
-                      : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true })} />}
+                      : <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true, min: 0 })} />}
                   </td>
                   <td className="px-4 py-3" data-label="LKR">
                     <Input type="number" value={(showOtherCurrency ? insuranceOtherLkr : insuranceLkr).toFixed(2)} readOnly />
