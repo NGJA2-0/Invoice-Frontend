@@ -78,6 +78,12 @@ export const adminService = {
     return response
   },
 
+  // Admin slot usage (occupied/remaining) for the dashboard gauge — superadmin only
+  getAdminSlotsSummary: async () => {
+    const response = await api.get('/super-admin/admin-slots')
+    return response
+  },
+
   // Full invoice list across all dealers, paginated + filterable by status — superadmin only
   // raw: true keeps `pagination` as a sibling of `data` instead of getting stripped by parseResponse
   getSuperAdminInvoices: async ({ page = 1, limit = 10, status } = {}) => {

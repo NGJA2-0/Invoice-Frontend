@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileCheck, Users } from 'lucide-react'
+import { FileCheck, Users, AlertTriangle, Lock, UserPlus } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import StatCard from '../../components/cards/StatCard'
 import Badge from '../../components/common/Badge'
@@ -113,16 +113,112 @@ const OfficerCapacityCardDetailed = ({ stage, totalCapacity, occupiedSlots, onCl
   )
 }
 
+// Superadmin-only: horizontal gauge showing admin slot occupancy,
+// with a red warning banner once remaining slots drop below 5.
+const AdminSlotsGauge = ({ occupiedSlots, remainingSlots, totalAdmins, totalSlots }) => {
+  const pct = totalSlots > 0 ? Math.min(Math.round((occupiedSlots / totalSlots) * 100), 100) : 0
+  const isLow = remainingSlots < 5
+
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-600">
+        Admin Capacity
+      </p>
+      <h3 className="mt-1 mb-4 text-xl font-semibold text-ink-900">
+        Admin slot usage
+      </h3>
+
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="relative flex-1 overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br from-azure-50 via-white to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)] lg:max-w-[50%]">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-azure-500 to-azure-700 opacity-10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-gradient-to-br from-azure-400 to-azure-600 opacity-[0.06] blur-2xl" />
+
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-azure-500 to-azure-700 text-white shadow-md ring-4 ring-azure-100">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-ink-900">{totalAdmins} admins active</p>
+                <p className="text-xs text-ink-500">Across {totalSlots} total slots</p>
+              </div>
+            </div>
+            <span className="w-fit rounded-full bg-ink-900/5 px-3 py-1.5 text-xs font-medium text-ink-600">
+              {pct}% full
+            </span>
+          </div>
+
+          <div className="relative mt-5 h-2.5 w-full overflow-hidden rounded-full bg-ink-900/10">
+            <div
+              className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${
+                isLow ? 'from-rose-500 to-rose-600' : 'from-azure-500 to-azure-700'
+              }`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+
+          {isLow && (
+            <div className="relative mt-5 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-600" />
+              <p className="text-xs font-medium text-rose-700">
+                Only {remainingSlots} admin slot{remainingSlots === 1 ? '' : 's'} left — consider increasing capacity soon.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="relative flex flex-1 overflow-hidden rounded-2xl border border-ink-100 bg-gradient-to-br from-slate-50 via-white to-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.06)]">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 opacity-[0.08] blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-gradient-to-br from-azure-400 to-azure-600 opacity-[0.06] blur-2xl" />
+
+          <div className="relative flex w-full items-center justify-around">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-md ring-4 ring-rose-100">
+                <Lock className="h-4.5 w-4.5" />
+              </div>
+              <div className="text-left">
+                <p className="text-2xl font-semibold text-ink-900">
+                  {occupiedSlots}
+                  <span className="text-sm font-normal text-ink-400">/{totalSlots}</span>
+                </p>
+                <p className="text-xs text-ink-500">Occupied</p>
+              </div>
+            </div>
+
+            <div className="h-10 w-px bg-ink-900/10" />
+
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-md ring-4 ${
+                isLow ? 'bg-gradient-to-br from-rose-500 to-rose-600 ring-rose-100' : 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-emerald-100'
+              }`}>
+                <UserPlus className="h-4.5 w-4.5" />
+              </div>
+              <div className="text-left">
+                <p className={`text-2xl font-semibold ${isLow ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  {remainingSlots}
+                </p>
+                <p className="text-xs text-ink-500">Remaining</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const Dashboard = () => {
   const {
     role,
     registrations,
     users,
     officerCapacitySummary,
+    adminSlotsSummary,
     userStats,
     adminUserStats,
     refreshAdminData,
     refreshOfficerCapacitySummary,
+    refreshAdminSlotsSummary,
     refreshUserStats,
   } = useApp()
   const navigate = useNavigate()
@@ -162,9 +258,10 @@ const Dashboard = () => {
   useEffect(() => {
     if (isSuperAdmin) {
       refreshOfficerCapacitySummary()
+      refreshAdminSlotsSummary()
       refreshUserStats()
     }
-  }, [isSuperAdmin, refreshOfficerCapacitySummary, refreshUserStats])
+  }, [isSuperAdmin, refreshOfficerCapacitySummary, refreshAdminSlotsSummary, refreshUserStats])
 
   // Pie-chart selection: null means "show all 3 stage cards"
   const [selectedStage, setSelectedStage] = useState(null)
@@ -359,6 +456,15 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {isSuperAdmin && adminSlotsSummary && (
+        <AdminSlotsGauge
+          occupiedSlots={adminSlotsSummary.occupiedSlots}
+          remainingSlots={adminSlotsSummary.remainingSlots}
+          totalAdmins={adminSlotsSummary.totalAdmins}
+          totalSlots={adminSlotsSummary.totalSlots}
+        />
       )}
 
       {isSuperAdmin ? (
