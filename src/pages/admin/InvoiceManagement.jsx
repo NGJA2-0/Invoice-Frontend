@@ -353,12 +353,12 @@ const InvoiceManagement = () => {
             aria-label="Open sidebar"
             className="hidden h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-600 shadow-sm transition hover:bg-ink-50 hover:text-ink-900 md:flex"
           >
-            <Menu size={17} />
+            <Menu size={19} strokeWidth={2.75} />
           </button>
         )}
         <div>
-          <h3 className="text-xl font-semibold text-ink-900">Invoice Management</h3>
-          <p className="mt-2 text-sm text-ink-600">
+          <h3 className="text-2xl font-bold text-ink-900">Invoice Management</h3>
+          <p className="mt-2 text-base font-semibold text-ink-700">
             Monitor export invoices submitted by dealers across every stage of review.
           </p>
         </div>
