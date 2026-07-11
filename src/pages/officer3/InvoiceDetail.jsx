@@ -44,7 +44,7 @@ const Stage3InvoiceDetail = () => {
     if (!invoice || !user?.id) return
     setActionLoading(true)
     try {
-      await officerApi.rejectStage3Invoice(invoiceId, user.id, {
+      await officerApi.rejectStage3Invoice(invoice.originalInvoiceId, {
         notes: rejectNotes,
       })
       setShowRejectDialog(false)
@@ -60,7 +60,7 @@ const Stage3InvoiceDetail = () => {
     if (!invoice || !user?.id) return
     setApproveLoading(true)
     try {
-      await officerApi.completeStage3Invoice(invoiceId, user.id)
+      await officerApi.completeStage3Invoice(invoice.originalInvoiceId)
       navigate('/officer3/dashboard')
     } catch (err) {
       setError(err?.message || 'Could not approve invoice')

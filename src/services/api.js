@@ -69,7 +69,9 @@ const handle401 = (response) => {
 }
 
 const request = async (path, options = {}) => {
-  const token = getStoredToken()
+  // Never send tokens to auth endpoints (login, signup, etc.)
+  const isAuthRoute = path.startsWith('/auth/')
+  const token = isAuthRoute ? null : getStoredToken()
   const { raw, ...fetchOptions } = options
   const response = await fetchWithFallback(buildUrl(path), {
     ...fetchOptions,
@@ -87,7 +89,8 @@ const request = async (path, options = {}) => {
 }
 
 const requestForm = async (path, formData, options = {}) => {
-  const token = getStoredToken()
+  const isAuthRoute = path.startsWith('/auth/')
+  const token = isAuthRoute ? null : getStoredToken()
   const response = await fetchWithFallback(buildUrl(path), {
     method: 'POST',
     body: formData,

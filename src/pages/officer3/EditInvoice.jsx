@@ -213,7 +213,7 @@ const Stage3EditInvoice = () => {
           method: 'POST',
           body: formData,
           headers: {
-            'X-User-Id': user?.id ? String(user.id) : '',
+            Authorization: `Bearer ${user?.token || ''}`,
           },
         }
       )
@@ -235,7 +235,7 @@ const Stage3EditInvoice = () => {
     invoiceData: getValues('invoiceData'),
   })
 
-  // ── Preview (uses shared preview endpoint; officer token is sent via X-User-Id) ──
+  // ── Preview (uses shared preview endpoint; officer identity derived from Bearer token) ──
   const handlePreview = async () => {
     if (!formReady || !ensureTemplate3NiDetails()) return
     try {
@@ -265,7 +265,7 @@ const Stage3EditInvoice = () => {
 
     setSubmitting(true)
     try {
-      await officerApi.editStage3Invoice(targetId, user.id, payload)
+      await officerApi.editStage3Invoice(targetId, payload)
       pushToast({
         title: 'Invoice resubmitted',
         message: 'Edition snapshot saved successfully.',
