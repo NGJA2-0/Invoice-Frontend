@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import Button from '../common/Button'
 import Input from '../common/Input'
@@ -452,6 +452,19 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   const itemsKey = tableConfig.key || (sectionKey === 'valuationTable' ? 'valuationItems' : 'items')
   const itemsPath = `${fieldPath}.${itemsKey}`
   const exchangeRatePath = 'invoiceData.exchangeRateSection'
+
+  // Clear stale Freight/Insurance values when the currency changes, so a
+  // value entered under a previous currency can't silently satisfy validation.
+  const prevCurrencyRef = useRef(selectedCurrency)
+  useEffect(() => {
+    if (prevCurrencyRef.current !== selectedCurrency) {
+      setValue(`${exchangeRatePath}.freight`, '', { shouldValidate: false, shouldDirty: true })
+      setValue(`${exchangeRatePath}.insurance`, '', { shouldValidate: false, shouldDirty: true })
+      setValue(`${exchangeRatePath}.freightOther`, '', { shouldValidate: false, shouldDirty: true })
+      setValue(`${exchangeRatePath}.insuranceOther`, '', { shouldValidate: false, shouldDirty: true })
+      prevCurrencyRef.current = selectedCurrency
+    }
+  }, [selectedCurrency, exchangeRatePath, setValue])
 
   const { fields, append, remove, update } = useFieldArray({ control, name: itemsPath })
   const items = watch(itemsPath) || []
@@ -1231,7 +1244,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                   <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={freightOtherUsd.toFixed(2)} readOnly />
-                      : <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true , min: 0 })} />}
+                      : <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true, min: 0 })} />}
                   </td>
                   <td className="px-4 py-3" data-label="LKR">
                     <Input type="number" value={(showOtherCurrency ? freightOtherLkr : freightLkr).toFixed(2)} readOnly />

@@ -176,9 +176,33 @@ const CreateInvoice = () => {
     if (subCategories.length > 0 && !subCategory) return showMissingToast('Sub-Category'), false
 
     const invoiceData = getValues('invoiceData')
+    console.log(invoiceData)
 
-    if (!invoiceData?.exchangeRateSection?.selectedCurrency) {
+    const exchange = invoiceData?.exchangeRateSection || {}
+
+    if (!exchange.selectedCurrency) {
       showMissingToast('Currency (in Valuation Table)')
+      return false
+    }
+
+    // otherCurrencyCode is set by ValuationTable whenever a non-USD currency
+    // is active — it's the reliable source of truth for which set of
+    // freight/insurance fields is actually being shown to the user.
+    const usingOtherCurrency = !!exchange.otherCurrencyCode
+
+    const freightValue = usingOtherCurrency ? exchange.freightOther : exchange.freight
+    const insuranceValue = usingOtherCurrency ? exchange.insuranceOther : exchange.insurance
+
+    const isBlank = (v) =>
+      v === undefined || v === null || String(v).trim() === '' || Number.isNaN(Number(v))
+
+    if (isBlank(freightValue)) {
+      showMissingToast(usingOtherCurrency ? `Freight (${exchange.selectedCurrency})` : 'Freight')
+      return false
+    }
+
+    if (isBlank(insuranceValue)) {
+      showMissingToast(usingOtherCurrency ? `Insurance (${exchange.selectedCurrency})` : 'Insurance')
       return false
     }
 
@@ -236,6 +260,7 @@ const CreateInvoice = () => {
 
     return true
   }
+
 
   const handleNewInvoice = () => {
     sessionStorage.removeItem('ci_invoiceData')
@@ -438,6 +463,8 @@ const CreateInvoice = () => {
 
   const buildPayload = (status) => {
     const invoiceData = getValues('invoiceData')
+
+    const invDate = invoiceData?.invoiceMeta?.invoiceDate
     if (businessProfile?.tin) {
       invoiceData.companyHeader.tin = businessProfile.tin
     }
