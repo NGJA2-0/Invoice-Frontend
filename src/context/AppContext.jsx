@@ -127,25 +127,22 @@ export const AppProvider = ({ children }) => {
     return data
   }, [])
 
-  const refreshOfficerInvoices = useCallback(async (officerId) => {
-    if (!officerId) return
-    const res = await officerApi.getAssignedInvoices(officerId)
+  const refreshOfficerInvoices = useCallback(async () => {
+    const res = await officerApi.getAssignedInvoices()
     const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
     setOfficerInvoices(list)
     return list
   }, [])
 
-  const refreshStage2OfficerInvoices = useCallback(async (stage2OfficerId) => {
-    if (!stage2OfficerId) return
-    const res = await officerApi.getStage2AssignedInvoices(stage2OfficerId)
+  const refreshStage2OfficerInvoices = useCallback(async () => {
+    const res = await officerApi.getStage2AssignedInvoices()
     const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
     setStage2OfficerInvoices(list)
     return list
   }, [])
 
-  const refreshStage3OfficerInvoices = useCallback(async (stage3OfficerId) => {
-    if (!stage3OfficerId) return
-    const res = await officerApi.getStage3AssignedInvoices(stage3OfficerId)
+  const refreshStage3OfficerInvoices = useCallback(async () => {
+    const res = await officerApi.getStage3AssignedInvoices()
     const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
     setStage3OfficerInvoices(list)
     return list

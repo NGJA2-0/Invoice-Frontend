@@ -48,7 +48,6 @@ const OfficerInvoiceDetail = () => {
     try {
       await officerApi.updateInvoiceStatus(
         invoice.originalInvoiceId,
-        user.id,
         { status: 'stage1_rejected', notes }
       )
       pushToast({
@@ -77,7 +76,6 @@ const OfficerInvoiceDetail = () => {
     try {
       await officerApi.completeInvoice(
         invoice.originalInvoiceId,
-        user.id,
         { notes }
       )
       pushToast({

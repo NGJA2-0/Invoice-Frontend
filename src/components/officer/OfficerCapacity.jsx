@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { officerApi } from '../../services/officerApi'
+import { useApp } from '../../context/AppContext'
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
@@ -13,55 +14,19 @@ let capacityCache = {
 }
 
 const OfficerCapacity = ({ officerId }) => {
-  const [capacity, setCapacity] = useState(() =>
-    capacityCache.officerId === officerId ? capacityCache.data : null
-  )
-  const [loading, setLoading] = useState(!capacity)
-  const [error, setError] = useState(null)
-  const intervalRef = useRef(null)
-
-  const fetchCapacity = useCallback(
-    async (force = false) => {
-      if (!officerId) return
-
-      const isCacheValid =
-        !force &&
-        capacityCache.officerId === officerId &&
-        capacityCache.data &&
-        Date.now() - capacityCache.timestamp < CACHE_DURATION
-
-      if (isCacheValid) {
-        setCapacity(capacityCache.data)
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError(null)
-        const data = await officerApi.getCapacity(officerId)
-        capacityCache = { officerId, data, timestamp: Date.now() }
-        setCapacity(data)
-      } catch (err) {
-        setError(err.message || 'Failed to load capacity')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [officerId]
-  )
-
+  const { user } = useApp()
+  const [capacity, setCapacity] = useState(null)
+  const loading = false
+  const error = null
+  
   useEffect(() => {
-    fetchCapacity(false)
-
-    intervalRef.current = setInterval(() => {
-      fetchCapacity(true)
-    }, CACHE_DURATION)
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+    if (user) {
+      setCapacity({
+        totalCapacity: user.totalCapacity || 10,
+        occupiedSlots: user.occupiedSlots || 0
+      })
     }
-  }, [fetchCapacity])
+  }, [user])
 
   if (!officerId) return null
 
