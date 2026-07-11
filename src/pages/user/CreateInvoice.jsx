@@ -530,9 +530,34 @@ const CreateInvoice = () => {
     }
   }
 
+  const validateInvoiceNumberPresent = () => {
+    const invoiceData = getValues('invoiceData')
+    const invNo = invoiceData?.invoiceMeta?.invoiceNumber || invoiceNumber
+
+    if (!invNo || !String(invNo).trim()) {
+      pushToast({
+        title: 'Invoice number required',
+        message: 'Invoice No. must be filled before saving as a draft.',
+        tone: 'danger',
+      })
+      return false
+    }
+    return true
+  }
+
   const handleSave = async (status) => {
-    if (!ensureTemplate3NiDetails()) return false
-    if (!validateFormComplete(status === 'draft' ? 'saving as draft' : 'submitting the invoice')) return false
+    // Invoice No. is the ONLY thing required to save a draft — it's how
+    // drafts are tracked and looked up later.
+    if (!validateInvoiceNumberPresent()) return false
+
+    // Everything else (NI details, all required fields, dropdowns,
+    // valuation table completeness) is only enforced when actually
+    // submitting the invoice for review — not when saving a draft.
+    if (status !== 'draft') {
+      if (!ensureTemplate3NiDetails()) return false
+      if (!validateFormComplete('submitting the invoice')) return false
+    }
+
     if (!user?.id) {
       pushToast({
         title: 'Missing user profile',
