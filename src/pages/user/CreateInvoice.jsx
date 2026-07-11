@@ -195,7 +195,7 @@ const CreateInvoice = () => {
     for (const section of templateConfig?.sections || []) {
       if (HIDDEN_SECTION_KEYS.includes(section.key)) continue
 
-      if (section.key === 'valuationTable' || section.sectionType === 'table') {
+      if (section.table || section.key === 'valuationTable' || section.sectionType === 'table') {
         const tableKey = section.table?.key || 'valuationItems'
         const items = invoiceData?.[section.key]?.[tableKey] || []
         if (!items.length) return showMissingToast(), false
