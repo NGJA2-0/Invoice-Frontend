@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { adminService } from '../../services/adminService'
 
 const STATUS_GROUPS = [
@@ -130,6 +131,157 @@ const extractPagination = (res, fallbackPage, fallbackLimit) => {
   }
 }
 
+// One accent per column — ties each stage group visually to its badge color elsewhere in the table.
+const STATUS_GROUP_ACCENTS = {
+  General: { dot: 'bg-slate-400', text: 'text-slate-500', bar: 'bg-slate-300' },
+  'Stage 1': { dot: 'bg-amber-400', text: 'text-amber-600', bar: 'bg-amber-300' },
+  'Stage 2': { dot: 'bg-violet-400', text: 'text-violet-600', bar: 'bg-violet-300' },
+  'Stage 3': { dot: 'bg-rose-400', text: 'text-rose-600', bar: 'bg-rose-300' },
+  Final: { dot: 'bg-emerald-400', text: 'text-emerald-600', bar: 'bg-emerald-300' },
+}
+
+// Desktop-only (lg+) status dropdown: lays the stage groups out side by side
+// as columns instead of the single stacked list a native <select> forces.
+const StatusDropdown = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef(null)
+  const panelRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const clickedButton = containerRef.current && containerRef.current.contains(e.target)
+      const clickedPanel = panelRef.current && panelRef.current.contains(e.target)
+      if (!clickedButton && !clickedPanel) {
+        setOpen(false)
+      }
+    }
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [])
+
+  const selectedLabel = value ? formatStatusLabel(value) : 'All statuses'
+
+  const handleSelect = (nextValue) => {
+    onChange(nextValue)
+    setOpen(false)
+  }
+
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
+
+  useEffect(() => {
+    if (open && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      setCoords({ top: rect.bottom + 8, left: rect.left })
+    }
+  }, [open])
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`flex w-full min-w-[220px] items-center justify-between gap-3 rounded-xl border bg-white px-3 py-2 text-left text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-ink-200 ${
+          open ? 'border-ink-400 text-ink-900' : 'border-ink-200 text-ink-800 hover:border-ink-300'
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          {value && <span className={`h-1.5 w-1.5 rounded-full ${STATUS_GROUP_ACCENTS[STATUS_GROUPS.find((g) => g.options.includes(value))?.label]?.dot || 'bg-ink-400'}`} />}
+          {selectedLabel}
+        </span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`h-4 w-4 flex-shrink-0 text-ink-400 transition-transform ${open ? 'rotate-180' : ''}`}
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open &&
+        createPortal(
+          <>
+            {/* Backdrop — dims and blurs the entire page, closes on click. Portaled to <body> so it
+                isn't scoped by any ancestor's backdrop-filter (which would turn `fixed` into `absolute`). */}
+            <div
+              className="fixed inset-0 z-40 animate-fade-in bg-ink-900/10 backdrop-blur-sm"
+              onClick={() => setOpen(false)}
+              aria-hidden="true"
+            />
+
+            <div
+              ref={panelRef}
+              className="fixed z-50 w-[760px] max-w-[85vw] overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-2xl shadow-ink-900/10 ring-1 ring-black/5"
+              style={{ top: coords.top, left: coords.left }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-ink-100 bg-gradient-to-r from-ink-50/80 to-transparent px-5 py-3.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-400">Filter by status</p>
+                <button
+                  type="button"
+                  onClick={() => handleSelect('')}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                    !value
+                      ? 'bg-ink-900 text-white shadow-sm'
+                      : 'border border-ink-200 text-ink-600 hover:border-ink-300 hover:bg-ink-50'
+                  }`}
+                >
+                  All statuses
+                </button>
+              </div>
+
+              {/* Columns */}
+              <div className="grid grid-cols-5 divide-x divide-ink-100">
+                {STATUS_GROUPS.map((group) => {
+                  const accent = STATUS_GROUP_ACCENTS[group.label]
+                  return (
+                    <div key={group.label} className="flex flex-col px-3 py-4">
+                      <div className="mb-2.5 flex items-center gap-1.5 px-2">
+                        <span className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
+                        <p className={`text-[11px] font-bold uppercase tracking-wider ${accent.text}`}>
+                          {group.label}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        {group.options.map((opt) => {
+                          const isActive = value === opt
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => handleSelect(opt)}
+                              className={`group relative rounded-lg py-1.5 pl-3 pr-2 text-left text-xs leading-snug transition ${
+                                isActive ? 'bg-ink-50 font-semibold text-ink-900' : 'text-ink-600 hover:bg-ink-50/70 hover:text-ink-900'
+                              }`}
+                            >
+                              <span
+                                className={`absolute left-0 top-1/2 h-3.5 w-0.5 -translate-y-1/2 rounded-full transition-opacity ${accent.bar} ${
+                                  isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+                                }`}
+                              />
+                              {formatStatusLabel(opt).replace(`${group.label} · `, '')}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </>,
+          document.body,
+        )}
+    </div>
+  )
+}
+
 const InvoiceManagement = () => {
   const [invoices, setInvoices] = useState([])
   const [page, setPage] = useState(1)
@@ -170,6 +322,11 @@ const InvoiceManagement = () => {
     setPage(1)
   }
 
+  const handleStatusSelect = (nextStatus) => {
+    setStatus(nextStatus)
+    setPage(1)
+  }
+
   const handleLimitChange = (e) => {
     setLimit(Number(e.target.value))
     setPage(1)
@@ -192,16 +349,18 @@ const InvoiceManagement = () => {
       </div>
 
       {/* Filters */}
-      <div className="glass-card flex flex-col gap-4 rounded-2xl border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="glass-card relative z-20 flex flex-col gap-4 rounded-2xl border px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="status-filter" className="text-xs font-medium uppercase tracking-wide text-ink-500">
             Status
           </label>
+
+          {/* Below lg: native select, unchanged — OS picker handles this well on mobile */}
           <select
             id="status-filter"
             value={status}
             onChange={handleStatusChange}
-            className="w-full min-w-[220px] rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-800 shadow-sm outline-none transition focus:border-ink-400 focus:ring-2 focus:ring-ink-200 sm:w-auto"
+            className="w-full min-w-[220px] rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-800 shadow-sm outline-none transition focus:border-ink-400 focus:ring-2 focus:ring-ink-200 sm:w-auto lg:hidden"
           >
             <option value="">All statuses</option>
             {STATUS_GROUPS.map((group) => (
@@ -214,6 +373,11 @@ const InvoiceManagement = () => {
               </optgroup>
             ))}
           </select>
+
+          {/* lg and up: custom dropdown with stage groups laid out as columns */}
+          <div className="hidden lg:block">
+            <StatusDropdown value={status} onChange={handleStatusSelect} />
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
