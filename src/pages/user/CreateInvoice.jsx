@@ -158,6 +158,67 @@ const CreateInvoice = () => {
     return false
   }
 
+  const validateFormComplete = () => {
+    const showMissingToast = () => {
+      pushToast({
+        title: 'Incomplete form',
+        message: 'Some fields are missing. Please fill all required fields before viewing the preview.',
+        tone: 'danger',
+      })
+    }
+
+    if (!category) return showMissingToast(), false
+    if (subCategories.length > 0 && !subCategory) return showMissingToast(), false
+
+    const invoiceData = getValues('invoiceData')
+
+    if (!invoiceData?.exchangeRateSection?.selectedCurrency) return showMissingToast(), false
+
+    const HIDDEN_SECTION_KEYS = ['exchangeRateSection', 'cifSummary', 'senderInfo']
+    const SKIP_FIELDS = new Set([
+      'invoiceMeta.exportType',
+      'companyHeader.logoUrl',
+      'companyHeader.companyWebsite',
+      'companyHeader.companyEmail',
+      'receiverInfo.receiverContact',
+      'invoiceMeta.remarks',
+    ])
+
+    for (const section of templateConfig?.sections || []) {
+      if (HIDDEN_SECTION_KEYS.includes(section.key)) continue
+
+      if (section.key === 'valuationTable' || section.sectionType === 'table') {
+        const tableKey = section.table?.key || 'valuationItems'
+        const items = invoiceData?.[section.key]?.[tableKey] || []
+        if (!items.length) return showMissingToast(), false
+        for (const item of items) {
+          for (const col of section.table?.columns || []) {
+            if (col.readOnly || col.dataType === 'computed' || col.key === 'itemNo') continue
+            const val = item?.[col.key]
+            if (val === undefined || val === null || val === '') return showMissingToast(), false
+          }
+        }
+        continue
+      }
+
+      if (section.conditional) {
+        const fieldPath = section.conditional.field.split('.')
+        let value = invoiceData
+        for (const key of fieldPath) value = value?.[key]
+        if (value !== section.conditional.equals) continue
+      }
+
+      for (const field of section.fields || []) {
+        if (SKIP_FIELDS.has(`${section.key}.${field.key}`)) continue
+        if (!field.required) continue
+        const val = invoiceData?.[section.key]?.[field.key]
+        if (val === undefined || val === null || val === '') return showMissingToast(), false
+      }
+    }
+
+    return true
+  }
+
   const handleNewInvoice = () => {
     sessionStorage.removeItem('ci_invoiceData')
     sessionStorage.removeItem('ci_category')
@@ -373,6 +434,7 @@ const CreateInvoice = () => {
 
   const handlePreview = async () => {
     if (!formReady || !ensureTemplate3NiDetails()) return
+    if (!validateFormComplete()) return
     try {
       const data = await invoiceService.preview(buildPayload('draft'))
       setPreview(data)
@@ -1276,7 +1338,7 @@ const CreateInvoice = () => {
                   <Eye />
                   Preview
                 </button>
-                
+
                 {/* <button
                   type="button"
                   className="ci-btn ci-btn-ghost"
@@ -1314,7 +1376,7 @@ const CreateInvoice = () => {
           <div className="ci-preview-card">
             <div className="ci-preview-header no-print">
               <span className="ci-preview-title">Invoice Preview</span>
-             
+
             </div>
             <div className="ci-preview-body">
               <InvoicePreview
