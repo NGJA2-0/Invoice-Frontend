@@ -486,6 +486,16 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   }, [fields.length])
 
   const addItem = () => {
+    if (isValuationTable && !selectedCurrency) {
+      if (typeof pushToast === 'function') {
+        pushToast({
+          title: 'Currency required',
+          message: 'Select a currency before adding items to the table.',
+          tone: 'danger',
+        })
+      }
+      return
+    }
     if (isValuationTable && isStockExhausted) {
       if (typeof pushToast === 'function') {
         pushToast({
@@ -1094,6 +1104,16 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
         <button
           type="button"
           onClick={() => {
+            if (isValuationTable && !selectedCurrency) {
+              if (typeof pushToast === 'function') {
+                pushToast({
+                  title: 'Currency required',
+                  message: 'Select a currency before adding items to the table.',
+                  tone: 'danger',
+                })
+              }
+              return
+            }
             if (isMobile) {
               // build empty item for modal
               const defaultItem = {}
