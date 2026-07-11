@@ -82,7 +82,7 @@ const InvoiceTable = ({
   onPageSizeChange,
   onRowClick,
 }) => {
-  const { user, pushToast } = useApp()
+  const { user, role, pushToast } = useApp()
   const [favoritingId, setFavoritingId] = useState(null)
   const [favoritedIds, setFavoritedIds] = useState(() => new Set())
   const [downloadingId, setDownloadingId] = useState(null)
@@ -142,7 +142,7 @@ const InvoiceTable = ({
         message: error?.message,
         tone: 'error',
       })
-    } finally {// REPLACEMENT (keep only the first block's closing, then go straight to favourites logic)
+    } finally {
       root.unmount()
       container.remove()
       setDownloadingId(null)
@@ -166,7 +166,7 @@ const InvoiceTable = ({
             : []
 
     const loadFavoriteIds = async () => {
-      if (!user?.id) return
+      if (!user?.id || role !== 'user') return
 
       // Use the cache if we have a recent one — skips the API calls entirely.
       const cached = getCachedFavoriteIds(user.id)
@@ -370,7 +370,7 @@ const InvoiceTable = ({
               <th className="px-5 py-3">Total Value (LKR)</th>
               <th className="px-5 py-3">Receiver's Name</th>
               <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3 text-center">Favourite</th>
+              {role === 'user' && <th className="px-5 py-3 text-center">Favourite</th>}
               <th className="px-5 py-3 text-center">Download</th>
             </tr>
           </thead>
@@ -393,25 +393,27 @@ const InvoiceTable = ({
                     {formatInvoiceStatus(row.status)}
                   </Badge>
                 </td>
-                <td className="px-5 py-4 text-center">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
-                    }}
-                    disabled={favoritingId === row.id}
-                    title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
-                    aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
-                    className="inline-flex items-center justify-center rounded-full p-1.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isFavorited ? (
-                      <Heart size={18} className="fill-red-500 text-red-500" />
-                    ) : (
-                      <Heart size={18} className="text-ink-400" />
-                    )}
-                  </button>
-                </td>
+                {role === 'user' && (
+                  <td className="px-5 py-4 text-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
+                      }}
+                      disabled={favoritingId === row.id}
+                      title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                      aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                      className="inline-flex items-center justify-center rounded-full p-1.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isFavorited ? (
+                        <Heart size={18} className="fill-red-500 text-red-500" />
+                      ) : (
+                        <Heart size={18} className="text-ink-400" />
+                      )}
+                    </button>
+                  </td>
+                )}
                 <td className="px-5 py-4 text-center">
                   <button
                     type="button"
@@ -457,23 +459,25 @@ const InvoiceTable = ({
                 <Badge tone={statusTone[row.status] || 'neutral'}>
                   {formatInvoiceStatus(row.status)}
                 </Badge>
-                 <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
-                  }}
-                  disabled={favoritingId === row.id}
-                  title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
-                  aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
-                  className="inline-flex items-center justify-center rounded-full p-1 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isFavorited ? (
-                    <Heart size={18} className="fill-red-500 text-red-500" />
-                  ) : (
-                    <Heart size={18} className="text-ink-400" />
-                  )}
-                </button>
+                {role === 'user' && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      isFavorited ? handleRemoveFavorite(row.id) : handleAddFavorite(row.id)
+                    }}
+                    disabled={favoritingId === row.id}
+                    title={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                    aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+                    className="inline-flex items-center justify-center rounded-full p-1 transition-transform duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isFavorited ? (
+                      <Heart size={18} className="fill-red-500 text-red-500" />
+                    ) : (
+                      <Heart size={18} className="text-ink-400" />
+                    )}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={(e) => {
