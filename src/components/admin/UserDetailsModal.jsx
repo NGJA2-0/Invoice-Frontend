@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { adminService } from '../../services/adminService'
 
 const formatDate = (value) => {
@@ -60,6 +61,12 @@ const UserDetailsModal = ({ userId, onClose }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const panelRef = useRef(null)
+  const navigate = useNavigate()
+
+  const handleGoToAdmin = (adminId) => {
+    onClose()
+    navigate('/admin/admins', { state: { highlightAdminId: adminId } })
+  }
 
   useEffect(() => {
     if (!userId) return
@@ -241,6 +248,7 @@ const UserDetailsModal = ({ userId, onClose }) => {
                       </div>
                       <button
                         type="button"
+                        onClick={() => handleGoToAdmin(user.assignedAdmin.id)}
                         className="inline-flex flex-shrink-0 items-center justify-center gap-1.5 rounded-xl bg-ink-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-ink-800"
                       >
                         Go to admin
