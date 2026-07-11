@@ -110,7 +110,7 @@ const formatDate = (value) => {
 const formatCurrency = (value) => {
   const amount = Number(value)
   if (Number.isNaN(amount)) return 'N/A'
-  return `Rs. ${amount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return ` ${amount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 // Defensively unwrap whatever shape the API returns the list + pagination in.
@@ -441,15 +441,15 @@ const InvoiceManagement = () => {
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[900px] border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-ink-200 bg-ink-50/60 text-xs uppercase tracking-wide text-ink-500">
-                    <th className="px-6 py-3 font-medium">Invoice</th>
-                    <th className="px-6 py-3 font-medium">Company</th>
-                    <th className="px-6 py-3 font-medium">Export type</th>
-                    <th className="px-6 py-3 font-medium">Status</th>
-                    <th className="px-6 py-3 font-medium">Created by</th>
-                    <th className="px-6 py-3 font-medium">Created</th>
-                    <th className="px-6 py-3 font-medium">Updated</th>
-                    <th className="px-6 py-3 text-right font-medium">CIF (LKR)</th>
+                  <tr className="border-b border-ink-200 bg-gradient-to-r from-slate-500 via-slate-300 to-white text-sm uppercase tracking-wider text-ink-900 shadow-sm">
+                    <th className="px-6 py-4 font-bold">Invoice</th>
+                    <th className="px-6 py-4 font-bold">Company</th>
+                    <th className="px-6 py-4 font-bold">Export type</th>
+                    <th className="px-6 py-4 font-bold">Status</th>
+                    <th className="px-6 py-4 font-bold">Created by</th>
+                    <th className="px-6 py-4 font-bold">Created</th>
+                    <th className="px-6 py-4 font-bold">Updated</th>
+                    <th className="px-6 py-4 text-right font-bold">CIF (LKR)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
@@ -473,18 +473,20 @@ const InvoiceManagement = () => {
                           <button
                             type="button"
                             onClick={() => setSelectedUserId(invoice.createdBy.id)}
-                            className="font-medium text-ink-700 underline decoration-ink-300 decoration-1 underline-offset-2 transition hover:text-ink-900 hover:decoration-ink-500"
+                            className="inline-flex items-center rounded-lg border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white px-3 py-1.5 text-xs font-semibold text-emerald-800 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:from-emerald-100 hover:shadow-md active:translate-y-0"
                           >
                             {invoice.createdBy?.name || 'N/A'}
                           </button>
                         ) : (
                           <span className="text-ink-700">{invoice.createdBy?.name || 'N/A'}</span>
                         )}
-                      </td>
+                                              </td>
                       <td className="px-6 py-4 whitespace-nowrap text-ink-600">{formatDate(invoice.createdAt)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-ink-600">{formatDate(invoice.updatedAt)}</td>
-                      <td className="px-6 py-4 text-right font-semibold text-ink-900">
-                        {formatCurrency(invoice.cifLkr)}
+                      <td className="px-6 py-4 text-right">
+                        <span className="inline-flex items-center justify-end rounded-lg border border-rose-200 bg-gradient-to-b from-rose-50 to-white px-3 py-1.5 font-semibold text-rose-800 shadow-sm">
+                          {formatCurrency(invoice.cifLkr)}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -514,7 +516,7 @@ const InvoiceManagement = () => {
                         <button
                           type="button"
                           onClick={() => setSelectedUserId(invoice.createdBy.id)}
-                          className="mt-0.5 font-medium text-ink-700 underline decoration-ink-300 decoration-1 underline-offset-2"
+                          className="mt-1 inline-flex items-center rounded-lg border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white px-2.5 py-1 text-xs font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:from-emerald-100"
                         >
                           {invoice.createdBy?.name || 'N/A'}
                         </button>
@@ -524,7 +526,9 @@ const InvoiceManagement = () => {
                     </div>
                     <div>
                       <p className="text-ink-400">CIF (LKR)</p>
-                      <p className="mt-0.5 font-medium text-ink-700">{formatCurrency(invoice.cifLkr)}</p>
+                      <p className="mt-1 inline-flex items-center rounded-lg border border-rose-200 bg-gradient-to-b from-rose-50 to-white px-2.5 py-1 font-semibold text-rose-800 shadow-sm">
+                        {formatCurrency(invoice.cifLkr)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-ink-400">Created</p>
