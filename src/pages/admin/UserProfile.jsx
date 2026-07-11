@@ -121,6 +121,8 @@ const getInitials = (name = '') =>
     .join('') || '?'
 
 const FieldValue = ({ fieldKey, value }) => {
+  const navigate = useNavigate()
+
   if (value === null || value === undefined || value === '') {
     return <span className="text-sm text-ink-400">—</span>
   }
@@ -142,9 +144,23 @@ const FieldValue = ({ fieldKey, value }) => {
   }
 
   if (typeof value === 'object') {
+    const label = value.fullName || value.username || value.name || '—'
+
+    if (fieldKey === 'assignedAdmin') {
+      return (
+        <button
+          type="button"
+          onClick={() => navigate('/admin/admins')}
+          className="rounded-lg bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700 ring-1 ring-indigo-200 transition hover:bg-indigo-100"
+        >
+          {label}
+        </button>
+      )
+    }
+
     return (
       <span className="text-sm font-medium text-ink-900">
-        {value.fullName || value.username || value.name || '—'}
+        {label}
       </span>
     )
   }
