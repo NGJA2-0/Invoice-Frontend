@@ -158,6 +158,138 @@ const CreateInvoice = () => {
     return false
   }
 
+  const validateFormComplete = (action = 'viewing the preview') => {
+    const showMissingToast = (fieldLabel) => {
+      pushToast({
+        title: 'Incomplete form',
+        message: fieldLabel
+          ? `"${fieldLabel}" is required. Please fill it before ${action}.`
+          : `Some fields are missing. Please fill all required fields before ${action}.`,
+        tone: 'danger',
+      })
+    }
+
+    if (!category) {
+      showMissingToast('Category')
+      return false
+    }
+    if (subCategories.length > 0 && !subCategory) return showMissingToast('Sub-Category'), false
+
+    const invoiceData = getValues('invoiceData')
+    console.log(invoiceData)
+
+    const exchange = invoiceData?.exchangeRateSection || {}
+
+    if (!exchange.selectedCurrency) {
+      showMissingToast('Currency (in Valuation Table)')
+      return false
+    }
+
+    // otherCurrencyCode is set by ValuationTable whenever a non-USD currency
+    // is active — it's the reliable source of truth for which set of
+    // freight/insurance fields is actually being shown to the user.
+    const usingOtherCurrency = !!exchange.otherCurrencyCode
+
+    const freightValue = usingOtherCurrency ? exchange.freightOther : exchange.freight
+    const insuranceValue = usingOtherCurrency ? exchange.insuranceOther : exchange.insurance
+
+    const isBlank = (v) =>
+      v === undefined || v === null || String(v).trim() === '' || Number.isNaN(Number(v))
+
+    if (isBlank(freightValue)) {
+      showMissingToast(usingOtherCurrency ? `Freight (${exchange.selectedCurrency})` : 'Freight')
+      return false
+    }
+
+    if (isBlank(insuranceValue)) {
+      showMissingToast(usingOtherCurrency ? `Insurance (${exchange.selectedCurrency})` : 'Insurance')
+      return false
+    }
+
+    const invDate = invoiceData?.invoiceMeta?.invoiceDate
+    const todayStr = new Date().toISOString().split('T')[0]
+
+    if (!invDate) return showMissingToast('Invoice Date'), false
+    if (invDate < todayStr) {
+      pushToast({ title: 'Invalid invoice date', message: 'Invoice date cannot be in the past. Please select today or a future date.', tone: 'danger' })
+      return false
+    }
+
+    const HIDDEN_SECTION_KEYS = ['exchangeRateSection', 'cifSummary', 'senderInfo']
+    const SKIP_FIELDS = new Set([
+      'invoiceMeta.exportType',
+      'companyHeader.logoUrl',
+      'companyHeader.companyWebsite',
+      'companyHeader.companyEmail',
+      'receiverInfo.receiverContact',
+      'invoiceMeta.remarks',
+    ])
+
+    for (const section of templateConfig?.sections || []) {
+      if (HIDDEN_SECTION_KEYS.includes(section.key)) continue
+
+      const DEFAULT_VALUATION_COLUMNS = [
+        { key: 'itemNo', label: 'Item No' },
+        { key: 'itemType', label: 'Item Type' },
+        { key: 'description', label: 'Description of Goods' },
+        { key: 'noOfPcs', label: 'No of Pcs' },
+        { key: 'unitType', label: 'Unit Type' },
+        { key: 'weight', label: 'Weight' },
+        { key: 'weightUnit', label: 'Weight Unit' },
+        { key: 'ratePer', label: 'Rate Per' },
+        { key: 'rateUnit', label: 'Rate Unit' },
+        { key: 'amount', label: 'Amount', readOnly: true },
+      ]
+
+      const isValueMissing = (val) => {
+        if (val === undefined || val === null) return true
+        if (typeof val === 'number') return Number.isNaN(val)
+        if (typeof val === 'string') return val.trim() === ''
+        return false
+      }
+
+
+      if (section.table || section.key === 'valuationTable' || section.sectionType === 'table') {
+        const tableKey = section.table?.key || 'valuationItems'
+        const items = invoiceData?.[section.key]?.[tableKey] || []
+        if (!items.length) return showMissingToast(`${section.label} — at least one item`), false
+
+        const columns =
+          section.table?.columns ||
+          (section.key === 'valuationTable' ? DEFAULT_VALUATION_COLUMNS : [])
+
+        for (let rowIndex = 0; rowIndex < items.length; rowIndex++) {
+          const item = items[rowIndex]
+          for (const col of columns) {
+            if (col.readOnly || col.dataType === 'computed' || col.key === 'itemNo') continue
+            const val = item?.[col.key]
+            if (isValueMissing(val)) {
+              return showMissingToast(`${col.label} (Item ${rowIndex + 1} in ${section.label})`), false
+            }
+          }
+        }
+        continue
+      }
+
+      if (section.conditional) {
+        const fieldPath = section.conditional.field.split('.')
+        let value = invoiceData
+        for (const key of fieldPath) value = value?.[key]
+        if (value !== section.conditional.equals) continue
+      }
+
+      for (const field of section.fields || []) {
+        if (SKIP_FIELDS.has(`${section.key}.${field.key}`)) continue
+        if (!field.required) continue
+        const val = invoiceData?.[section.key]?.[field.key]
+        if (val === undefined || val === null || val === '') return showMissingToast(`${field.label} (${section.label})`), false
+      }
+    }
+
+    return true
+  }
+
+
   const handleNewInvoice = () => {
     sessionStorage.removeItem('ci_invoiceData')
     sessionStorage.removeItem('ci_category')
@@ -359,6 +491,8 @@ const CreateInvoice = () => {
 
   const buildPayload = (status) => {
     const invoiceData = getValues('invoiceData')
+
+    const invDate = invoiceData?.invoiceMeta?.invoiceDate
     if (businessProfile?.tin) {
       invoiceData.companyHeader.tin = businessProfile.tin
     }
@@ -372,7 +506,13 @@ const CreateInvoice = () => {
   }
 
   const handlePreview = async () => {
+    console.log("Preview clicked");
+
     if (!formReady || !ensureTemplate3NiDetails()) return
+    console.log("Calling validation");
+
+    if (!validateFormComplete('viewing the preview')) return
+    console.log("Validation passed");
     try {
       const data = await invoiceService.preview(buildPayload('draft'))
       setPreview(data)
@@ -390,8 +530,34 @@ const CreateInvoice = () => {
     }
   }
 
+  const validateInvoiceNumberPresent = () => {
+    const invoiceData = getValues('invoiceData')
+    const invNo = invoiceData?.invoiceMeta?.invoiceNumber || invoiceNumber
+
+    if (!invNo || !String(invNo).trim()) {
+      pushToast({
+        title: 'Invoice number required',
+        message: 'Invoice No. must be filled before saving as a draft.',
+        tone: 'danger',
+      })
+      return false
+    }
+    return true
+  }
+
   const handleSave = async (status) => {
-    if (!ensureTemplate3NiDetails()) return false
+    // Invoice No. is the ONLY thing required to save a draft — it's how
+    // drafts are tracked and looked up later.
+    if (!validateInvoiceNumberPresent()) return false
+
+    // Everything else (NI details, all required fields, dropdowns,
+    // valuation table completeness) is only enforced when actually
+    // submitting the invoice for review — not when saving a draft.
+    if (status !== 'draft') {
+      if (!ensureTemplate3NiDetails()) return false
+      if (!validateFormComplete('submitting the invoice')) return false
+    }
+
     if (!user?.id) {
       pushToast({
         title: 'Missing user profile',
@@ -1276,7 +1442,7 @@ const CreateInvoice = () => {
                   <Eye />
                   Preview
                 </button>
-                
+
                 {/* <button
                   type="button"
                   className="ci-btn ci-btn-ghost"
@@ -1314,7 +1480,7 @@ const CreateInvoice = () => {
           <div className="ci-preview-card">
             <div className="ci-preview-header no-print">
               <span className="ci-preview-title">Invoice Preview</span>
-             
+
             </div>
             <div className="ci-preview-body">
               <InvoicePreview

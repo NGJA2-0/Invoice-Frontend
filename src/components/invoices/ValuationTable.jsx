@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import Button from '../common/Button'
 import Input from '../common/Input'
@@ -453,6 +453,19 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
   const itemsPath = `${fieldPath}.${itemsKey}`
   const exchangeRatePath = 'invoiceData.exchangeRateSection'
 
+  // Clear stale Freight/Insurance values when the currency changes, so a
+  // value entered under a previous currency can't silently satisfy validation.
+  const prevCurrencyRef = useRef(selectedCurrency)
+  useEffect(() => {
+    if (prevCurrencyRef.current !== selectedCurrency) {
+      setValue(`${exchangeRatePath}.freight`, '', { shouldValidate: false, shouldDirty: true })
+      setValue(`${exchangeRatePath}.insurance`, '', { shouldValidate: false, shouldDirty: true })
+      setValue(`${exchangeRatePath}.freightOther`, '', { shouldValidate: false, shouldDirty: true })
+      setValue(`${exchangeRatePath}.insuranceOther`, '', { shouldValidate: false, shouldDirty: true })
+      prevCurrencyRef.current = selectedCurrency
+    }
+  }, [selectedCurrency, exchangeRatePath, setValue])
+
   const { fields, append, remove, update } = useFieldArray({ control, name: itemsPath })
   const items = watch(itemsPath) || []
 
@@ -485,7 +498,57 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     })
   }, [fields.length])
 
+  // ── Row completeness check ──────────────────────────────────────────────
+  const isFieldFilled = (val) => {
+    if (val === undefined || val === null) return false
+    if (typeof val === 'number') return !Number.isNaN(val)
+    if (typeof val === 'string') return val.trim() !== ''
+    return true
+  }
+
+  // Returns the first column that's missing a value in the given item,
+  // skipping itemNo and any auto-computed/readOnly columns.
+  const getIncompleteColumn = (item, columns) => {
+    for (const col of columns) {
+      if (col.key === 'itemNo') continue
+      if (col.readOnly || col.dataType === 'computed') continue
+      if (!isFieldFilled(item?.[col.key])) return col
+    }
+    return null
+  }
+
+  // Checks the last row already in the table. Returns true (and shows a
+  // toast) if it's OK to add a new row.
+  const canAddNewItem = () => {
+    const currentItems = watch(itemsPath) || []
+    if (currentItems.length === 0) return true
+    const lastIndex = currentItems.length - 1
+    const lastItem = currentItems[lastIndex]
+    const missingCol = getIncompleteColumn(lastItem, tableConfig.columns)
+    if (missingCol) {
+      if (typeof pushToast === 'function') {
+        pushToast({
+          title: 'Incomplete item',
+          message: `Please fill "${missingCol.label}" in Item ${lastIndex + 1} before adding a new item.`,
+          tone: 'danger',
+        })
+      }
+      return false
+    }
+    return true
+  }
+
   const addItem = () => {
+    if (isValuationTable && !selectedCurrency) {
+      if (typeof pushToast === 'function') {
+        pushToast({
+          title: 'Currency required',
+          message: 'Select a currency before adding items to the table.',
+          tone: 'danger',
+        })
+      }
+      return
+    }
     if (isValuationTable && isStockExhausted) {
       if (typeof pushToast === 'function') {
         pushToast({
@@ -496,6 +559,9 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
       }
       return
     }
+
+    // NEW: don't allow a new blank row until the last one is fully filled
+    if (!canAddNewItem()) return
 
     const defaultItem = {}
     tableConfig.columns.forEach((col) => {
@@ -510,6 +576,7 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
     defaultItem.isDone = false
     append(defaultItem)
   }
+
 
   const findColumnKey = (pattern, excludePattern) =>
     tableConfig.columns.find((col) => pattern.test(col.key) && !excludePattern?.test(col.key))?.key
@@ -1094,8 +1161,21 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
         <button
           type="button"
           onClick={() => {
+            if (isValuationTable && !selectedCurrency) {
+              if (typeof pushToast === 'function') {
+                pushToast({
+                  title: 'Currency required',
+                  message: 'Select a currency before adding items to the table.',
+                  tone: 'danger',
+                })
+              }
+              return
+            }
+
+            // NEW: block adding another item until the last one is complete
+            if (!canAddNewItem()) return
+
             if (isMobile) {
-              // build empty item for modal
               const defaultItem = {}
               tableConfig.columns.forEach((col) => {
                 if (col.dataType === 'number' || col.dataType === 'computed' || col.readOnly) {
@@ -1205,13 +1285,13 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                   <td className="px-4 py-3 font-semibold text-ink-700">Freight</td>
                   {showOtherCurrency && (
                     <td className="px-4 py-3" data-label={selectedCurrency}>
-                      <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freightOther`, { valueAsNumber: true })} />
+                      <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.freightOther`, { valueAsNumber: true, min: 0 })} />
                     </td>
                   )}
                   <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={freightOtherUsd.toFixed(2)} readOnly />
-                      : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true })} />}
+                      : <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.freight`, { valueAsNumber: true, min: 0 })} />}
                   </td>
                   <td className="px-4 py-3" data-label="LKR">
                     <Input type="number" value={(showOtherCurrency ? freightOtherLkr : freightLkr).toFixed(2)} readOnly />
@@ -1221,13 +1301,13 @@ const ValuationTable = ({ control, register, watch, setValue, section, businessP
                   <td className="px-4 py-3 font-semibold text-ink-700">Insurance</td>
                   {showOtherCurrency && (
                     <td className="px-4 py-3" data-label={selectedCurrency}>
-                      <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insuranceOther`, { valueAsNumber: true })} />
+                      <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.insuranceOther`, { valueAsNumber: true, min: 0 })} />
                     </td>
                   )}
                   <td className="px-4 py-3" data-label="USD">
                     {showOtherCurrency
                       ? <Input type="number" value={insuranceOtherUsd.toFixed(2)} readOnly />
-                      : <Input type="number" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true })} />}
+                      : <Input type="number" min="0" placeholder="0.00" {...register(`${exchangeRatePath}.insurance`, { valueAsNumber: true, min: 0 })} />}
                   </td>
                   <td className="px-4 py-3" data-label="LKR">
                     <Input type="number" value={(showOtherCurrency ? insuranceOtherLkr : insuranceLkr).toFixed(2)} readOnly />
