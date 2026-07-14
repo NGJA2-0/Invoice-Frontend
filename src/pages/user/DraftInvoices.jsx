@@ -33,7 +33,7 @@ const DraftInvoices = () => {
     if (!user?.id) return
     setLoading(true)
     try {
-      const res = await invoiceService.getDraftInvoices(user.id, { page, pageSize: size })
+      const res = await invoiceService.getDraftInvoices({ page, pageSize: size })
       setDrafts(res?.data || [])
       setPagination({
         currentPage: res?.pagination?.currentPage || 1,
