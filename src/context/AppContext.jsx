@@ -56,6 +56,32 @@ const extractPagination = (res) => ({
   hasPreviousPage: res?.pagination?.hasPreviousPage || false,
 })
 
+// stage1/my-invoices returns { data: { invoices, page, limit, total, totalPages } }
+// — page/limit/total live flat on `data`, not under a `pagination` key,
+// and there's no hasNextPage/hasPreviousPage, so derive them.
+const extractOfficerInvoicesList = (res) => {
+  const d = res?.data
+  if (Array.isArray(d?.invoices)) return d.invoices
+  if (Array.isArray(d)) return d
+  if (Array.isArray(res?.invoices)) return res.invoices
+  if (Array.isArray(res)) return res
+  return []
+}
+
+const extractOfficerInvoicesPagination = (res) => {
+  const d = res?.data || res || {}
+  const currentPage = d.page || 1
+  const totalPages = d.totalPages || 1
+  return {
+    currentPage,
+    pageSize: d.limit || 10,
+    totalRecords: d.total || 0,
+    totalPages,
+    hasNextPage: currentPage < totalPages,
+    hasPreviousPage: currentPage > 1,
+  }
+}
+
 export const AppProvider = ({ children }) => {
   const [role, setRole] = useState(() => localStorage.getItem(ROLE_KEY))
   const [user, setUser] = useState(readStoredUser)
@@ -88,6 +114,15 @@ export const AppProvider = ({ children }) => {
   })
   const [usersSummaryFilters, setUsersSummaryFilters] = useState({ status: undefined })
   const [officerInvoices, setOfficerInvoices] = useState([])
+  const [officerInvoicesPagination, setOfficerInvoicesPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalRecords: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  })
+  const [officerInvoicesFilters, setOfficerInvoicesFilters] = useState({ status: undefined, search: undefined })
   const [stage2OfficerInvoices, setStage2OfficerInvoices] = useState([])
   const [stage3OfficerInvoices, setStage3OfficerInvoices] = useState([])
   const [toasts, setToasts] = useState([])
@@ -128,11 +163,13 @@ export const AppProvider = ({ children }) => {
     return data
   }, [])
 
-  const refreshOfficerInvoices = useCallback(async () => {
-    const res = await officerApi.getAssignedInvoices()
-    const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
-    setOfficerInvoices(list)
-    return list
+  const refreshOfficerInvoices = useCallback(async (options = {}) => {
+    const { page = 1, pageSize = 10, status, search } = options
+    const res = await officerApi.getAssignedInvoices({ page, limit: pageSize, status, search })
+    setOfficerInvoices(extractOfficerInvoicesList(res))
+    setOfficerInvoicesPagination(extractOfficerInvoicesPagination(res))
+    setOfficerInvoicesFilters({ status, search })
+    return res
   }, [])
 
   const refreshStage2OfficerInvoices = useCallback(async () => {
@@ -466,6 +503,8 @@ export const AppProvider = ({ children }) => {
       usersSummaryPagination,
       usersSummaryFilters,
       officerInvoices,
+      officerInvoicesPagination,
+      officerInvoicesFilters,
       stage2OfficerInvoices,
       stage3OfficerInvoices,
       notifications,
@@ -521,6 +560,8 @@ export const AppProvider = ({ children }) => {
       usersSummaryPagination,
       usersSummaryFilters,
       officerInvoices,
+      officerInvoicesPagination,
+      officerInvoicesFilters,
       stage2OfficerInvoices,
       stage3OfficerInvoices,
       notifications,
@@ -540,7 +581,7 @@ export const AppProvider = ({ children }) => {
           refreshAdminUserStats(user.id)
         }
       } else if (role === 'officer') {
-        refreshOfficerInvoices(user.id)
+        refreshOfficerInvoices()
       } else if (role === 'stage2officer') {
         refreshStage2OfficerInvoices(user.id)
       } else if (role === 'stage3officer') {

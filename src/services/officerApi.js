@@ -34,8 +34,15 @@ export const officerApi = {
   // PATCH /api/v1/admin/officers/transfer-slots
   transferSlots: (payload) => api.patch(`${BASE}/officers/transfer-slots`, payload),
 
-  // GET /api/v1/stage1/my-invoices
-  getAssignedInvoices: () => api.get(`/stage1/my-invoices`),
+  // GET /api/v1/stage1/my-invoices?page=&limit=&status=&search=
+  getAssignedInvoices: ({ page = 1, limit = 10, status, search } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    if (search) params.set('search', search)
+    return api.get(`/stage1/my-invoices?${params.toString()}`, { raw: true })
+  },
 
  // GET /api/v1/stage2/my-invoices
   getStage2AssignedInvoices: () => api.get(`/stage2/my-invoices`),
