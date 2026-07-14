@@ -54,8 +54,15 @@ export const officerApi = {
     return api.get(`/stage2/my-invoices?${params.toString()}`, { raw: true })
   },
 
-  // GET /api/v1/stage3/my-invoices
-  getStage3AssignedInvoices: () => api.get(`/stage3/my-invoices`),
+  // GET /api/v1/stage3/my-invoices?page=&limit=&status=&search=
+  getStage3AssignedInvoices: ({ page = 1, limit = 10, status, search } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    if (search) params.set('search', search)
+    return api.get(`/stage3/my-invoices?${params.toString()}`, { raw: true })
+  },
 
 // GET /api/v1/stage2/invoices/:originalInvoiceId/latest
   getStage2DocumentById: (originalInvoiceId) => api.get(`/stage2/invoices/${originalInvoiceId}/latest`),

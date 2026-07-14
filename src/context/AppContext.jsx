@@ -136,6 +136,15 @@ export const AppProvider = ({ children }) => {
   })
   const [stage2OfficerInvoicesFilters, setStage2OfficerInvoicesFilters] = useState({ status: undefined, search: undefined })
   const [stage3OfficerInvoices, setStage3OfficerInvoices] = useState([])
+  const [stage3OfficerInvoicesPagination, setStage3OfficerInvoicesPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalRecords: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  })
+  const [stage3OfficerInvoicesFilters, setStage3OfficerInvoicesFilters] = useState({ status: undefined, search: undefined })
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
 
@@ -192,11 +201,13 @@ export const AppProvider = ({ children }) => {
     return res
   }, [])
 
-  const refreshStage3OfficerInvoices = useCallback(async () => {
-    const res = await officerApi.getStage3AssignedInvoices()
-    const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
-    setStage3OfficerInvoices(list)
-    return list
+  const refreshStage3OfficerInvoices = useCallback(async (options = {}) => {
+    const { page = 1, pageSize = 10, status, search } = options
+    const res = await officerApi.getStage3AssignedInvoices({ page, limit: pageSize, status, search })
+    setStage3OfficerInvoices(extractOfficerInvoicesList(res))
+    setStage3OfficerInvoicesPagination(extractOfficerInvoicesPagination(res))
+    setStage3OfficerInvoicesFilters({ status, search })
+    return res
   }, [])
 
   const refreshUserProfile = useCallback(async () => {
@@ -522,6 +533,8 @@ export const AppProvider = ({ children }) => {
       stage2OfficerInvoicesPagination,
       stage2OfficerInvoicesFilters,
       stage3OfficerInvoices,
+      stage3OfficerInvoicesPagination,
+      stage3OfficerInvoicesFilters,
       notifications,
       toasts,
       selectRole,
@@ -581,6 +594,8 @@ export const AppProvider = ({ children }) => {
       stage2OfficerInvoicesPagination,
       stage2OfficerInvoicesFilters,
       stage3OfficerInvoices,
+      stage3OfficerInvoicesPagination,
+      stage3OfficerInvoicesFilters,
       notifications,
       toasts,
     ],
@@ -602,7 +617,7 @@ export const AppProvider = ({ children }) => {
       } else if (role === 'stage2officer') {
         refreshStage2OfficerInvoices()
       } else if (role === 'stage3officer') {
-        refreshStage3OfficerInvoices(user.id)
+        refreshStage3OfficerInvoices()
       } else {
         refreshUserProfile()
         refreshInvoices()
