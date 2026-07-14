@@ -57,11 +57,13 @@ const extractPagination = (res) => ({
 })
 
 // stage1/my-invoices returns { data: { invoices, page, limit, total, totalPages } }
-// — page/limit/total live flat on `data`, not under a `pagination` key,
+// stage2/my-invoices returns { data: { data, page, limit, total, totalPages } } (note: nested key is "data", not "invoices")
+// — page/limit/total live flat on the inner object either way, not under a `pagination` key,
 // and there's no hasNextPage/hasPreviousPage, so derive them.
 const extractOfficerInvoicesList = (res) => {
   const d = res?.data
   if (Array.isArray(d?.invoices)) return d.invoices
+  if (Array.isArray(d?.data)) return d.data
   if (Array.isArray(d)) return d
   if (Array.isArray(res?.invoices)) return res.invoices
   if (Array.isArray(res)) return res
@@ -124,6 +126,15 @@ export const AppProvider = ({ children }) => {
   })
   const [officerInvoicesFilters, setOfficerInvoicesFilters] = useState({ status: undefined, search: undefined })
   const [stage2OfficerInvoices, setStage2OfficerInvoices] = useState([])
+  const [stage2OfficerInvoicesPagination, setStage2OfficerInvoicesPagination] = useState({
+    currentPage: 1,
+    pageSize: 10,
+    totalRecords: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  })
+  const [stage2OfficerInvoicesFilters, setStage2OfficerInvoicesFilters] = useState({ status: undefined, search: undefined })
   const [stage3OfficerInvoices, setStage3OfficerInvoices] = useState([])
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
@@ -172,11 +183,13 @@ export const AppProvider = ({ children }) => {
     return res
   }, [])
 
-  const refreshStage2OfficerInvoices = useCallback(async () => {
-    const res = await officerApi.getStage2AssignedInvoices()
-    const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
-    setStage2OfficerInvoices(list)
-    return list
+  const refreshStage2OfficerInvoices = useCallback(async (options = {}) => {
+    const { page = 1, pageSize = 10, status, search } = options
+    const res = await officerApi.getStage2AssignedInvoices({ page, limit: pageSize, status, search })
+    setStage2OfficerInvoices(extractOfficerInvoicesList(res))
+    setStage2OfficerInvoicesPagination(extractOfficerInvoicesPagination(res))
+    setStage2OfficerInvoicesFilters({ status, search })
+    return res
   }, [])
 
   const refreshStage3OfficerInvoices = useCallback(async () => {
@@ -506,6 +519,8 @@ export const AppProvider = ({ children }) => {
       officerInvoicesPagination,
       officerInvoicesFilters,
       stage2OfficerInvoices,
+      stage2OfficerInvoicesPagination,
+      stage2OfficerInvoicesFilters,
       stage3OfficerInvoices,
       notifications,
       toasts,
@@ -563,6 +578,8 @@ export const AppProvider = ({ children }) => {
       officerInvoicesPagination,
       officerInvoicesFilters,
       stage2OfficerInvoices,
+      stage2OfficerInvoicesPagination,
+      stage2OfficerInvoicesFilters,
       stage3OfficerInvoices,
       notifications,
       toasts,
@@ -583,7 +600,7 @@ export const AppProvider = ({ children }) => {
       } else if (role === 'officer') {
         refreshOfficerInvoices()
       } else if (role === 'stage2officer') {
-        refreshStage2OfficerInvoices(user.id)
+        refreshStage2OfficerInvoices()
       } else if (role === 'stage3officer') {
         refreshStage3OfficerInvoices(user.id)
       } else {
