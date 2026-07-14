@@ -698,7 +698,8 @@ const EditProfile = () => {
           <Input
             label="Gem Dealer File No"
             value={gemDealerFileNo}
-            onChange={(event) => setGemDealerFileNo(event.target.value)}
+            disabled
+            // onChange={(event) => setGemDealerFileNo(event.target.value)}
             placeholder="e.g. GD/2024/001234"
           />
           <div className="ep-full ep-select-field">
@@ -755,10 +756,10 @@ const EditProfile = () => {
 
         <div className="ep-grid">
           <Input
-            label="New License ID"
+            label="New Gem Dealer File No"
             value={newLicenseId}
             onChange={(event) => setNewLicenseId(event.target.value)}
-            placeholder="e.g. NEW-LIC-2027"
+            placeholder="e.g. NEW-FILE-2027"
           />
           <Input
             label="New Expiry Date"

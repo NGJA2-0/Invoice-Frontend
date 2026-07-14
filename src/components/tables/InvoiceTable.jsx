@@ -179,7 +179,7 @@ const InvoiceTable = ({
 
       try {
         // Fetch page 1 first to learn how many total pages exist.
-        const firstPage = await userService.getFavorites(user.id, { page: 1, pageSize: 100 })
+        const firstPage = await userService.getFavorites({ page: 1, pageSize: 100 })
         extractItems(firstPage).forEach((invoice) => {
           if (invoice?.invoiceId) ids.add(invoice.invoiceId)
         })
@@ -239,7 +239,7 @@ const InvoiceTable = ({
     updateFavoritedIds((prev) => new Set(prev).add(invoiceId))
 
     try {
-      await userService.addFavorite(user.id, invoiceId)
+      await userService.addFavorite(invoiceId)
       pushToast?.({ title: 'Added to favourites', tone: 'success' })
     } catch (error) {
       const alreadyFavorited = /already in favorites/i.test(error?.message || '')
