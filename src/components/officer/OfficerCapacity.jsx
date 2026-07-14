@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { officerApi } from '../../services/officerApi'
-import { useApp } from '../../context/AppContext'
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
@@ -14,19 +13,50 @@ let capacityCache = {
 }
 
 const OfficerCapacity = ({ officerId }) => {
-  const { user } = useApp()
   const [capacity, setCapacity] = useState(null)
-  const loading = false
-  const error = null
-  
-  useEffect(() => {
-    if (user) {
-      setCapacity({
-        totalCapacity: user.totalCapacity || 10,
-        occupiedSlots: user.occupiedSlots || 0
-      })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const fetchCapacity = useCallback(async (force = false) => {
+    if (!officerId) return
+
+    const isCacheValid =
+      !force &&
+      capacityCache.officerId === officerId &&
+      capacityCache.data &&
+      Date.now() - capacityCache.timestamp < CACHE_DURATION
+
+    if (isCacheValid) {
+      setCapacity(capacityCache.data)
+      return
     }
-  }, [user])
+
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await officerApi.getMyCapacity()
+      capacityCache = { officerId, data, timestamp: Date.now() }
+      setCapacity(data)
+    } catch (err) {
+      setError(err.message || 'Failed to load slot data')
+    } finally {
+      setLoading(false)
+    }
+  }, [officerId])
+
+  // Initial load — uses cache if it's still within the 5-minute window
+  useEffect(() => {
+    fetchCapacity()
+  }, [fetchCapacity])
+
+  // Auto-refresh every 5 minutes. A manual browser refresh also gets
+  // fresh data instantly, since capacityCache lives in JS memory and
+  // is wiped on full page reload.
+  useEffect(() => {
+    if (!officerId) return
+    const interval = setInterval(() => fetchCapacity(true), CACHE_DURATION)
+    return () => clearInterval(interval)
+  }, [officerId, fetchCapacity])
 
   if (!officerId) return null
 
@@ -204,58 +234,58 @@ const OfficerCapacity = ({ officerId }) => {
         @media (max-width: 768px) {
           .oc-card {
             max-width: 100%;
+            padding: 1.1rem;
           }
           .oc-card-inner {
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+          }
+          .oc-stats {
+            justify-content: space-between;
+            gap: 0.75rem;
+          }
+          .oc-stat {
+            min-width: 0;
           }
           .oc-divider {
             display: none;
           }
           .oc-grid-section {
             width: 100%;
-            max-width: 260px;
+            max-width: 240px;
+            margin: 0 auto;
+          }
+          .oc-grid {
+            gap: 6px;
           }
         }
 
         @media (max-width: 480px) {
           .oc-card {
-            padding: 1rem;
+            padding: 0.85rem;
           }
-          .oc-stats {
-            gap: 1.4rem;
-            justify-content: center;
+          .oc-stat-label {
+            font-size: 9px;
           }
           .oc-stat-value {
-            font-size: 1.35rem;
+            font-size: 1.2rem;
+          }
+          .oc-grid-label {
+            font-size: 9px;
+          }
+          .oc-grid-fraction {
+            font-size: 10px;
+            padding: 2px 7px;
           }
           .oc-grid-section {
-            max-width: 100%;
+            max-width: 210px;
           }
-        }
-          color: #8a93a3;
-          font-weight: 500;
-        }
-
-        @media (max-width: 640px) {
-          .oc-card {
-            padding: 0.9rem 1rem;
-            gap: 1rem;
+          .oc-grid {
+            gap: 5px;
           }
-          .oc-stats {
-            gap: 1.1rem;
-          }
-          .oc-stat-value {
-            font-size: 1.15rem;
-          }
-          .oc-divider {
-            display: none;
-          }
-          .oc-slot {
-            width: 16px;
-            height: 16px;
-            border-radius: 5px;
+          .oc-legend-item {
+            font-size: 10.5px;
           }
         }
       `}</style>

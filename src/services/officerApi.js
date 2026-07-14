@@ -18,6 +18,10 @@ export const officerApi = {
   // GET /api/v1/admin/officers/:id/capacity
   getCapacity: (officerId) => api.get(`${BASE}/officers/${officerId}/capacity`),
 
+  // GET /api/v1/officers/me/capacity
+  // Not under /admin — self-service endpoint, identity comes from the officer's own Bearer token.
+  getMyCapacity: () => api.get('/officers/me/capacity'),
+
   // PUT /api/v1/admin/officers/:id
   update: (id, payload) => api.put(`${BASE}/officers/${id}`, payload),
 
