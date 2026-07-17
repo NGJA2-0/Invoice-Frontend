@@ -90,7 +90,13 @@ const MyInvoices = () => {
           onSortChange={handleSortChange}
           onPageChange={setPage}
           onPageSizeChange={handlePageSizeChange}
-          onRowClick={(row) => navigate(`/user/invoices/${row.id}`)}
+          onRowClick={(row) => {
+            if (row.status === 'draft') {
+              navigate('/user/create-invoice', { state: { draftInvoiceId: row.id } })
+            } else {
+              navigate(`/user/invoices/${row.id}`)
+            }
+          }}
         />
         </div>
       )}
