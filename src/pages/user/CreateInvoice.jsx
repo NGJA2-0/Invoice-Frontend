@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Download, Eye, Save, FileText, ChevronRight } from 'lucide-react'
 import Button from '../../components/common/Button'
@@ -100,10 +100,20 @@ const normalizeOptions = (items) => {
 const CreateInvoice = () => {
   const { userStatus, user, createInvoice, pushToast } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
+  const draftInvoiceId = location.state?.draftInvoiceId || null
+  const [loadingDraft, setLoadingDraft] = useState(false)
+
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
-  const [category, setCategory] = useState(() => sessionStorage.getItem('ci_category') || '')
-  const [subCategory, setSubCategory] = useState(() => sessionStorage.getItem('ci_subCategory') || '')
+  const [category, setCategory] = useState(() => {
+    if (location.state?.draftInvoiceId) return ''
+    return sessionStorage.getItem('ci_category') || ''
+  })
+  const [subCategory, setSubCategory] = useState(() => {
+    if (location.state?.draftInvoiceId) return ''
+    return sessionStorage.getItem('ci_subCategory') || ''
+  })
   const [templateConfig, setTemplateConfig] = useState(null)
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [preview, setPreview] = useState(null)
@@ -117,12 +127,14 @@ const CreateInvoice = () => {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
 
   useEffect(() => {
+    if (draftInvoiceId) return
     sessionStorage.setItem('ci_category', category)
-  }, [category])
+  }, [category, draftInvoiceId])
 
   useEffect(() => {
+    if (draftInvoiceId) return
     sessionStorage.setItem('ci_subCategory', subCategory)
-  }, [subCategory])
+  }, [subCategory, draftInvoiceId])
 
   const form = useForm({
     defaultValues: {
@@ -135,11 +147,63 @@ const CreateInvoice = () => {
   // Watch all values and persist to sessionStorage
   useEffect(() => {
     const subscription = form.watch((values) => {
-      if (blockSaveRef.current) return
+      if (blockSaveRef.current || draftInvoiceId) return
       sessionStorage.setItem('ci_invoiceData', JSON.stringify(values))
     })
     return () => subscription.unsubscribe()
-  }, [form])
+  }, [form, draftInvoiceId])
+
+  useEffect(() => {
+    if (!draftInvoiceId) return
+
+    const loadDraft = async () => {
+      setLoadingDraft(true)
+      try {
+        const invoice = await invoiceService.getById(draftInvoiceId)
+        if (invoice) {
+          blockSaveRef.current = true
+          
+          setCategory(invoice.category || '')
+          setSubCategory(invoice.subCategory || '')
+          setInvoiceNumber(invoice.invoiceNumber || '')
+          
+          reset({
+            invoiceData: invoice.data || buildDefaultInvoiceData()
+          })
+          
+          if (invoice.data) {
+            try {
+              const previewData = await invoiceService.preview({
+                category: invoice.category,
+                subCategory: invoice.subCategory,
+                invoiceData: invoice.data,
+              })
+              setPreview(previewData)
+            } catch (e) {
+              console.error('Draft preview load failed', e)
+            }
+          }
+          
+          pushToast({
+            title: 'Draft loaded',
+            message: `Draft invoice ${invoice.invoiceNumber || ''} has been autofilled.`,
+            tone: 'success',
+          })
+        }
+      } catch (error) {
+        pushToast({
+          title: 'Failed to load draft',
+          message: error.message || 'Unable to fetch draft details.',
+          tone: 'danger',
+        })
+      } finally {
+        setLoadingDraft(false)
+        setTimeout(() => { blockSaveRef.current = false }, 200)
+      }
+    }
+
+    loadDraft()
+  }, [draftInvoiceId, reset])
 
   const templateKey = String(templateConfig?.templateKey || '').toUpperCase()
   const isTemplate3 = templateKey === 'TEMPLATE_3'
@@ -299,6 +363,7 @@ const CreateInvoice = () => {
     setTemplateConfig(null)
     setPreview(null)
     reset({ invoiceData: buildDefaultInvoiceData() })
+    navigate('/user/create-invoice', { replace: true, state: {} })
   }
 
   useEffect(() => {
@@ -360,7 +425,7 @@ const CreateInvoice = () => {
         return
       }
 
-      const hasSaved = !!sessionStorage.getItem('ci_invoiceData')  // CHECK BEFORE ASYNC
+      const hasSaved = !draftInvoiceId && !!sessionStorage.getItem('ci_invoiceData')  // CHECK BEFORE ASYNC
 
       try {
         const data = await invoiceService.getSubCategories(category)
@@ -368,6 +433,17 @@ const CreateInvoice = () => {
         setSubCategories(normalized)
         setSubCategoriesLoaded(true)
         const autoSelected = normalized.length === 1 ? normalized[0].value : ''
+
+        // Editing an existing draft: subCategory + the full invoiceData were
+        // already restored from the server by the draft-loading effect.
+        // Never let sessionStorage/auto-select overwrite the subCategory here,
+        // and never reset invoiceData to defaults — that was wiping the
+        // valuation table / CIF summary that came from the draft.
+        if (draftInvoiceId) {
+          setSubCategory(prev => prev || autoSelected)
+          setTemplateConfig(null)
+          return
+        }
 
         setSubCategory(prev => sessionStorage.getItem('ci_subCategory') || autoSelected)
         setTemplateConfig(null)
@@ -395,7 +471,7 @@ const CreateInvoice = () => {
       }
     }
     loadSubCategories()
-  }, [category, reset, businessProfile])
+  }, [category, reset, businessProfile, draftInvoiceId])
 
   useEffect(() => {
     const shouldLoad = category && subCategoriesLoaded && (subCategory || subCategories.length === 0)
@@ -443,7 +519,7 @@ const CreateInvoice = () => {
 
     const saved = sessionStorage.getItem('ci_invoiceData')
     console.log(sessionStorage.getItem('ci_invoiceData'))
-    if (isRestoringRef.current && saved) {
+    if (!draftInvoiceId && isRestoringRef.current && saved) {
       try {
         const parsed = JSON.parse(saved)
         reset(parsed)
@@ -568,7 +644,11 @@ const CreateInvoice = () => {
     }
 
     try {
-      await createInvoice(buildPayload(status))
+      if (draftInvoiceId) {
+        await invoiceService.updateDraft(draftInvoiceId, buildPayload(status))
+      } else {
+        await createInvoice(buildPayload(status))
+      }
       pushToast({
         title: status === 'draft' ? 'Draft saved' : 'Invoice submitted',
         message:
@@ -590,19 +670,26 @@ const CreateInvoice = () => {
 
   const confirmSaveDraft = async () => {
     setShowDraftConfirm(false)
-    await handleSave('draft')
+    const success = await handleSave('draft')
+    if (success && draftInvoiceId) {
+      navigate('/user/draft-invoices')
+    }
   }
 
   const confirmSubmitInvoice = async () => {
     setShowSubmitConfirm(false)
     const success = await handleSave('submitted')
     if (success) {
-      handleNewInvoice()
-      try {
-        const nextNumber = await invoiceService.generateNumber()
-        setInvoiceNumber(nextNumber?.invoiceNumber || '')
-      } catch (error) {
-        setInvoiceNumber('')
+      if (draftInvoiceId) {
+        navigate('/user/draft-invoices')
+      } else {
+        handleNewInvoice()
+        try {
+          const nextNumber = await invoiceService.generateNumber()
+          setInvoiceNumber(nextNumber?.invoiceNumber || '')
+        } catch (error) {
+          setInvoiceNumber('')
+        }
       }
     }
   }
@@ -1304,9 +1391,13 @@ const CreateInvoice = () => {
               <span className="ci-eyebrow-dot" />
               NGJA Invoice Engine
             </div>
-            <h1 className="ci-title">Create Export Invoice</h1>
+            <h1 className="ci-title">
+              {draftInvoiceId ? 'Complete Draft Invoice' : 'Create Export Invoice'}
+            </h1>
             <p className="ci-subtitle">
-              Select a category to load the correct invoice template
+              {draftInvoiceId 
+                ? 'Fill the remaining details to submit the invoice' 
+                : 'Select a category to load the correct invoice template'}
             </p>
           </div>
           {invoiceNumber && (
@@ -1322,7 +1413,7 @@ const CreateInvoice = () => {
               className="ci-btn ci-btn-ghost"
               onClick={() => navigate('/user/draft-invoices')}
             >
-              View Drafts
+              {draftInvoiceId ? 'Back to Drafts' : 'View Drafts'}
             </button>
             <button
               type="button"
@@ -1381,12 +1472,14 @@ const CreateInvoice = () => {
             />
           </div>
 
-          {loadingConfig && (
+          {(loadingConfig || loadingDraft) && (
             <div className="ci-loading">
               <div className="ci-loading-dot" />
               <div className="ci-loading-dot" />
               <div className="ci-loading-dot" />
-              <span className="ci-loading-text">Loading invoice configuration…</span>
+              <span className="ci-loading-text">
+                {loadingDraft ? 'Loading draft invoice details…' : 'Loading invoice configuration…'}
+              </span>
             </div>
           )}
         </div>

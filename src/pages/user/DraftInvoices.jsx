@@ -526,7 +526,7 @@ const DraftInvoices = () => {
                   {drafts.map((invoice) => (
                     <tr
                       key={invoice.invoiceId}
-                      onClick={() => navigate(`/user/invoices/${invoice.invoiceId}`, { state: { from: 'drafts' } })}
+                      onClick={() => navigate('/user/create-invoice', { state: { draftInvoiceId: invoice.invoiceId } })}
                     >
                       <td className="di-invoice-number">{invoice.invoiceNumber}</td>
                       <td>{invoice.invoiceDate}</td>
@@ -540,10 +540,12 @@ const DraftInvoices = () => {
                         <button
                           type="button"
                           className="di-submit-btn"
-                          disabled={submittingId === invoice.invoiceId}
-                          onClick={(e) => handleSubmitInvoice(e, invoice.invoiceId)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate('/user/create-invoice', { state: { draftInvoiceId: invoice.invoiceId } })
+                          }}
                         >
-                          {submittingId === invoice.invoiceId ? 'Submitting…' : 'Submit'}
+                          Submit
                         </button>
                       </td>
                     </tr>
@@ -557,7 +559,7 @@ const DraftInvoices = () => {
                   <div
                     key={invoice.invoiceId}
                     className="di-mobile-card"
-                    onClick={() => navigate(`/user/invoices/${invoice.invoiceId}`, { state: { from: 'drafts' } })}
+                    onClick={() => navigate('/user/create-invoice', { state: { draftInvoiceId: invoice.invoiceId } })}
                   >
                     <div className="di-mobile-row-top">
                       <span className="di-invoice-number">
@@ -585,10 +587,12 @@ const DraftInvoices = () => {
                     <button
                       type="button"
                       className="di-submit-btn"
-                      disabled={submittingId === invoice.invoiceId}
-                      onClick={(e) => handleSubmitInvoice(e, invoice.invoiceId)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate('/user/create-invoice', { state: { draftInvoiceId: invoice.invoiceId } })
+                      }}
                     >
-                      {submittingId === invoice.invoiceId ? 'Submitting…' : 'Submit Invoice'}
+                      Submit Invoice
                     </button>
                   </div>
                 ))}

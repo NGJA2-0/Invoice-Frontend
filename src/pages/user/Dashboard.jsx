@@ -292,7 +292,13 @@ const Dashboard = () => {
             {favourites.map((row) => (
               <div
                 key={row.id}
-                onClick={() => navigate(`/user/invoices/${row.id}`, { state: { from: 'dashboard' } })}
+                onClick={() => {
+                  if (row.status === 'draft') {
+                    navigate('/user/create-invoice', { state: { draftInvoiceId: row.id } })
+                  } else {
+                    navigate(`/user/invoices/${row.id}`, { state: { from: 'dashboard' } })
+                  }
+                }}
                 className="group relative flex cursor-pointer items-center justify-between gap-3 overflow-hidden rounded-2xl border border-cloud-200 bg-white px-4 py-3.5 shadow-sm transition-all duration-150 hover:border-[#d9c89a] hover:shadow-md"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#d4af37] via-[#b8922a] to-[#d4af37] opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
