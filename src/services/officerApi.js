@@ -18,6 +18,10 @@ export const officerApi = {
   // GET /api/v1/admin/officers/:id/capacity
   getCapacity: (officerId) => api.get(`${BASE}/officers/${officerId}/capacity`),
 
+  // GET /api/v1/officers/me/capacity
+  // Not under /admin — self-service endpoint, identity comes from the officer's own Bearer token.
+  getMyCapacity: () => api.get('/officers/me/capacity'),
+
   // PUT /api/v1/admin/officers/:id
   update: (id, payload) => api.put(`${BASE}/officers/${id}`, payload),
 
@@ -30,14 +34,35 @@ export const officerApi = {
   // PATCH /api/v1/admin/officers/transfer-slots
   transferSlots: (payload) => api.patch(`${BASE}/officers/transfer-slots`, payload),
 
-  // GET /api/v1/stage1/my-invoices
-  getAssignedInvoices: () => api.get(`/stage1/my-invoices`),
+  // GET /api/v1/stage1/my-invoices?page=&limit=&status=&search=
+  getAssignedInvoices: ({ page = 1, limit = 10, status, search } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    if (search) params.set('search', search)
+    return api.get(`/stage1/my-invoices?${params.toString()}`, { raw: true })
+  },
 
- // GET /api/v1/stage2/my-invoices
-  getStage2AssignedInvoices: () => api.get(`/stage2/my-invoices`),
+ // GET /api/v1/stage2/my-invoices?page=&limit=&status=&search=
+  getStage2AssignedInvoices: ({ page = 1, limit = 10, status, search } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    if (search) params.set('search', search)
+    return api.get(`/stage2/my-invoices?${params.toString()}`, { raw: true })
+  },
 
-  // GET /api/v1/stage3/my-invoices
-  getStage3AssignedInvoices: () => api.get(`/stage3/my-invoices`),
+  // GET /api/v1/stage3/my-invoices?page=&limit=&status=&search=
+  getStage3AssignedInvoices: ({ page = 1, limit = 10, status, search } = {}) => {
+    const params = new URLSearchParams()
+    params.set('page', page)
+    params.set('limit', limit)
+    if (status) params.set('status', status)
+    if (search) params.set('search', search)
+    return api.get(`/stage3/my-invoices?${params.toString()}`, { raw: true })
+  },
 
 // GET /api/v1/stage2/invoices/:originalInvoiceId/latest
   getStage2DocumentById: (originalInvoiceId) => api.get(`/stage2/invoices/${originalInvoiceId}/latest`),
